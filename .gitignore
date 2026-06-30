@@ -1,16 +1,36 @@
-node_modules
-dist
-coverage
+# Dependencies
+node_modules/
 
+# Build
+dist/
+build/
+coverage/
+
+# Logs
+*.log
+logs/
+
+# Environment
 .env
 .env.*
+!.env.example
 
-.vscode
-.idea
+# IDE
+.vscode/
+.idea/
 
+# OS
 .DS_Store
+Thumbs.db
 
-*.log
+# NestJS
+apps/backend/dist/
 
-apps/*/node_modules
-packages/*/node_modules
+# Vite
+apps/frontend/dist/
+
+# Turbo
+.turbo/
+
+# Misc
+*.tsbuildinfo
