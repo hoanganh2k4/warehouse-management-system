@@ -1,0 +1,12 @@
+{
+  "name": "smart-wms",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "backend": "npm run start:dev --workspace=backend",
+    "frontend": "npm run dev --workspace=frontend"
+  }
+}
