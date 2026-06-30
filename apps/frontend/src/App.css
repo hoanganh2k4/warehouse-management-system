@@ -70,6 +70,87 @@
   }
 }
 
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.app-header .eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.app-header h1 {
+  margin: 0 0 8px;
+  font-size: clamp(2rem, 2.5vw, 3rem);
+}
+
+.app-header p {
+  margin: 0;
+  color: #4f5666;
+}
+
+.api-link {
+  color: #0f4c81;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.products-panel {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.product-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.05);
+}
+
+.product-card h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+}
+
+.product-card p {
+  margin: 8px 0;
+  color: #3a3f52;
+  font-size: 0.95rem;
+}
+
+.error {
+  color: #c11d1d;
+}
+
 #next-steps {
   display: flex;
   border-top: 1px solid var(--border);

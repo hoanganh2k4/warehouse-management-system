@@ -4,7 +4,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 
 const connectionString = process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/smart_wms';
 const adapter = new PrismaPg({ connectionString });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient({ adapter } as any);
 
 // NOTE: tạm dùng sha256 để không phụ thuộc thêm package bcrypt trong seed.
 // Khi viết module Auth thật, hãy thay bằng bcrypt.hash() và migrate lại passwordHash của user seed.
