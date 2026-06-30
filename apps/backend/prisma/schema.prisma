@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ===================== Identity =====================
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  email        String?   @unique
+  passwordHash String
+  fullName     String?
+  roleId       String
+  role         Role      @relation(fields: [roleId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  transactions Transaction[]
+
+  @@index([roleId])
+  @@map("users")
+}
+
+// ===================== Catalog =====================
+
+enum ProductCategory {
+  MILK
+  CRACKER
+}
+
+model Product {
+  id        String          @id @default(uuid())
+  skuCode   String          @unique
+  name      String
+  category  ProductCategory
+  unit      String
+  isHeavy   Boolean         @default(false)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  deletedAt DateTime?
+
+  batches Batch[]
+  slots   Slot[]  @relation("SlotCurrentProduct")
+
+  @@index([category])
+  @@map("products")
+}
+
+model Batch {
+  id              String   @id @default(uuid())
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id])
+  batchCode       String   @unique
+  manufactureDate DateTime
+  expiryDate      DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  inventories  Inventory[]
+  transactions Transaction[]
+
+  @@index([productId])
+  @@index([expiryDate])
+  @@map("batches")
+}
+
+// ===================== Warehouse =====================
+
+model Warehouse {
+  id        String   @id @default(uuid())
+  name      String
+  address   String?
+  zones     Zone[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("warehouse")
+}
+
+model Zone {
+  id          String    @id @default(uuid())
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  code        String
+  racks       Rack[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([warehouseId, code])
+  @@map("zones")
+}
+
+model Rack {
+  id        String   @id @default(uuid())
+  zoneId    String
+  zone      Zone     @relation(fields: [zoneId], references: [id])
+  code      String
+  levels    Level[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([zoneId, code])
+  @@map("racks")
+}
+
+model Level {
+  id          String   @id @default(uuid())
+  rackId      String
+  rack        Rack     @relation(fields: [rackId], references: [id])
+  levelNumber Int
+  slots       Slot[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([rackId, levelNumber])
+  @@map("levels")
+}
+
+model Slot {
+  id                     String   @id @default(uuid())
+  levelId                String
+  level                  Level    @relation(fields: [levelId], references: [id])
+  code                   String
+  maxCapacity            Int
+  usedCapacity           Int      @default(0)
+  availableCapacity      Int
+  occupancyRate          Float    @default(0)
+  currentProductId       String?
+  currentProduct         Product? @relation("SlotCurrentProduct", fields: [currentProductId], references: [id])
+  distanceToGate         Float
+  outboundFrequencyScore Float    @default(0)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  inventories     Inventory[]
+  transactionsIn  Transaction[] @relation("SlotTo")
+  transactionsOut Transaction[] @relation("SlotFrom")
+
+  @@unique([levelId, code])
+  @@index([currentProductId])
+  @@map("slots")
+}
+
+// ===================== Inventory =====================
+
+model Inventory {
+  id        String   @id @default(uuid())
+  batchId   String
+  batch     Batch    @relation(fields: [batchId], references: [id])
+  slotId    String
+  slot      Slot     @relation(fields: [slotId], references: [id])
+  quantity  Int
+  updatedAt DateTime @updatedAt
+
+  @@unique([batchId, slotId])
+  @@index([slotId])
+  @@map("inventory")
+}
+
+// ===================== Operation =====================
+
+enum TransactionType {
+  IMPORT
+  EXPORT
+  MOVE
+}
+
+model Transaction {
+  id         String          @id @default(uuid())
+  type       TransactionType
+  batchId    String
+  batch      Batch           @relation(fields: [batchId], references: [id])
+  slotFromId String?
+  slotFrom   Slot?           @relation("SlotFrom", fields: [slotFromId], references: [id])
+  slotToId   String?
+  slotTo     Slot?           @relation("SlotTo", fields: [slotToId], references: [id])
+  quantity   Int
+  userId     String
+  user       User            @relation(fields: [userId], references: [id])
+  note       String?
+  createdAt  DateTime        @default(now())
+
+  @@index([batchId])
+  @@index([type])
+  @@map("transactions")
+}
