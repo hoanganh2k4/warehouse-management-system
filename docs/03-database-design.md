@@ -301,20 +301,76 @@ Tracks every inventory movement.
 
 Transaction Types
 
-- INBOUND
-- OUTBOUND
+- IMPORT
+- EXPORT
 - MOVE
-- ADJUSTMENT
 
 Fields
 
 | Name | Type |
 |------|------|
 | id | UUID |
-| inventoryId | UUID |
 | type | Enum |
+| batchId | UUID |
+| slotFromId | UUID? |
+| slotToId | UUID? |
 | quantity | Integer |
+| userId | UUID |
+| note | String? |
 | createdAt | Timestamp |
+
+---
+
+# Prisma Schema & Seed
+
+## Prisma schema location
+
+The Prisma schema file is located at:
+
+```text
+apps/backend/prisma/schema.prisma
+```
+
+## Generated Prisma client
+
+The generated Prisma client lives in:
+
+```text
+apps/backend/generated/prisma
+```
+
+## Seed script location
+
+The seed script is located at:
+
+```text
+apps/backend/prisma/seed.ts
+```
+
+## What seed creates
+
+The seed script populates the database with:
+
+- Roles: `Quản lý`, `Nhân viên kho`
+- Users: `admin`, `staff01`
+- Warehouse structure: warehouse, zones, racks, levels, slots
+- Products and batches for FEFO test data
+
+## Useful database tables
+
+Seed data is written to these tables:
+
+- `roles`
+- `users`
+- `warehouse`
+- `zones`
+- `racks`
+- `levels`
+- `slots`
+- `products`
+- `batches`
+- `inventory`
+- `transactions`
 
 ---
 

@@ -151,3 +151,44 @@ docker compose down
 ```bash
 docker compose down -v
 ```
+
+---
+
+# Backend: Prisma & Seed Commands
+
+From the backend folder:
+
+```bash
+cd /home/haa900/warehouse-management-system/apps/backend
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Generate Prisma client:
+
+```bash
+npx prisma generate
+```
+
+Run database migrations:
+
+```bash
+npx prisma migrate deploy
+```
+
+Run seed script:
+
+```bash
+npm run seed
+```
+
+If you need to reset the database schema and seed from scratch:
+
+```bash
+npx prisma migrate reset --force
+npm run seed
+```
