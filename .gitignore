@@ -25,6 +25,7 @@ Thumbs.db
 
 # NestJS
 apps/backend/dist/
+apps/backend/generated/
 
 # Vite
 apps/frontend/dist/

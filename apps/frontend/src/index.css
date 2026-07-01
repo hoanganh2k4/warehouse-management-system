@@ -1,111 +1,129 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* Ink & surfaces */
+  --ink: #0e1420;
+  --ink-soft: #161d2c;
+  --ink-line: rgba(255, 255, 255, 0.08);
+  --canvas: #f3f4f7;
+  --surface: #ffffff;
+  --line: #e4e6ec;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* Text */
+  --text: #1b2130;
+  --text-muted: #6b7280;
+  --text-faint: #9aa1b0;
+  --text-on-ink: #eef0f5;
+  --text-on-ink-muted: #8790a3;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
+  /* Accent — warehouse signage amber */
+  --accent: #e8a33d;
+  --accent-strong: #b5791b;
+  --accent-soft: rgba(232, 163, 61, 0.16);
+  --accent-ink: #241804;
+
+  /* Status */
+  --danger: #d64545;
+  --danger-soft: rgba(214, 69, 69, 0.1);
+  --success: #2f9e6b;
+  --success-soft: rgba(47, 158, 107, 0.12);
+
+  --shadow-sm: 0 1px 2px rgba(14, 20, 32, 0.05);
+  --shadow-md: 0 8px 24px rgba(14, 20, 32, 0.08);
+  --shadow-lg: 0 20px 45px rgba(14, 20, 32, 0.12);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+
+  --sidebar-w: 248px;
+  --sidebar-w-rail: 76px;
+  --topbar-h: 68px;
+
+  --display: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
   color-scheme: light dark;
+  font: 15px/1.5 var(--sans);
+  letter-spacing: 0.01em;
   color: var(--text);
-  background: var(--bg);
+  background: var(--canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+    --ink: #0a0e17;
+    --ink-soft: #131a29;
+    --canvas: #0b0f17;
+    --surface: #121826;
+    --line: #232b3b;
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+    --text: #e7e9ee;
+    --text-muted: #8a93a6;
+    --text-faint: #5b6272;
+    --text-on-ink: #eef0f5;
+    --text-on-ink-muted: #7b8496;
+
+    --accent: #f0b24f;
+    --accent-strong: #f6c877;
+    --accent-soft: rgba(240, 178, 79, 0.14);
+    --accent-ink: #1c1301;
+
+    --danger-soft: rgba(214, 69, 69, 0.16);
+    --success-soft: rgba(47, 158, 107, 0.18);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 20px 45px rgba(0, 0, 0, 0.45);
   }
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+* {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  background: var(--canvas);
+}
+
+#root {
+  min-height: 100svh;
 }
 
 h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+h2,
+h3,
+h4 {
+  font-family: var(--display);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
 p {
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+button,
+input {
+  font-family: inherit;
+  color: inherit;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
