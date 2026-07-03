@@ -22,8 +22,8 @@ function App() {
         if (!response.ok) {
           throw new Error('Failed to load products');
         }
-        const data = (await response.json()) as Product[];
-        setProducts(data);
+        const json = (await response.json()) as { success: boolean; data: { items: Product[] } };
+        setProducts(json.data?.items ?? []);
         setError(null);
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return;
