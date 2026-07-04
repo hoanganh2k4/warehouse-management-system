@@ -1,0 +1,40 @@
+Bạn là trợ lý lập trình frontend. Tôi đang làm 1 task NHỎ, KHÔNG được làm gì ngoài phạm vi liệt kê dưới đây.
+
+BỐI CẢNH:
+Dự án React + TypeScript + Vite, vừa cài xong react-router-dom (Task 01). Hiện `App.tsx` đang tự gọi trực tiếp `<Sidebar />` và `<Topbar query={query} onQueryChange={setQuery} />` cùng toàn bộ logic dashboard sản phẩm trong cùng 1 file.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY, KHÔNG HƠN):
+1. Tạo file mới `src/components/Layout.tsx`: chứa `<Sidebar />`, sau đó 1 div bọc `<Topbar query="" onQueryChange={() => {}} />` (tạm truyền rỗng — task sau sẽ xoá 2 props này) và `<Outlet />` của react-router-dom.
+2. Sửa `src/main.tsx`: bọc `<App />` bằng `<BrowserRouter>` (import từ 'react-router-dom').
+3. Sửa `src/App.tsx`: XOÁ TOÀN BỘ logic dashboard hiện tại RA KHỎI PHẠM VI TASK NÀY — task này CHỈ thêm khai báo `<Routes>`/`<Route>` bên cạnh logic cũ, tạm thời route `/products` vẫn render nguyên component `App` cũ y hệt bây giờ (chưa tách logic đi đâu cả, việc tách là task riêng sau). Nói cách khác: đừng xoá bất kỳ dòng code logic nào trong `App.tsx` ở task này, chỉ thêm phần Route bao ngoài.
+
+QUAN TRỌNG — GIỮ NGUYÊN CSS:
+Phải giữ đúng tên class CSS hiện có (ví dụ `app-shell`, `app-main`) — đọc kỹ App.tsx/App.css hiện tại trước khi viết Layout.tsx, không tự đặt tên class mới.
+
+FILE ĐƯỢC PHÉP SỬA/TẠO:
+- Tạo mới: src/components/Layout.tsx
+- Sửa: src/main.tsx
+- Sửa: src/App.tsx (chỉ phần khai báo Route, không đụng logic dashboard)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- src/components/Sidebar.tsx
+- src/components/Topbar.tsx
+- src/components/ProductTable.tsx, StatCard.tsx, ProductCard.tsx
+- src/App.css, src/index.css
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung 3 file: Layout.tsx (mới), main.tsx (đã sửa), App.tsx (đã sửa). Không rút gọn bằng "// giữ nguyên phần còn lại" — viết đầy đủ để tôi copy-paste trực tiếp.
+
+Đây là nội dung các file hiện tại:
+
+--- Sidebar.tsx ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- Topbar.tsx ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- App.tsx ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- main.tsx ---
+[DÁN NỘI DUNG Ở ĐÂY]

@@ -1,0 +1,41 @@
+Bạn là trợ lý lập trình frontend. Tôi đang làm 1 task NHỎ: nối 1 form có sẵn với 1 service có sẵn, thêm xử lý lỗi.
+
+BỐI CẢNH:
+`Login.tsx` hiện có form username/password, khi submit chỉ đang `console.log({ username, password })`. Đã có sẵn `src/services/auth.service.ts` với hàm `login(username, password): Promise<LoginResponse>` — hàm này throw Error(message) nếu sai tài khoản/mật khẩu (lỗi 401 từ backend).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+Sửa `Login.tsx`:
+1. Thêm state mới: `errorMessage: string | null` (mặc định null), và `isSubmitting: boolean` (mặc định false).
+2. Trong hàm submit: gọi `event.preventDefault()`, set `isSubmitting = true`, set `errorMessage = null`, sau đó gọi `await login(username, password)` (import từ auth.service.ts) trong khối try/catch:
+   - Thành công: TẠM THỜI chỉ `console.log(result)` (việc lưu token thật là task sau) — CHƯA điều hướng đi đâu ở task này.
+   - Thất bại (catch): set `errorMessage = error.message` (hiển thị message thật từ backend, không phải message tự bịa).
+   - Luôn set `isSubmitting = false` ở cuối (dùng finally).
+3. Hiển thị `errorMessage` trên giao diện NẾU khác null — dùng lại đúng class CSS hiện có cho trạng thái lỗi trong dự án (tìm class `.state-panel`/`.state-error` trong App.css, dùng lại đúng tên class đó, KHÔNG tự bịa class mới).
+4. Nút submit: disable khi `isSubmitting === true`, đổi chữ nút thành "Đang đăng nhập..." trong lúc đó.
+
+QUY TẮC:
+- KHÔNG sửa auth.service.ts hay api-client.ts.
+- KHÔNG dùng alert() của trình duyệt để hiển thị lỗi — phải hiển thị ngay trên giao diện form.
+- KHÔNG thêm route /login vào App.tsx ở task này.
+
+FILE ĐƯỢC PHÉP SỬA:
+- src/pages/login/Login.tsx
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- src/services/auth.service.ts
+- src/lib/api-client.ts
+- src/App.css (chỉ đọc để tìm đúng tên class lỗi có sẵn)
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung Login.tsx đã sửa.
+
+Đây là nội dung hiện tại:
+
+--- Login.tsx (hiện tại) ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- auth.service.ts ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- App.css (trích đoạn class .state-panel/.state-error, chỉ đọc) ---
+[DÁN NỘI DUNG Ở ĐÂY]

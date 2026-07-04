@@ -1,0 +1,34 @@
+Bạn là trợ lý lập trình frontend. Tôi đang làm 1 task NHỎ: tạo 1 file hạ tầng dùng chung, KHÔNG đụng tới bất kỳ nơi nào đang gọi API hiện có.
+
+BỐI CẢNH:
+Backend trả về response theo đúng 1 khuôn cố định:
+- Thành công: { "success": true, "data": <dữ liệu thật> }
+- Thất bại: { "success": false, "message": "<mô tả lỗi>" } (kèm HTTP status lỗi, ví dụ 400/401/404/409)
+
+Dev server Vite đã tự proxy `/api` sang backend (xem vite.config.ts), nên base URL chỉ cần là "/api".
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+Tạo file mới `src/lib/api-client.ts`:
+1. Tạo 1 axios instance với `baseURL: '/api'`.
+2. Thêm 1 RESPONSE interceptor:
+   - Nếu response có `success: true` → trả thẳng về `response.data.data` (bóc vỏ, bỏ lớp {success, data} bên ngoài).
+   - Nếu response có `success: false` hoặc bị lỗi (catch nhánh error của axios) → throw `new Error(message)` với `message` lấy từ `error.response.data.message` (nếu có), hoặc 1 message mặc định ("Có lỗi xảy ra") nếu không có.
+3. Export axios instance này làm default export, đặt tên `apiClient`.
+
+QUY TẮC:
+- KHÔNG đụng vào `ProductList.tsx` hay bất kỳ nơi nào khác đang gọi API — task này CHỈ tạo file mới, chưa thay thế chỗ nào dùng nó.
+- Không thêm request interceptor (gắn Authorization header) ở task này — đó là task khác sau này.
+- Dùng TypeScript, có type rõ ràng cho phần response (ví dụ 1 interface `ApiEnvelope<T>` với 2 field `success: boolean` và tuỳ theo đó là `data: T` hoặc `message: string`).
+
+FILE ĐƯỢC PHÉP TẠO:
+- src/lib/api-client.ts (MỚI)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- src/pages/products/ProductList.tsx
+- Mọi file khác
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file api-client.ts.
+
+Tham khảo: đoạn code hiện tại trong ProductList.tsx đang tự làm việc "bóc vỏ" response thủ công như sau (chỉ để bạn hiểu đúng khuôn dữ liệu, KHÔNG sửa file này):
+[DÁN ĐOẠN fetch('/api/products', ...) TỪ ProductList.tsx VÀO ĐÂY]

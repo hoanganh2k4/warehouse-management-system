@@ -1,0 +1,44 @@
+Bạn là trợ lý lập trình frontend. Tôi đang làm 1 task NHỎ: tạo 1 route guard (chặn truy cập khi chưa đăng nhập).
+
+BỐI CẢNH:
+`src/hooks/useAuth.ts` có sẵn hàm `isAuthenticated()`. `App.tsx` hiện có `<Routes>` với route `/products` (public) và `/login` (public). Sắp tới sẽ có thêm route `/products/new` và `/products/:id/edit` — 2 route này CẦN đăng nhập mới được vào (backend bắt buộc token cho các API tạo/sửa/xoá sản phẩm).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Tạo file mới `src/components/ProtectedRoute.tsx`:
+   - Component này gọi `useAuth().isAuthenticated()`.
+   - Nếu KHÔNG đăng nhập: return `<Navigate to="/login" replace />` (import `Navigate` từ 'react-router-dom').
+   - Nếu ĐÃ đăng nhập: return `<Outlet />` (import `Outlet` từ 'react-router-dom') để render route con.
+2. Sửa `App.tsx`: thêm 2 route mới, bọc trong `<Route element={<ProtectedRoute />}>`:
+   - `path="/products/new"` → tạm thời render `<div>Coming soon (Task 27)</div>` (component thật CHƯA tồn tại, sẽ được thay thế ở task khác sau này — chỉ cần placeholder ở đây).
+   - `path="/products/:id/edit"` → tạm thời render `<div>Coming soon (Task 33)</div>`.
+   - 2 route này vẫn nằm bên trong `<Route element={<Layout />}>` như route `/products` hiện có (để vẫn có Sidebar/Topbar bao quanh).
+
+QUY TẮC:
+- TUYỆT ĐỐI không bọc route `/products` (danh sách) hay `/login` vào ProtectedRoute — 2 route đó vẫn phải công khai, không cần đăng nhập.
+- Dùng đúng `<Navigate to="/login" replace />` (có `replace`) để tránh vòng lặp khi bấm nút Back của trình duyệt.
+- Không sửa nội dung useAuth.ts hay Layout.tsx.
+
+FILE ĐƯỢC PHÉP SỬA/TẠO:
+- Tạo mới: src/components/ProtectedRoute.tsx
+- Sửa: src/App.tsx (chỉ thêm 2 route mới, không đổi route đã có)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- src/hooks/useAuth.ts
+- src/components/Layout.tsx
+- src/pages/login/Login.tsx
+- src/pages/products/ProductList.tsx
+- src/lib/api-client.ts
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung 2 file: ProtectedRoute.tsx (mới) và App.tsx (đã thêm route mới, đầy đủ, không rút gọn phần cũ).
+
+Đây là nội dung hiện tại:
+
+--- useAuth.ts ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- App.tsx (hiện tại, sau khi đã di dời dashboard) ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- Layout.tsx (chỉ để tham khảo cấu trúc route lồng nhau) ---
+[DÁN NỘI DUNG Ở ĐÂY]

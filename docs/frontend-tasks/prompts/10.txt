@@ -1,0 +1,40 @@
+Bạn là trợ lý lập trình frontend. Tôi đang làm 1 task NHỎ: tạo 1 custom hook để lưu/đọc token đăng nhập.
+
+BỐI CẢNH:
+`Login.tsx` hiện đang gọi `login(username, password)` thành công thì chỉ `console.log(result)` — cần thay bằng việc lưu token thật.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Tạo file mới `src/hooks/useAuth.ts`:
+   - Đặt hằng số `const TOKEN_KEY = 'wms_access_token';` ở đầu file.
+   - Hàm `saveToken(token: string): void` → `localStorage.setItem(TOKEN_KEY, token)`.
+   - Hàm `getToken(): string | null` → `localStorage.getItem(TOKEN_KEY)`.
+   - Hàm `isAuthenticated(): boolean` → `!!getToken()`.
+   - Hàm `logout(): void` → `localStorage.removeItem(TOKEN_KEY)`.
+   - Custom hook `useAuth()` trả về object chứa cả 4 hàm trên: `{ saveToken, getToken, isAuthenticated, logout }`.
+2. Sửa `Login.tsx`: thay dòng `console.log(result)` (khi đăng nhập thành công) bằng:
+   - Gọi `saveToken(result.accessToken)` (lấy từ hook `useAuth()`).
+   - Điều hướng sang `/products` bằng `useNavigate()` của react-router-dom (import `useNavigate` từ 'react-router-dom', gọi `const navigate = useNavigate();` ở đầu component, rồi `navigate('/products')` sau khi lưu token).
+
+QUY TẮC:
+- CHỈ lưu `accessToken`, KHÔNG cần xử lý `refreshToken` ở task này.
+- Đặt tên key `localStorage` đúng chính xác `wms_access_token` (các task sau sẽ cần đúng tên key này).
+- KHÔNG sửa auth.service.ts hay api-client.ts.
+
+FILE ĐƯỢC PHÉP SỬA/TẠO:
+- Tạo mới: src/hooks/useAuth.ts
+- Sửa: src/pages/login/Login.tsx
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- src/services/auth.service.ts
+- src/lib/api-client.ts
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung 2 file: useAuth.ts (mới) và Login.tsx (đã sửa).
+
+Đây là nội dung hiện tại:
+
+--- Login.tsx (sau Task 09) ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- auth.service.ts (để biết kiểu LoginResponse) ---
+[DÁN NỘI DUNG Ở ĐÂY]

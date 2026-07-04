@@ -1,0 +1,32 @@
+Bạn là trợ lý lập trình frontend. Tôi đang làm 1 task NHỎ: thêm 1 request interceptor cho axios, KHÔNG dùng hook React trong file này.
+
+BỐI CẢNH:
+`src/lib/api-client.ts` hiện đã có response interceptor (tự bóc vỏ {success, data}, tự throw Error khi lỗi). Token đăng nhập được lưu trong localStorage với key cố định `wms_access_token` (xem `src/hooks/useAuth.ts`).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+Sửa `src/lib/api-client.ts`: thêm 1 REQUEST interceptor (chạy TRƯỚC khi request được gửi đi, khác với response interceptor đã có):
+- Đọc token trực tiếp bằng `localStorage.getItem('wms_access_token')` (đọc thẳng, KHÔNG import hoặc gọi hook `useAuth()` — vì đây không phải React component/hook, gọi hook React ở đây sẽ lỗi "Invalid hook call").
+- Nếu có token: gắn `config.headers.Authorization = 'Bearer ' + token`.
+- Nếu không có token: để request đi bình thường, không thêm header đó (để các API công khai như GET /products không bị ảnh hưởng).
+
+QUY TẮC:
+- TUYỆT ĐỐI không import hoặc gọi `useAuth` (hook React) trong file này.
+- Giữ nguyên toàn bộ response interceptor đã có, chỉ THÊM request interceptor mới.
+- Không hardcode bất kỳ token thật nào vào code.
+
+FILE ĐƯỢC PHÉP SỬA:
+- src/lib/api-client.ts
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- src/hooks/useAuth.ts (chỉ đọc để biết đúng tên key localStorage)
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung api-client.ts đã sửa (bao gồm cả phần cũ đã có, không rút gọn).
+
+Đây là nội dung hiện tại:
+
+--- api-client.ts (hiện tại) ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- useAuth.ts (chỉ đọc, để lấy đúng tên key 'wms_access_token') ---
+[DÁN NỘI DUNG Ở ĐÂY]

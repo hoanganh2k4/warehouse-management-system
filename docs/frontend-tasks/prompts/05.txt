@@ -1,0 +1,40 @@
+Bạn là trợ lý lập trình frontend. Tôi đang làm 1 task NHỎ: tách 1 tính năng ra khỏi 1 component dùng chung.
+
+BỐI CẢNH:
+`Topbar.tsx` hiện đang nhận 2 props `query` và `onQueryChange` để hiển thị 1 ô search, nhưng `Topbar` là component layout dùng chung cho MỌI trang trong tương lai (không chỉ trang Products). `Layout.tsx` hiện đang gọi `<Topbar query="" onQueryChange={() => {}} />` (giá trị rỗng tạm thời). `ProductList.tsx` là nơi thực sự cần ô search "tìm theo tên/SKU/category".
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Sửa `Topbar.tsx`: XOÁ HẲN 2 props `query`/`onQueryChange` và phần JSX ô input search bên trong nó. `Topbar` sau task này chỉ còn phần "vỏ tĩnh" (link "API docs", avatar người dùng) — không nhận thêm props nào liên quan tới search.
+2. Sửa `Layout.tsx`: xoá 2 props tạm thời `query=""` `onQueryChange={() => {}}` đang truyền cho `<Topbar />` (giờ Topbar không cần 2 props này nữa).
+3. Sửa `ProductList.tsx`: thêm ô input search NGAY TRONG file này, ở khu vực đầu trang (dùng lại class CSS `.topbar-search` đã có sẵn trong App.css cho input, không tạo class mới), nối vào đúng state `query` đã tồn tại sẵn trong ProductList.tsx (state này đã có từ trước, chỉ là giờ ô input hiển thị nó nằm ở ProductList thay vì Topbar).
+
+QUY TẮC:
+- Không đổi hành vi lọc/tìm kiếm hiện tại (vẫn lọc y hệt như cũ) — chỉ đổi VỊ TRÍ đặt ô input.
+- Dùng lại đúng class CSS có sẵn (`.topbar-search` hoặc class tương đương tìm thấy trong App.css), không tạo class CSS mới, không sửa App.css.
+
+FILE ĐƯỢC PHÉP SỬA:
+- src/components/Topbar.tsx
+- src/components/Layout.tsx
+- src/pages/products/ProductList.tsx
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- src/components/Sidebar.tsx, ProductTable.tsx, StatCard.tsx
+- src/App.tsx
+- src/App.css
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung 3 file đã sửa.
+
+Đây là nội dung các file hiện tại:
+
+--- Topbar.tsx ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- Layout.tsx ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- ProductList.tsx ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- App.css (chỉ để tham khảo class .topbar-search và .page-header, KHÔNG sửa file này) ---
+[DÁN NỘI DUNG Ở ĐÂY]

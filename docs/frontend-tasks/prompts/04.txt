@@ -1,0 +1,37 @@
+Bạn là trợ lý lập trình frontend. Tôi đang làm 1 task DI DỜI CODE, KHÔNG được sửa logic, chỉ được di chuyển nguyên trạng.
+
+BỐI CẢNH:
+`App.tsx` hiện có `<Routes>` bọc ngoài (từ task trước), nhưng route `/products` vẫn render nguyên component `App` cũ có đầy đủ logic dashboard (state, fetch, JSX bảng sản phẩm) gộp chung với khai báo Route. `Layout.tsx` đã có sẵn Sidebar + Topbar + Outlet.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+Di dời NGUYÊN TRẠNG toàn bộ logic dashboard (mọi `useState`, `useEffect`, `useMemo`, hàm fetch, biến `filteredProducts`, `stats`, và toàn bộ JSX từ `<main className="app-content">` trở xuống) từ `App.tsx` sang file MỚI `src/pages/products/ProductList.tsx`.
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi tên biến, KHÔNG đổi cách fetch dữ liệu, KHÔNG "tối ưu" hay "dọn dẹp" code — chỉ cắt-dán.
+- Sau khi di dời, `App.tsx` CHỈ còn `<Routes>`/`<Route>`, không còn bất kỳ `useState`/`useEffect` nào.
+- `ProductList.tsx` không bọc lại `<Sidebar />`/`<Topbar />`/div `app-shell` — những phần đó Layout.tsx đã lo, ProductList chỉ giữ từ `<main className="app-content">` trở xuống.
+- Route `/products` trong App.tsx trỏ tới `<ProductList />` mới, đặt bên trong `<Route element={<Layout />}>`.
+- Thêm 1 route mặc định: `path="/"` → `<Navigate to="/products" replace />`.
+
+FILE ĐƯỢC PHÉP SỬA/TẠO:
+- Tạo mới: src/pages/products/ProductList.tsx
+- Sửa: src/App.tsx
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- src/components/Layout.tsx, Sidebar.tsx, Topbar.tsx, ProductTable.tsx, StatCard.tsx
+- src/App.css, src/index.css
+- src/types.ts
+
+LƯU Ý ĐƯỜNG DẪN IMPORT:
+`ProductList.tsx` nằm sâu hơn `App.tsx` 2 cấp thư mục (`pages/products/` thay vì gốc `src/`) — phải sửa lại đường dẫn import (ví dụ `../../types` thay vì `./types`, `../../components/ProductTable` thay vì `./components/ProductTable`).
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung 2 file: ProductList.tsx (mới, đầy đủ) và App.tsx (đã rút gọn, đầy đủ). Không rút gọn bằng comment "giữ nguyên".
+
+Đây là nội dung file hiện tại:
+
+--- App.tsx (đầy đủ, bản hiện tại) ---
+[DÁN NỘI DUNG Ở ĐÂY]
+
+--- Layout.tsx (để bạn biết Sidebar/Topbar đã có sẵn, không cần lặp lại) ---
+[DÁN NỘI DUNG Ở ĐÂY]

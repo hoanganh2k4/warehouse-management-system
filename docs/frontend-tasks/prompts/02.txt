@@ -1,0 +1,15 @@
+Task này KHÔNG bắt buộc cần AI — chỉ cần tạo thư mục rỗng bằng terminal hoặc VS Code.
+
+Nếu vẫn muốn dùng AI để chắc chắn không sai đường dẫn, dùng prompt sau:
+
+---
+
+Tôi cần tạo 4 thư mục rỗng trong dự án React (Vite) của tôi, nằm trong `apps/frontend/src/`:
+- pages
+- services
+- hooks
+- lib
+
+Mỗi thư mục cần có 1 file rỗng tên `.gitkeep` bên trong (vì Git không lưu thư mục rỗng).
+
+Hãy cho tôi đúng các lệnh terminal (dùng được trên cả Mac/Linux và Windows Git Bash) để tạo 4 thư mục và 4 file `.gitkeep` này, chạy từ thư mục gốc của repo. KHÔNG tạo thêm file hay thư mục nào khác ngoài 4 cái trên.

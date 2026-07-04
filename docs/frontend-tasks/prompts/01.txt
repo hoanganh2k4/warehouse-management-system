@@ -1,0 +1,22 @@
+Bạn là trợ lý lập trình frontend. Tôi đang làm 1 task NHỎ, KHÔNG được làm gì ngoài phạm vi liệt kê dưới đây.
+
+BỐI CẢNH:
+Dự án React + TypeScript + Vite. Hiện tại chưa có react-router-dom và axios trong package.json.
+
+MỤC TIÊU TASK:
+Thêm 2 dependency vào package.json: "react-router-dom" và "axios" (bản mới nhất ổn định). KHÔNG cài thêm bất kỳ thư viện nào khác (không react-query, không thư viện UI, không thư viện form).
+
+FILE ĐƯỢC PHÉP SỬA:
+- package.json (chỉ phần dependencies)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- Bất kỳ file .tsx/.ts nào khác
+- App.css, index.css
+
+YÊU CẦU ĐẦU RA:
+1. Cho tôi đúng lệnh npm install cần chạy (ví dụ: npm install react-router-dom axios).
+2. KHÔNG tự ý sửa version của các dependency đã có sẵn trong package.json.
+3. Không giải thích dài dòng, chỉ cần lệnh cài đặt.
+
+Đây là nội dung package.json hiện tại:
+[DÁN NỘI DUNG package.json VÀO ĐÂY]

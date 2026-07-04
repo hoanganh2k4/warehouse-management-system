@@ -1,0 +1,34 @@
+Bạn là trợ lý lập trình frontend. Tôi đang làm 1 task NHỎ: viết 1 service gọi API thuần, KHÔNG có giao diện.
+
+BỐI CẢNH:
+Đã có sẵn `src/lib/api-client.ts` (axios instance đã tự bóc vỏ {success, data}, tự throw Error khi lỗi). Backend có endpoint POST /auth/login, nhận { username, password }, trả về data dạng:
+{
+  accessToken: string,
+  refreshToken: string,
+  expiresIn: number
+}
+Nếu sai tài khoản/mật khẩu, backend trả lỗi 401 kèm message mô tả — apiClient đã tự throw Error(message) trong trường hợp này (xem api-client.ts).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+Tạo file mới `src/services/auth.service.ts`:
+1. Định nghĩa type `LoginResponse` khớp đúng 3 field trên.
+2. Viết hàm `async function login(username: string, password: string): Promise<LoginResponse>` — gọi `apiClient.post('/auth/login', { username, password })` và trả kết quả về.
+3. Export hàm `login`.
+
+QUY TẮC:
+- File này KHÔNG chứa bất kỳ JSX/component/giao diện nào — chỉ là hàm TypeScript thuần.
+- KHÔNG tự bắt lỗi (try/catch) trong service này — để lỗi tự "nổi" (throw) lên chỗ gọi nó (Login.tsx sẽ tự bắt lỗi ở task khác).
+- KHÔNG lưu token vào localStorage ở đây — việc lưu là task khác.
+
+FILE ĐƯỢC PHÉP TẠO:
+- src/services/auth.service.ts (MỚI)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- src/lib/api-client.ts
+- Mọi file khác
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file auth.service.ts.
+
+Đây là nội dung api-client.ts hiện tại (để bạn import đúng cách, KHÔNG sửa file này):
+[DÁN NỘI DUNG api-client.ts VÀO ĐÂY]

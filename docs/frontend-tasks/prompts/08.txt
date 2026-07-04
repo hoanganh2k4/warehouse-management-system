@@ -1,0 +1,35 @@
+Bạn là trợ lý lập trình frontend. Tôi đang làm 1 task NHỎ: chỉ giao diện, CHƯA gọi API thật.
+
+BỐI CẢNH:
+Dự án chưa có trang đăng nhập nào. Cần 1 form đơn giản: username, password, nút "Đăng nhập".
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+Tạo file mới `src/pages/login/Login.tsx`:
+1. 2 state: `username`, `password` (dùng useState, kiểu string, giá trị đầu là '').
+2. Form có 2 input dạng controlled input (value + onChange nối vào state), 1 input type="text" cho username, 1 input type="password" cho password.
+3. `<form onSubmit={...}>` — hàm submit phải gọi `event.preventDefault()` trước, sau đó CHỈ CẦN `console.log({ username, password })` (chưa gọi API thật — việc đó là task sau).
+4. 1 nút submit ghi "Đăng nhập".
+
+QUY TẮC VỀ STYLE:
+- Xem qua App.css xem có class input/form nào tái dùng được không (ví dụ `.topbar-search input` có sẵn style input). Nếu không có class phù hợp, tạo 1 file CSS riêng `src/pages/login/Login.css` cho riêng trang này — TUYỆT ĐỐI không thêm class mới vào App.css dùng chung.
+- KHÔNG thêm route `/login` vào App.tsx ở task này — việc đó dồn vào 1 task sau khi API đã chạy được, để tránh sửa App.tsx 2 lần.
+- KHÔNG dùng `alert()` của trình duyệt cho bất kỳ trường hợp nào.
+
+FILE ĐƯỢC PHÉP TẠO:
+- src/pages/login/Login.tsx (MỚI)
+- src/pages/login/Login.css (MỚI, chỉ nếu cần)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- src/App.css
+- src/App.tsx
+- Mọi file trong src/components/
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung Login.tsx (và Login.css nếu có tạo).
+
+Tham khảo style hiện có (chỉ đọc, không sửa):
+--- App.css (trích đoạn liên quan tới input/form nếu có) ---
+[DÁN NỘI DUNG App.css VÀO ĐÂY]
+
+--- StatCard.tsx (chỉ để tham khảo cách đặt type Props/export trong dự án này) ---
+[DÁN NỘI DUNG StatCard.tsx VÀO ĐÂY]
