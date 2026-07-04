@@ -101,34 +101,7 @@ Tạo file với cấu trúc:
 - [ ] Toàn bộ checklist A–H đã được thực hiện thật (không đánh dấu pass hàng loạt mà không test), kết quả ghi rõ Pass/Fail cho từng dòng.
 - [ ] Nếu có Fail, đã ghi rõ mức độ nghiêm trọng và đề xuất hướng xử lý.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi vừa test thủ công xong toàn bộ luồng CRUD sản phẩm của dự án (checklist A-H bên dưới), kết quả từng mục như sau (điền kết quả thật của bạn vào đây thay cho các dòng mẫu):
-
-A1. Login đúng tài khoản: Pass
-A2. Login sai mật khẩu: Pass
-A3. ...
-[ĐIỀN ĐỦ KẾT QUẢ THẬT CỦA BẠN CHO TỪNG MỤC A ĐẾN H]
-
-Hãy giúp tôi tổng hợp thành file docs/test-report.md theo đúng cấu trúc mẫu sau (không tự thêm mục test nào tôi không liệt kê, không tự đoán kết quả cho mục tôi không ghi):
-
-# Test Report — Product CRUD (Task 01–41)
-**Người test:** [điền]
-**Ngày:** [điền]
-**Môi trường:** [điền]
-
-## Tổng quan
-(tính tổng số Pass/Fail dựa trên dữ liệu tôi cung cấp)
-
-## Chi tiết theo từng mục (A–H)
-(dùng bảng markdown | # | Mô tả | Kết quả | Ghi chú |, điền đúng dữ liệu tôi đưa, không bịa thêm)
-
-## Bug phát hiện (nếu có)
-(chỉ liệt kê nếu tôi có ghi Fail ở đâu đó, mô tả lại đúng những gì tôi đã nêu, không suy diễn thêm)
-
-## Known issues chấp nhận được (không phải bug)
-- Tìm kiếm không ra kết quả hiển thị "No products yet" thay vì "No matches" (theo phân tích ở Task 22).
-
-Trả về toàn bộ nội dung file docs/test-report.md.
-```
+Xem file: `prompts/Stage-5/41.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

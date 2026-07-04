@@ -55,30 +55,7 @@ Task này **chỉ** thay khối trên bằng lời gọi `useProducts`. Chưa x�
 - [ ] Mở tab Network trong DevTools, thấy đúng 1 request `GET /api/products?page=1&limit=20` khi load trang (không gọi lặp lại liên tục — nếu bị loop, kiểm tra lại Task 15 dependency array).
 - [ ] Ô tìm kiếm vẫn lọc được (client-side, tạm thời) như hành vi cũ.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần sửa file apps/frontend/src/pages/products/ProductList.tsx trong dự án React + TypeScript.
-
-Hiện tại file có đoạn code fetch thủ công như sau (dán nguyên đoạn thật từ file của bạn vào đây trước khi chạy prompt):
-[DÁN ĐOẠN useState + useEffect fetch cũ VÀO ĐÂY]
-
-Tôi đã có sẵn hook apps/frontend/src/hooks/useProducts.ts, dùng như sau:
-const { items, meta, loading, error, refetch } = useProducts({ page: 1, limit: 20 });
-- items: Product[]
-- meta: { page, limit, total, totalPages } | null
-- loading: boolean
-- error: string | null
-- refetch: () => void
-
-Yêu cầu:
-1. Xoá toàn bộ useState (products, loading, error) và useEffect fetch thủ công cũ.
-2. Thay bằng lời gọi useProducts({ page: 1, limit: 20 }) như trên.
-3. Đổi mọi nơi đang dùng biến "products" thành "items".
-4. Đổi totalCount truyền cho <ProductTable /> từ "products.length" thành "meta?.total ?? 0".
-5. GIỮ NGUYÊN biến "query" và logic filteredProducts lọc client-side hiện có — không xoá, không sửa logic đó ở bước này.
-6. Import useProducts đúng đường dẫn tương đối tới hooks/useProducts.ts.
-
-Chỉ sửa phần liên quan đến fetch dữ liệu, không đổi bố cục JSX, không đổi các component con khác.
-Trả về toàn bộ nội dung file sau khi sửa.
-```
+Xem file: `prompts/Stage-2/16.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

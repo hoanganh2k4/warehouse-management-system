@@ -1,0 +1,22 @@
+Tôi cần làm 3 việc trong dự án React + TypeScript + react-router-dom:
+
+1. Thêm route mới vào apps/frontend/src/App.tsx (dán nội dung thật vào đây):
+[DÁN NỘI DUNG THẬT App.tsx VÀO ĐÂY]
+Route mới: path="products/:id/edit", bọc bởi ProtectedRoute (đã có sẵn, dùng lại y hệt cách bọc route "products/new"), element là component ProductEdit (import từ './pages/products/ProductEdit').
+
+2. Thêm 1 Link "Sửa" trong apps/frontend/src/pages/products/ProductDetail.tsx (dán nội dung thật vào đây):
+[DÁN NỘI DUNG THẬT ProductDetail.tsx VÀO ĐÂY]
+Link trỏ tới `/products/${id}/edit` (dùng đúng biến id đã có trong component), đặt cạnh khu vực tiêu đề sản phẩm, style bằng class "btn-secondary" (đã có từ Task 27). CHƯA thêm nút Xoá ở bước này.
+
+3. Tạo file mới apps/frontend/src/pages/products/ProductEdit.tsx — CHỈ dựng khung tối thiểu, CHƯA load dữ liệu, CHƯA có form:
+- Dùng useParams<{ id: string }>() lấy id
+- 1 Link "← Quay lại chi tiết" trỏ về `/products/${id}` (route Detail đã có)
+- Tiêu đề "Sửa sản phẩm"
+- Chưa có nội dung gì khác
+
+Ràng buộc:
+- Không load dữ liệu, không dựng form thật ở bước này.
+- Không thêm nút Xoá.
+- Không sửa ProductTable.tsx hay ProductCreate.tsx.
+
+Trả về: (1) đoạn route thêm vào App.tsx, (2) đoạn Link thêm vào ProductDetail.tsx, (3) toàn bộ nội dung ProductEdit.tsx.

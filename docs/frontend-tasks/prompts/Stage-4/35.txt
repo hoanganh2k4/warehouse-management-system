@@ -1,0 +1,25 @@
+Tôi cần làm 2 việc trong dự án React + TypeScript + axios + react-router-dom:
+
+1. MỞ RỘNG apps/frontend/src/types.ts và apps/frontend/src/services/product.service.ts (dán bản thật của cả 2 file vào đây):
+[DÁN NỘI DUNG THẬT types.ts VÀO ĐÂY]
+[DÁN NỘI DUNG THẬT product.service.ts VÀO ĐÂY]
+
+Thêm type UpdateProductPayload = { name?: string; category?: ProductCategory; unit?: string; isHeavy?: boolean } vào types.ts (KHÔNG có skuCode).
+Thêm hàm updateProduct(id: string, payload: UpdateProductPayload): Promise<Product> vào object productService đã có, gọi apiClient.put(`/products/${id}`, payload). Không tạo file mới, không tự bắt lỗi trong service.
+
+2. Sửa file apps/frontend/src/pages/products/ProductEdit.tsx (dán bản thật vào đây, file này hiện đã có state form prefill từ product):
+[DÁN NỘI DUNG THẬT ProductEdit.tsx VÀO ĐÂY]
+
+Yêu cầu sửa:
+- Thêm state submitting (boolean, mặc định false).
+- Import useNavigate, khởi tạo navigate.
+- Đổi phần bọc form thành <form onSubmit={handleSubmit}> nếu chưa phải.
+- Viết hàm async handleSubmit(e): e.preventDefault(); nếu !form hoặc !id thì return; set submitting=true; gọi productService.updateProduct(id, { name: form.name.trim(), category: form.category, unit: form.unit.trim(), isHeavy: form.isHeavy }); nếu thành công navigate(`/products/${id}`); nếu lỗi tạm console.error(err) (Task sau sẽ thay bằng Toast); finally set submitting=false.
+- Nút submit: disabled={submitting}, text "Đang lưu..." khi submitting, ngược lại "Lưu thay đổi".
+
+Ràng buộc:
+- KHÔNG validate ở bước này.
+- KHÔNG gửi skuCode trong payload.
+- KHÔNG đổi đường điều hướng khi thành công (phải về /products/${id}).
+
+Trả về toàn bộ nội dung của cả 3 file sau khi sửa (types.ts, product.service.ts, ProductEdit.tsx).

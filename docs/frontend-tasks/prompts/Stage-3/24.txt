@@ -1,0 +1,22 @@
+Tôi cần MỞ RỘNG 2 file đã có trong dự án React + TypeScript + axios (không tạo file mới):
+
+1. apps/frontend/src/types.ts — hiện đã có type Product, PaginatedResult<T>, v.v. (dán nội dung thật vào đây):
+[DÁN NỘI DUNG THẬT types.ts VÀO ĐÂY]
+
+2. apps/frontend/src/services/product.service.ts — hiện đã có object productService với hàm getProducts (dán nội dung thật vào đây):
+[DÁN NỘI DUNG THẬT product.service.ts VÀO ĐÂY]
+
+Backend có endpoint GET /products/:id trả về Product kèm thêm field "batches" là mảng batch, mỗi batch có dạng:
+{ id, productId, batchCode, manufactureDate, expiryDate, createdAt, updatedAt } — manufactureDate/expiryDate/createdAt/updatedAt là ISO date string.
+Nếu id không tồn tại, backend trả lỗi 404 (axios sẽ tự throw).
+
+Yêu cầu:
+1. Trong types.ts, thêm 2 type mới: "Batch" (theo cấu trúc trên) và "ProductDetail" (= Product & { batches: Batch[] }). Không xoá gì đang có.
+2. Trong product.service.ts, thêm 1 hàm mới vào object productService đã có: getProductById(id: string): Promise<ProductDetail>, gọi apiClient.get(`/products/${id}`) và trả kết quả. Không tự try/catch, để lỗi tự throw.
+
+Ràng buộc:
+- Không tạo file mới.
+- Không sửa/xoá hàm getProducts đã có.
+- Không thêm hàm nào khác ngoài getProductById.
+
+Trả về toàn bộ nội dung của cả 2 file sau khi sửa.

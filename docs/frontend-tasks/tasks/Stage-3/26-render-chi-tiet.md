@@ -77,35 +77,7 @@ if (!product) {
 - [ ] Sản phẩm có `batches.length === 0` → thấy dòng "Chưa có lô hàng nào" thay vì bảng trống lỗi layout.
 - [ ] `npx tsc --noEmit` không lỗi.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần sửa file apps/frontend/src/pages/products/ProductDetail.tsx trong dự án React + TypeScript.
-
-Nội dung hiện tại (khung tạm từ task trước, dán bản thật vào đây):
-[DÁN NỘI DUNG THẬT ProductDetail.tsx VÀO ĐÂY]
-
-Đã có sẵn hook apps/frontend/src/hooks/useProductDetail.ts dùng như sau:
-const { product, loading, error, refetch } = useProductDetail(id);
-- product: ProductDetail | null, với ProductDetail = Product & { batches: Batch[] }
-- Product có: id, skuCode, name, category ('MILK'|'CRACKER'), unit, isHeavy, createdAt, updatedAt (ISO string)
-- Batch có: id, productId, batchCode, manufactureDate, expiryDate, createdAt, updatedAt (ISO string), đã được backend sort theo expiryDate tăng dần.
-
-CSS đã có sẵn các class này (định nghĩa trong App.css, dùng bởi ProductTable.tsx), hãy TÁI SỬ DỤNG, không tạo class mới trùng chức năng:
-- "chip" (hiển thị category dạng thẻ)
-- "badge badge-heavy" / "badge badge-standard" (hiển thị trạng thái heavy/standard)
-- "skeleton" (loading placeholder)
-- "state-panel" / "state-panel state-error" / "state-title" / "state-body" (hiển thị trạng thái rỗng/lỗi)
-- "muted-cell" (text phụ, ví dụ ngày tháng)
-
-Yêu cầu:
-1. Xử lý 3 trạng thái ngay trong component (không tách file con):
-   - loading: hiện vài dòng skeleton đơn giản.
-   - error: hiện state-panel state-error, có nút "Thử lại" gọi refetch().
-   - !product (sau khi hết loading, không lỗi): hiện state-panel với text "Không tìm thấy sản phẩm".
-2. Khi có product, render: tên, SKU, category (class "chip"), unit, badge heavy/standard, ngày tạo/cập nhật (viết 1 hàm formatDate riêng trong file này, dùng new Date().toLocaleDateString('en-US', {year:'numeric', month:'short', day:'numeric'}) như style đã dùng trong ProductTable.tsx — không import hàm này từ nơi khác).
-3. Render bảng batches: cột Batch Code, Ngày sản xuất, Ngày hết hạn. Nếu batches.length === 0, hiện dòng text "Chưa có lô hàng nào" thay vì bảng trống.
-4. KHÔNG thêm nút Sửa/Xoá ở bước này.
-
-Trả về toàn bộ nội dung file ProductDetail.tsx sau khi sửa.
-```
+Xem file: `prompts/Stage-3/26.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

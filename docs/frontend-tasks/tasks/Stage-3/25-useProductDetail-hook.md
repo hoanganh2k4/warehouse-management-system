@@ -89,28 +89,7 @@ export function useProductDetail(id: string | undefined) {
 - [ ] Gọi hook với id không tồn tại → `error` có message hợp lý (message lỗi 404 từ backend, ví dụ "Request failed with status code 404" hoặc message thật do axios/api-client trả), `product` là `null`.
 - [ ] Gọi hook với `id = undefined` → không có request nào được gửi (kiểm tra tab Network), `error = 'Thiếu id sản phẩm'`.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần tạo file mới: apps/frontend/src/hooks/useProductDetail.ts trong dự án React 19 + TypeScript.
-
-Bối cảnh:
-- Đã có apps/frontend/src/services/product.service.ts export "productService.getProductById(id: string): Promise<ProductDetail>".
-- Đã có type ProductDetail trong apps/frontend/src/types.ts.
-- KHÔNG dùng react-query, chỉ dùng useState/useEffect thuần.
-
-Yêu cầu viết hook "useProductDetail(id: string | undefined)":
-1. Trả về: { product: ProductDetail | null; loading: boolean; error: string | null; refetch: () => void }.
-2. Nếu id là undefined hoặc chuỗi rỗng: KHÔNG gọi API, set loading=false, error='Thiếu id sản phẩm', product=null, và dừng ngay (return sớm trong useEffect, không tiếp tục code fetch bên dưới).
-3. Nếu id hợp lệ: gọi productService.getProductById(id), set loading=true trước khi gọi, cập nhật product/error/loading tương ứng khi resolve/reject.
-4. Chống race condition bằng cờ "cancelled" trong cleanup của useEffect.
-5. error phải là string (dùng err.message, không phải Error object).
-6. refetch() phải trigger gọi lại API (dùng state đếm reloadToken làm dependency phụ trong useEffect, cùng với "id").
-
-Ràng buộc:
-- Không tạo file nào khác.
-- Không sửa product.service.ts hay types.ts.
-- Không format ngày tháng hay xử lý hiển thị gì trong hook này — chỉ trả dữ liệu thô.
-
-Trả về toàn bộ nội dung file hooks/useProductDetail.ts.
-```
+Xem file: `prompts/Stage-3/25.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

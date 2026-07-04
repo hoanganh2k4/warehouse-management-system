@@ -1,0 +1,19 @@
+Tôi cần thêm 1 route mới vào dự án React + TypeScript đang dùng react-router-dom.
+
+Trước tiên, đây là nội dung thật của apps/frontend/src/App.tsx hiện tại:
+[DÁN NỘI DUNG THẬT CỦA App.tsx VÀO ĐÂY]
+
+Yêu cầu:
+1. Thêm 1 route mới, nested cùng cấp với route hiện có của trang ProductList, path là "products/:id", element là component ProductDetail (import từ './pages/products/ProductDetail').
+2. Không đổi route/path đã có của ProductList.
+3. Tạo file mới apps/frontend/src/pages/products/ProductDetail.tsx với nội dung:
+   - Dùng useParams<{ id: string }>() từ react-router-dom để lấy "id" từ URL.
+   - Render 1 link "← Quay lại danh sách" trỏ về đúng route của trang ProductList (dựa theo route thật tôi vừa dán ở trên).
+   - Render tiêu đề "Chi tiết sản phẩm" và hiển thị "ID: {id}" tạm thời.
+   - KHÔNG gọi API, chưa cần logic loading/error ở bước này.
+
+Ràng buộc:
+- Không sửa ProductList.tsx hay ProductTable.tsx.
+- Không style phức tạp, dùng class CSS đơn giản tương tự các trang khác trong page-header hiện có (nếu thấy class "page-header", "eyebrow", "page-desc" trong App.tsx/ProductList.tsx thì tái sử dụng đúng class đó cho đồng bộ).
+
+Trả về: (1) đoạn route cần thêm vào App.tsx và vị trí thêm, (2) toàn bộ nội dung file ProductDetail.tsx mới.

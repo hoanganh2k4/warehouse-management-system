@@ -48,23 +48,7 @@ Các khu vực cần rà soát (đã được tạo qua các task trước, tấ
 - [ ] `ConfirmDialog` và `Toast` hiển thị hợp lý trên mobile, không che hết màn hình cũng không bị cắt.
 - [ ] Không có file `.tsx` nào bị sửa — kiểm tra `git status` chỉ thấy `App.css`.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần thêm responsive CSS vào file apps/frontend/src/App.css trong dự án React + TypeScript (dán toàn bộ nội dung file hiện tại vào đây):
-[DÁN NỘI DUNG THẬT App.css VÀO ĐÂY]
-
-Đây là toàn bộ các class hiện có liên quan đến layout (không đổi tên bất kỳ class nào): app-shell, sidebar (component Sidebar), app-main, stat-row, stat-card, panel, panel-header, table-wrap, product-table, form-group, form-actions, dialog-overlay, dialog-box, toast.
-
-Yêu cầu: CHỈ thêm CSS (media query), KHÔNG đổi tên class nào đã có, KHÔNG được yêu cầu sửa bất kỳ file .tsx nào — nếu cảm thấy cần đổi class trong JSX để làm responsive tốt hơn, hãy nói rõ điều đó thay vì tự giả định class mới đã tồn tại trong JSX.
-
-Thêm 2 breakpoint: @media (max-width: 768px) và @media (max-width: 480px). Trong đó:
-1. Sidebar: chuyển layout từ cột dọc cố định sang dạng gọn hơn ở tablet/mobile (ví dụ giảm width, hoặc đổi flex-direction sang row với flex-wrap) — chọn cách đơn giản nhất, không cần hamburger menu (không có JS toggle).
-2. stat-row: cho phép flex-wrap hoặc chuyển sang grid responsive để 4 StatCard không bị bó hẹp trên mobile.
-3. table-wrap: đảm bảo có overflow-x: auto để bảng sản phẩm cuộn ngang được trên mobile thay vì làm vỡ layout trang.
-4. form-group, form-actions: full-width trên mobile.
-5. dialog-box: giới hạn max-width nhưng responsive (width: 90% trên mobile thay vì cố định px).
-6. toast: full-width trên mobile (thay vì width cố định nhỏ ở góc màn hình).
-
-Trả về toàn bộ nội dung file App.css sau khi thêm CSS responsive (giữ nguyên phần CSS gốc, chỉ bổ sung thêm).
-```
+Xem file: `prompts/Stage-5/39.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

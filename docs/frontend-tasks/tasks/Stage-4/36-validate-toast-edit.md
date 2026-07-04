@@ -80,33 +80,7 @@ Lưu ý: `PUT /products/:id` không có lỗi 409 (chỉ `create` mới check tr
 - [ ] Giả lập lỗi 404: sửa 1 sản phẩm, sau đó xoá thẳng sản phẩm đó qua Prisma Studio trong lúc form Edit đang mở, bấm "Lưu" → thấy Toast "Sản phẩm không còn tồn tại (có thể đã bị xoá)." thay vì crash trang.
 - [ ] `npx tsc --noEmit` không lỗi.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần sửa file apps/frontend/src/pages/products/ProductEdit.tsx trong dự án React + TypeScript + axios.
-
-Nội dung hiện tại (đã có submit thật ở task trước, dán bản thật vào đây):
-[DÁN NỘI DUNG THẬT ProductEdit.tsx VÀO ĐÂY]
-
-Đã có sẵn component dùng chung apps/frontend/src/components/Toast.tsx với props: message (string), type ('error'|'success'), onClose (function). KHÔNG cần sửa component này, chỉ import và dùng.
-
-Yêu cầu:
-1. Thêm type EditFormErrors = Partial<Record<keyof EditFormState, string>> và state errors bằng useState<EditFormErrors>({}).
-2. Viết hàm validate(): EditFormErrors — nếu form là null trả về {}; kiểm tra form.name.trim() rỗng → lỗi 'Vui lòng nhập tên sản phẩm'; form.unit.trim() rỗng → lỗi 'Vui lòng nhập đơn vị tính'. Không validate category.
-3. Trong handleSubmit đã có, thêm đoạn gọi validate() và setErrors() ngay đầu hàm (sau khi check !form || !id), nếu có lỗi thì return sớm, không gọi API.
-4. Hiển thị lỗi dưới từng input tương ứng bằng class "form-error" đã có sẵn (chỉ hiện khi errors[field] có giá trị).
-5. Sửa hàm cập nhật field (updateField hoặc tương đương) để xoá lỗi của field đó khỏi errors mỗi khi field được sửa.
-6. Thêm state toastMessage (string | null, mặc định null).
-7. Import { isAxiosError } from 'axios' và Toast từ '../../components/Toast'.
-8. Thay đoạn catch (err) { console.error(err); } hiện có bằng:
-   - Nếu isAxiosError(err) && err.response?.status === 404: setToastMessage('Sản phẩm không còn tồn tại (có thể đã bị xoá).')
-   - Ngược lại: setToastMessage('Không thể lưu thay đổi. Vui lòng thử lại.')
-9. Render Toast có điều kiện: {toastMessage && <Toast message={toastMessage} type="error" onClose={() => setToastMessage(null)} />}
-
-Ràng buộc:
-- Không tạo hay sửa components/Toast.tsx.
-- Không xử lý lỗi 409 (Edit không có lỗi này).
-- Không validate hay cho sửa skuCode.
-
-Trả về toàn bộ nội dung file ProductEdit.tsx sau khi sửa.
-```
+Xem file: `prompts/Stage-4/36.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

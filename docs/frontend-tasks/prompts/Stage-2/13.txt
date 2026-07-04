@@ -1,0 +1,17 @@
+Tôi đang làm việc trong file apps/frontend/src/types.ts của một dự án React + TypeScript.
+File hiện tại chỉ có một type "Product" duy nhất. Hãy giúp tôi MỞ RỘNG file này (không xoá gì đang có):
+
+1. Thêm type: export type ProductCategory = 'MILK' | 'CRACKER';
+2. Đổi field "category" trong type Product từ kiểu string sang kiểu ProductCategory.
+3. Thêm 2 type mới:
+   export type PaginationMeta = { page: number; limit: number; total: number; totalPages: number; };
+   export type PaginatedResult<T> = { items: T[]; meta: PaginationMeta; };
+4. Thêm 2 type mới:
+   export type ProductSort = 'name' | 'sku' | 'category';
+   export type GetProductsParams = { page?: number; limit?: number; keyword?: string; sort?: ProductSort; };
+
+Yêu cầu bắt buộc:
+- Không xoá, không đổi tên bất kỳ field nào đã có trong Product.
+- Không thêm type nào khác ngoài 5 type liệt kê ở trên.
+- Không sửa file nào khác ngoài types.ts.
+- Trả về toàn bộ nội dung file types.ts sau khi sửa.

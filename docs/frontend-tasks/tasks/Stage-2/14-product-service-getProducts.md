@@ -56,25 +56,7 @@ export const productService = {
 
 Backend phải đang chạy (`npm run start:dev` ở `apps/backend`). Tạm thời gọi hàm này từ một chỗ bất kỳ (ví dụ console DevTools qua `window`) để xác nhận response đúng hình dạng `{ items: [...], meta: {...} }` trước khi báo hoàn thành.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần tạo file mới: apps/frontend/src/services/product.service.ts trong dự án React + TypeScript + axios.
-
-Bối cảnh:
-- Đã có sẵn file apps/frontend/src/lib/api-client.ts export một axios instance tên "apiClient".
-- Đã có sẵn các type trong apps/frontend/src/types.ts: Product, GetProductsParams, PaginatedResult<T>.
-- Backend có endpoint GET /products nhận query params page, limit, keyword, sort và trả về dữ liệu dạng PaginatedResult<Product> (đã được apiClient tự bóc envelope {success, data}, nghĩa là apiClient.get() trả thẳng Promise<T>).
-
-Yêu cầu:
-1. Import apiClient từ '../lib/api-client'.
-2. Import type Product, PaginatedResult, GetProductsParams từ '../types'.
-3. Tạo object "productService" export ra, có 1 hàm duy nhất:
-   getProducts(params: GetProductsParams): Promise<PaginatedResult<Product>>
-   gọi apiClient.get('/products', { params }) và trả về kết quả.
-4. KHÔNG thêm hàm nào khác (không getProductById, không createProduct...).
-5. KHÔNG dùng fetch() trực tiếp, phải dùng apiClient.
-6. Trả về toàn bộ nội dung file.
-
-Trước khi viết, hãy hỏi tôi cho xem nội dung thật của apiClient trong lib/api-client.ts nếu cần xác nhận cách nó trả dữ liệu (trả thẳng data hay trả AxiosResponse).
-```
+Xem file: `prompts/Stage-2/14.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

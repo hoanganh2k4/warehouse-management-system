@@ -1,0 +1,20 @@
+Tôi cần tạo file mới: apps/frontend/src/hooks/useProducts.ts trong dự án React 19 + TypeScript.
+
+Bối cảnh:
+- Đã có apps/frontend/src/services/product.service.ts export "productService.getProducts(params)" trả về Promise<PaginatedResult<Product>>.
+- Đã có type trong apps/frontend/src/types.ts: GetProductsParams, PaginationMeta, Product, PaginatedResult<T>.
+- KHÔNG được dùng react-query hay bất kỳ thư viện data-fetching nào — chỉ dùng useState/useEffect thuần của React.
+
+Yêu cầu viết hook "useProducts(params: GetProductsParams)":
+1. Trả về object gồm: items (Product[]), meta (PaginationMeta | null), loading (boolean), error (string | null), refetch (function không tham số).
+2. Gọi lại productService.getProducts mỗi khi các field của params thay đổi (page, limit, keyword, sort) — liệt kê từng field vào dependency array của useEffect, KHÔNG để nguyên object params (tránh loop vô hạn do object mới mỗi lần render).
+3. Chống race condition: dùng cờ "cancelled" trong cleanup function của useEffect, bỏ qua kết quả nếu request đã cũ.
+4. error phải là string, không phải Error object — bắt lỗi bằng try/catch hoặc .catch() và convert err.message.
+5. refetch() phải trigger gọi lại API (dùng một state đếm làm dependency phụ, ví dụ reloadToken).
+
+Ràng buộc:
+- Không tạo thêm file nào khác.
+- Không sửa product.service.ts hay types.ts.
+- Không debounce trong hook này.
+
+Trả về toàn bộ nội dung file hooks/useProducts.ts.

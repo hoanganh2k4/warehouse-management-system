@@ -39,20 +39,7 @@ Nhiều khả năng qua các Task 16–19, `loading` đã được truyền đú
 - [ ] Throttle mạng trong DevTools (Slow 3G) để xác nhận rõ trạng thái loading kéo dài đúng như mong đợi.
 - [ ] Không có file nào bị sửa ngoài `ProductList.tsx` (và chỉ khi thực sự cần dọn state thừa).
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần rà soát file apps/frontend/src/pages/products/ProductList.tsx trong dự án React + TypeScript.
-
-File này dùng hook useProducts trả về { items, meta, loading, error, refetch } và render:
-<ProductTable products={items} totalCount={meta?.total ?? 0} loading={...} error={...} query={inputValue} />
-
-Hãy kiểm tra và cho tôi biết:
-1. Prop "loading" truyền vào ProductTable có đang trỏ đúng vào biến "loading" lấy ra từ useProducts hay không, hay đang trỏ nhầm vào một state "loading" cũ khác còn sót lại trong file.
-2. Nếu có state "loading" trùng tên/thừa còn sót lại từ code cũ (trước khi dùng hook), hãy xoá state thừa đó và chỉ giữ lại loading từ hook.
-3. Không sửa bất kỳ file nào khác, không sửa ProductTable.tsx.
-4. Không thêm loading indicator mới nào khác ngoài cái ProductTable đã tự có sẵn.
-
-Nếu mọi thứ đã đúng, xác nhận lại là không cần sửa gì và giải thích ngắn gọn tại sao đã đúng.
-Nếu cần sửa, trả về toàn bộ nội dung file sau khi sửa.
-```
+Xem file: `prompts/Stage-2/20.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

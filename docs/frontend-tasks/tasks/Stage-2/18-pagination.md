@@ -60,29 +60,7 @@ useEffect(() => {
 - [ ] Gõ từ khoá tìm kiếm mới trong khi đang ở trang > 1 → tự động quay về trang 1.
 - [ ] `npx tsc --noEmit` không lỗi.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần sửa file apps/frontend/src/pages/products/ProductList.tsx trong dự án React + TypeScript.
-
-Hiện tại file đang gọi:
-const { items, meta, loading, error, refetch } = useProducts({ page: 1, limit: 20, keyword: debouncedKeyword || undefined });
-trong đó meta có dạng { page, limit, total, totalPages } | null.
-
-Yêu cầu:
-1. Thêm state "page" (number, mặc định 1) bằng useState.
-2. Sửa lời gọi useProducts để dùng "page" thay vì số 1 cố định: useProducts({ page, limit: 20, keyword: debouncedKeyword || undefined }).
-3. Thêm 1 useEffect theo dõi debouncedKeyword: mỗi khi debouncedKeyword đổi, gọi setPage(1) để reset về trang 1.
-4. Thêm UI điều khiển trang, đặt ngay sau component <ProductTable />, gồm:
-   - nút "Trang trước": disabled khi loading hoặc page <= 1, onClick giảm page đi 1
-   - đoạn text hiển thị "Trang {page} / {meta?.totalPages ?? 1}"
-   - nút "Trang sau": disabled khi loading hoặc !meta hoặc page >= meta.totalPages, onClick tăng page lên 1
-
-Ràng buộc:
-- Không đổi limit, giữ cố định 20.
-- Không sửa ProductTable.tsx.
-- Không dùng thư viện pagination ngoài, chỉ dùng thẻ <button> thường.
-- CSS đơn giản là đủ, không cần hoàn thiện responsive ở bước này.
-
-Trả về toàn bộ nội dung file sau khi sửa.
-```
+Xem file: `prompts/Stage-2/18.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

@@ -73,30 +73,7 @@ Task này **chỉ dựng UI tĩnh**, chưa bind state (Task 28), chưa validate 
 - [ ] `npx tsc --noEmit` không lỗi.
 - [ ] Form hiển thị đủ 5 field + nút submit + link huỷ, chưa có hành vi submit thật (bấm nút chưa làm gì, hoặc reload trang mặc định của `<form>` — chấp nhận được ở bước này).
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần làm 3 việc trong dự án React + TypeScript + react-router-dom:
-
-1. Thêm route mới vào apps/frontend/src/App.tsx (dán nội dung thật vào đây):
-[DÁN NỘI DUNG THẬT App.tsx VÀO ĐÂY]
-Route mới: path="products/new", bọc bởi component ProtectedRoute đã có sẵn (import từ đúng đường dẫn đã dùng cho các route khác), element bên trong là component ProductCreate (import từ './pages/products/ProductCreate'). Đặt route này cùng cấp/nested giống các route con khác trong Layout.
-
-2. Thêm 1 Link trong apps/frontend/src/pages/products/ProductList.tsx (dán nội dung thật vào đây):
-[DÁN NỘI DUNG THẬT ProductList.tsx VÀO ĐÂY]
-Thêm 1 <Link to="/products/new"> với text "+ Thêm sản phẩm", đặt trong phần page-header, cạnh tiêu đề "Products". Style đơn giản bằng class "btn-primary" (sẽ định nghĩa ở bước 3).
-
-3. Tạo file mới apps/frontend/src/pages/products/ProductCreate.tsx — CHỈ dựng UI tĩnh, CHƯA bind state, CHƯA validate, CHƯA gọi API:
-- Tiêu đề "Tạo sản phẩm mới"
-- Field skuCode: input text
-- Field name: input text
-- Field category: select với đúng 2 option "MILK" (label "Sữa (MILK)") và "CRACKER" (label "Bánh quy (CRACKER)"), defaultValue="MILK", không có option rỗng
-- Field unit: input text, placeholder "ví dụ: hộp, thùng, kg"
-- Field isHeavy: checkbox với label "Hàng nặng (cần xử lý đặc biệt)"
-- 1 nút submit "Tạo sản phẩm" (chưa gắn onClick/onSubmit thật)
-- 1 Link "Huỷ" quay về "/"
-
-Thêm vào apps/frontend/src/App.css vài class CSS đơn giản mới (không sửa class nào đã có): .form-group, .form-label, .form-input, .form-actions, .btn-primary, .btn-secondary — dùng tông màu/spacing nhất quán với các class hiện có trong file (xem .panel, .chip để tham khảo).
-
-Trả về: (1) đoạn route thêm vào App.tsx, (2) đoạn Link thêm vào ProductList.tsx, (3) toàn bộ nội dung ProductCreate.tsx, (4) đoạn CSS mới thêm vào App.css.
-```
+Xem file: `prompts/Stage-3/27.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

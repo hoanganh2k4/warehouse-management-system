@@ -1,0 +1,22 @@
+Tôi cần làm 2 việc trong dự án React + TypeScript + axios:
+
+1. Tạo file mới apps/frontend/src/components/Toast.tsx — component thuần dùng chung, KHÔNG biết gì về ProductCreate hay bất kỳ trang nào gọi nó:
+   - Props: message (string), type ('error' | 'success', mặc định 'error'), onClose (function), durationMs (number, mặc định 4000).
+   - Tự động gọi onClose sau durationMs bằng useEffect + setTimeout (nhớ cleanup bằng clearTimeout).
+   - Render 1 div class "toast toast-{type}", có nút đóng (×) gọi onClose khi bấm.
+
+2. Sửa file apps/frontend/src/pages/products/ProductCreate.tsx (dán bản thật vào đây, file này hiện có hàm handleSubmit với catch tạm chỉ console.error):
+[DÁN NỘI DUNG THẬT ProductCreate.tsx VÀO ĐÂY]
+
+Yêu cầu sửa:
+- Thêm state toastMessage (string | null, mặc định null).
+- Import { isAxiosError } from 'axios'.
+- Thay đoạn catch (err) { console.error(err); } bằng logic:
+  + Nếu isAxiosError(err) && err.response?.status === 409: set toastMessage = 'Mã SKU này đã tồn tại. Vui lòng chọn mã khác.' (nếu message backend là 'SKU already exists'), ngược lại set toastMessage = 'Dữ liệu bị trùng, vui lòng kiểm tra lại.'
+  + Các lỗi khác: set toastMessage = 'Không thể tạo sản phẩm. Vui lòng thử lại.'
+- Import Toast từ '../../components/Toast', render có điều kiện khi toastMessage khác null: <Toast message={toastMessage} type="error" onClose={() => setToastMessage(null)} />
+- KHÔNG reset state "form" khi có lỗi — giữ nguyên dữ liệu người dùng đã nhập.
+
+Thêm CSS tối thiểu vào apps/frontend/src/App.css cho .toast (position: fixed, góc trên phải màn hình, padding, border-radius, box-shadow), .toast-error (nền đỏ nhạt viền đỏ), .toast-success (nền xanh nhạt viền xanh), .toast-close (nút đóng).
+
+Trả về: (1) toàn bộ nội dung Toast.tsx, (2) toàn bộ nội dung ProductCreate.tsx sau khi sửa, (3) đoạn CSS thêm vào App.css.

@@ -53,27 +53,7 @@ Validate phía client để giảm request thừa và cho UX tốt hơn, **nhưn
 - [ ] Lỗi hiển thị đúng dưới từng input, biến mất khi field đó được sửa lại.
 - [ ] `npx tsc --noEmit` không lỗi.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần sửa file apps/frontend/src/pages/products/ProductCreate.tsx trong dự án React + TypeScript.
-
-Nội dung hiện tại (đã bind state ở task trước, dán bản thật vào đây):
-[DÁN NỘI DUNG THẬT ProductCreate.tsx VÀO ĐÂY]
-
-File hiện có type ProductFormState = { skuCode, name, category, unit, isHeavy } và state "form" + hàm "updateField".
-
-Yêu cầu:
-1. Thêm type FormErrors = Partial<Record<keyof ProductFormState, string>> và state errors bằng useState<FormErrors>({}).
-2. Viết hàm validate(): FormErrors kiểm tra:
-   - form.skuCode.trim() rỗng → lỗi "Vui lòng nhập mã SKU"
-   - form.name.trim() rỗng → lỗi "Vui lòng nhập tên sản phẩm"
-   - form.unit.trim() rỗng → lỗi "Vui lòng nhập đơn vị tính"
-   Không validate category (luôn hợp lệ vì chỉ có 2 option trong select).
-3. Sửa hàm updateField hiện có để xoá lỗi của field đó khỏi state errors mỗi khi field được cập nhật (dùng object rest/destructure để loại bỏ key tương ứng).
-4. Hiển thị lỗi ngay dưới input tương ứng (chỉ hiển thị khi errors[field] có giá trị), dùng thẻ <p className="form-error">{errors.field}</p>.
-5. Thêm class CSS .form-error vào App.css (màu đỏ, font-size nhỏ khoảng 13px), không sửa class khác.
-6. KHÔNG gọi API, chỉ chuẩn bị hàm validate() để dùng ở bước submit sau này (không cần gắn vào nút submit thật ở bước này, có thể để tạm 1 console.log(validate()) trong onClick nút submit để test).
-
-Trả về toàn bộ nội dung file ProductCreate.tsx sau khi sửa, và đoạn CSS .form-error thêm vào App.css.
-```
+Xem file: `prompts/Stage-3/29.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

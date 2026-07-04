@@ -67,29 +67,7 @@ const { items, meta, loading, error, refetch } = useProducts({
 - [ ] Đổi sort trong khi đang ở trang > 1 → tự quay về trang 1.
 - [ ] `npx tsc --noEmit` không lỗi.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần sửa file apps/frontend/src/pages/products/ProductList.tsx trong dự án React + TypeScript.
-
-Hiện tại file có:
-- type ProductSort = 'name' | 'sku' | 'category'; (import từ ../../types)
-- state "page" và useEffect reset page khi debouncedKeyword đổi (từ task trước)
-- lời gọi: useProducts({ page, limit: 20, keyword: debouncedKeyword || undefined })
-
-Yêu cầu:
-1. Thêm state "sort" kiểu ProductSort, mặc định 'name'.
-2. Thêm "sort" vào params của useProducts.
-3. Sửa useEffect reset page hiện có để theo dõi thêm "sort" (mảng dependency gồm cả debouncedKeyword và sort) — khi 1 trong 2 đổi thì setPage(1).
-4. Thêm 1 thẻ <select> gần ô tìm kiếm, với 3 option: 
-   - value="name" label "Tên sản phẩm"
-   - value="sku" label "Mã SKU"  
-   - value="category" label "Danh mục"
-   onChange gọi setSort(e.target.value as ProductSort).
-
-Ràng buộc:
-- Không thêm sort giảm dần hay field sort khác ngoài 3 giá trị trên.
-- Không sửa ProductTable.tsx.
-
-Trả về toàn bộ nội dung file sau khi sửa.
-```
+Xem file: `prompts/Stage-2/19.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

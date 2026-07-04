@@ -1,0 +1,14 @@
+Tôi cần sửa file apps/frontend/src/pages/products/ProductCreate.tsx trong dự án React + TypeScript.
+
+Nội dung hiện tại (form tĩnh chưa bind state, dán bản thật vào đây):
+[DÁN NỘI DUNG THẬT ProductCreate.tsx VÀO ĐÂY]
+
+Yêu cầu:
+1. Thêm type cục bộ ProductFormState = { skuCode: string; name: string; category: 'MILK' | 'CRACKER'; unit: string; isHeavy: boolean; }.
+2. Tạo 1 state duy nhất bằng useState<ProductFormState> khởi tạo giá trị rỗng (skuCode: '', name: '', category: 'MILK', unit: '', isHeavy: false) — KHÔNG tách thành 5 useState riêng lẻ.
+3. Viết 1 hàm generic updateField<K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) để cập nhật state theo field.
+4. Gắn value/checked + onChange cho đúng 5 input hiện có trong form, gọi updateField tương ứng. Input text/select dùng "value", checkbox dùng "checked".
+5. KHÔNG đổi cấu trúc JSX/layout đã có, chỉ thêm props value/checked/onChange vào các input.
+6. KHÔNG validate, KHÔNG gọi API ở bước này.
+
+Trả về toàn bộ nội dung file sau khi sửa.

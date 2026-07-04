@@ -72,35 +72,7 @@ Component thuần dùng chung (đặt trong `components/`, ngang hàng `Toast.ts
 - [ ] Test tạm: render `<ConfirmDialog open={true} title="Test" message="Test message" onConfirm={() => alert('confirmed')} onCancel={() => alert('cancelled')} />` trong 1 trang bất kỳ → thấy overlay + hộp thoại đúng như mong đợi, bấm nền ngoài → cancelled, bấm nút "Xác nhận" → confirmed, bấm bên trong hộp thoại không tự đóng.
 - [ ] Xoá đoạn test tạm trước khi coi task hoàn thành (không để lại code test trong file khác).
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần tạo file mới: apps/frontend/src/components/ConfirmDialog.tsx trong dự án React + TypeScript.
-
-Đây là component dùng chung, PHẢI hoàn toàn controlled bởi props (không tự quản lý state mở/đóng bên trong).
-
-Yêu cầu:
-1. Props: open (boolean), title (string), message (string), confirmLabel (string, mặc định 'Xác nhận'), cancelLabel (string, mặc định 'Huỷ'), onConfirm (function), onCancel (function), loading (boolean, mặc định false).
-2. Nếu open === false, component return null (không render gì).
-3. Khi open === true, render:
-   - 1 div overlay class "dialog-overlay", onClick gọi onCancel
-   - bên trong là 1 div class "dialog-box", onClick gọi e.stopPropagation() để bấm vào bên trong hộp thoại KHÔNG đóng theo overlay
-   - trong dialog-box: <h3 className="dialog-title">{title}</h3>, <p className="dialog-message">{message}</p>, và 1 div class "dialog-actions" chứa 2 nút:
-     + nút class "btn-secondary": {cancelLabel}, onClick={onCancel}, disabled={loading}
-     + nút class "btn-danger": onClick={onConfirm}, disabled={loading}, text là "Đang xử lý..." nếu loading=true, ngược lại {confirmLabel}
-
-Thêm CSS vào apps/frontend/src/App.css (không sửa class nào đã có):
-- .dialog-overlay: position fixed, top/left/right/bottom 0, background rgba đen mờ (ví dụ rgba(0,0,0,0.5)), display flex, align-items và justify-content center, z-index cao (ví dụ 1000)
-- .dialog-box: background trắng, border-radius, padding, max-width khoảng 400px, box-shadow
-- .dialog-title: font-weight đậm, margin-bottom nhỏ
-- .dialog-message: màu chữ phụ (xám), margin-bottom
-- .dialog-actions: display flex, gap, justify-content: flex-end
-- .btn-danger: nền đỏ, chữ trắng, border-radius giống .btn-primary đã có nhưng khác màu
-
-Ràng buộc:
-- KHÔNG gọi API trong component này.
-- KHÔNG dùng window.confirm().
-- KHÔNG tự thêm state bên trong component.
-
-Trả về toàn bộ nội dung file ConfirmDialog.tsx và đoạn CSS thêm vào App.css.
-```
+Xem file: `prompts/Stage-5/37.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

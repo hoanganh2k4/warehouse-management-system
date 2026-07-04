@@ -45,29 +45,7 @@ Endpoint `POST /products` yêu cầu Bearer token — **không cần tự thêm 
 - [ ] Gọi lại với `skuCode` trùng vừa tạo → promise reject với lỗi có `status 409` (kiểm tra qua `err.response.status` nếu dùng axios thuần).
 - [ ] Không sửa file nào khác ngoài `types.ts` và `product.service.ts`.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần MỞ RỘNG 2 file đã có trong dự án React + TypeScript + axios (không tạo file mới):
-
-1. apps/frontend/src/types.ts (dán nội dung thật vào đây):
-[DÁN NỘI DUNG THẬT types.ts VÀO ĐÂY]
-
-2. apps/frontend/src/services/product.service.ts (dán nội dung thật vào đây):
-[DÁN NỘI DUNG THẬT product.service.ts VÀO ĐÂY]
-
-Backend có endpoint POST /products yêu cầu Bearer token (đã được apiClient tự động gắn sẵn qua interceptor, không cần code thêm ở đây), nhận body:
-{ skuCode: string; name: string; category: 'MILK' | 'CRACKER'; unit: string; isHeavy?: boolean }
-Trả về Product vừa tạo nếu thành công (201). Nếu skuCode trùng, trả lỗi 409.
-
-Yêu cầu:
-1. Trong types.ts, thêm type CreateProductPayload theo đúng cấu trúc body trên (dùng lại type ProductCategory đã có). Không xoá gì đang có.
-2. Trong product.service.ts, thêm 1 hàm mới vào object productService đã có: createProduct(payload: CreateProductPayload): Promise<Product>, gọi apiClient.post('/products', payload) và trả kết quả. KHÔNG tự try/catch lỗi 409, để lỗi tự throw ra ngoài.
-
-Ràng buộc:
-- Không tạo file mới.
-- Không sửa các hàm đã có (getProducts, getProductById).
-- Không tự thêm header Authorization thủ công.
-
-Trả về toàn bộ nội dung của cả 2 file sau khi sửa.
-```
+Xem file: `prompts/Stage-3/30.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

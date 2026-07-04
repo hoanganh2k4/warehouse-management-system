@@ -41,21 +41,7 @@ Sau Task 16, `totalCount` được truyền là `meta?.total ?? 0` — đây là
 - [ ] Đã test cả 2 case và ghi lại quan sát thực tế (đúng như phân tích hoặc khác — báo cáo trung thực).
 - [ ] Không có commit code nào cho task này, chỉ có ghi chú/báo cáo.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi muốn bạn giúp tôi PHÂN TÍCH (không sửa code) hành vi empty-state của component sau, không cần viết lại gì:
-
-[DÁN NỘI DUNG ProductTable.tsx VÀO ĐÂY]
-
-Component này được gọi từ ProductList.tsx như sau:
-<ProductTable products={items} totalCount={meta?.total ?? 0} loading={loading} error={error} query={inputValue} />
-
-trong đó "meta" lấy từ hook useProducts, meta.total là tổng số bản ghi KHỚP với điều kiện keyword tìm kiếm hiện tại (trả về từ backend), không phải tổng số sản phẩm toàn hệ thống không điều kiện.
-
-Câu hỏi:
-1. Khi người dùng tìm kiếm một từ khoá không có kết quả nào, component này sẽ hiển thị nhánh "No products yet" hay nhánh "No matches for {query}"? Giải thích tại sao dựa trên thứ tự if/else trong code.
-2. Nhánh "No matches for {query}" (dựa trên products.length === 0) có còn khả năng được kích hoạt trong thực tế với cách truyền props hiện tại không? Trong trường hợp nào?
-
-Không đề xuất sửa code — tôi chỉ cần phân tích để quyết định có cần một task riêng để fix hay không.
-```
+Xem file: `prompts/Stage-2/22.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

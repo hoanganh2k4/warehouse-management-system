@@ -61,27 +61,7 @@ const { items, meta, loading, error, refetch } = useProducts({
 - [ ] Xoá hết ô tìm kiếm → danh sách quay lại đầy đủ.
 - [ ] `npx tsc --noEmit` không lỗi.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần sửa file apps/frontend/src/pages/products/ProductList.tsx trong dự án React + TypeScript.
-
-Hiện tại file có state "query" và logic lọc sản phẩm client-side bằng useMemo (dán đoạn thật vào đây):
-[DÁN ĐOẠN state query + useMemo filteredProducts CŨ VÀO ĐÂY]
-
-Và đang gọi: const { items, meta, loading, error, refetch } = useProducts({ page: 1, limit: 20 });
-
-Yêu cầu:
-1. Xoá logic lọc client-side (useMemo filteredProducts).
-2. Tạo 2 state: "inputValue" (string, cập nhật ngay theo mỗi lần gõ, bind vào ô input hiện có) và "debouncedKeyword" (string, cập nhật sau 350ms không gõ thêm, dùng useEffect + setTimeout, không dùng thư viện ngoài).
-3. Sửa lời gọi useProducts thành: useProducts({ page: 1, limit: 20, keyword: debouncedKeyword || undefined }).
-4. Đổi prop truyền cho <ProductTable /> — products nhận thẳng "items" (không qua filter nữa), query nhận "inputValue" (để hiển thị đúng trong thông báo "No matches for...").
-5. Ô input tìm kiếm hiện có (đang bind vào state cũ) đổi sang bind vào "inputValue".
-
-Ràng buộc:
-- Không dùng thư viện debounce ngoài, tự viết bằng setTimeout/useEffect.
-- Không sửa ProductTable.tsx.
-- Không thêm lọc theo category phía client.
-
-Trả về toàn bộ nội dung file sau khi sửa.
-```
+Xem file: `prompts/Stage-2/17.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

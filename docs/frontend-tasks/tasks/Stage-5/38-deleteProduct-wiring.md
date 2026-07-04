@@ -126,43 +126,9 @@ Không cần thêm type mới vào `types.ts` cho response này (kiểu inline `
 - [ ] Vào lại API `GET /products/:id` của sản phẩm vừa xoá → nhận lỗi 404 (đã bị soft-delete, `findOne` lọc `deletedAt: null`).
 - [ ] `npx tsc --noEmit` không lỗi.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-**Trước khi chạy prompt, xác nhận với anh Đăng: làm theo Phương án A (thêm cột Actions vào ProductTable.tsx) hay Phương án B (chỉ xoá từ Detail)?** Prompt dưới đây viết cho Phương án A — nếu chọn B, bỏ phần 2 và 3 liên quan `ProductTable.tsx`/`ProductList.tsx`, chỉ giữ phần 1 và phần `ProductDetail.tsx`.
+Xem file: `prompts/Stage-5/38.txt`
 
-```
-Tôi cần làm nhiều việc trong dự án React + TypeScript + axios + react-router-dom (Phương án A — có sửa ProductTable.tsx):
-
-1. MỞ RỘNG apps/frontend/src/services/product.service.ts (dán bản thật vào đây):
-[DÁN NỘI DUNG THẬT product.service.ts VÀO ĐÂY]
-Thêm hàm deleteProduct(id: string): Promise<{ id: string; deletedAt: string }>, gọi apiClient.delete(`/products/${id}`). Không tạo file mới.
-
-2. SỬA apps/frontend/src/components/ProductTable.tsx (dán bản thật vào đây):
-[DÁN NỘI DUNG THẬT ProductTable.tsx VÀO ĐÂY]
-- Thêm prop onDeleteRequest: (product: Product) => void vào ProductTableProps.
-- Thêm cột "Actions" vào thead (cả bản skeleton và bản thật) và tbody: mỗi dòng có <Link to={`/products/${product.id}`} className="btn-secondary btn-sm">Xem</Link> và <button className="btn-danger btn-sm" onClick={() => onDeleteRequest(product)}>Xoá</button>.
-- Import Link từ react-router-dom.
-- KHÔNG đổi logic 3 nhánh loading/empty/error đã có.
-
-3. SỬA apps/frontend/src/pages/products/ProductList.tsx (dán bản thật vào đây):
-[DÁN NỘI DUNG THẬT ProductList.tsx VÀO ĐÂY]
-Đã có sẵn components/ConfirmDialog.tsx (props: open, title, message, confirmLabel, cancelLabel, onConfirm, onCancel, loading) và hook useProducts trả về có "refetch".
-- Thêm state productToDelete (Product | null, mặc định null) và deleting (boolean, mặc định false).
-- Truyền onDeleteRequest={setProductToDelete} vào <ProductTable />.
-- Render <ConfirmDialog /> với open={productToDelete !== null}, title="Xoá sản phẩm", message hiển thị tên sản phẩm sắp xoá, loading={deleting}, onCancel={() => setProductToDelete(null)}, onConfirm={handleConfirmDelete}.
-- Viết hàm async handleConfirmDelete: nếu !productToDelete return; set deleting=true; gọi productService.deleteProduct(productToDelete.id); nếu thành công: setProductToDelete(null) và gọi refetch(); nếu lỗi: console.error(err); finally set deleting=false.
-
-4. SỬA apps/frontend/src/pages/products/ProductDetail.tsx (dán bản thật vào đây, file này đã có nút "Sửa" từ task trước):
-[DÁN NỘI DUNG THẬT ProductDetail.tsx VÀO ĐÂY]
-- Thêm state showConfirm (boolean) và deleting (boolean).
-- Thêm nút "Xoá" cạnh nút "Sửa" đã có, onClick={() => setShowConfirm(true)}.
-- Import useNavigate (nếu chưa có) và ConfirmDialog.
-- Render ConfirmDialog tương tự trên, nhưng khi xoá thành công thì navigate('/') thay vì refetch (vì sản phẩm đã bị xoá, trang detail không còn gì để hiển thị).
-
-Ràng buộc chung:
-- Không xoá thật (hard delete), chỉ gọi đúng endpoint DELETE /products/:id đã có sẵn (backend tự soft-delete).
-- Không quên disable nút trong lúc deleting=true.
-- Không đổi logic loading/empty/error trong ProductTable.tsx.
-
-Trả về toàn bộ nội dung của cả 4 file sau khi sửa.
-```
+⚠️ File này có lưu ý chọn Phương án A/B ở đầu — đọc kỹ trước khi copy phần prompt bên dưới.
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

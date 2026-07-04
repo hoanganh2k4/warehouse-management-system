@@ -66,20 +66,7 @@ Mở tab Network, xác nhận:
 - [ ] Đã tick đủ checklist Console ở Mục 3 và Network ở Mục 4.
 - [ ] Ghi lại danh sách bug đã phát hiện + đã fix (nếu có) trong PR description, chuẩn bị dữ liệu cho Task 41.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi vừa chạy lệnh sau trong thư mục apps/frontend và gặp lỗi/warning dưới đây:
-
-[DÁN OUTPUT THẬT CỦA "npm run lint" HOẶC "npm run build" VÀO ĐÂY]
-
-Đây là nội dung file đang bị báo lỗi (dán đúng file được chỉ ra trong thông báo lỗi):
-[DÁN NỘI DUNG FILE LIÊN QUAN VÀO ĐÂY]
-
-Yêu cầu:
-1. Giải thích ngắn gọn nguyên nhân gây lỗi/warning này.
-2. Sửa đúng nguyên nhân gốc — KHÔNG dùng eslint-disable, @ts-ignore, hay ép kiểu "as any" để né lỗi, trừ khi tôi xác nhận đây là false-positive cần disable có lý do rõ ràng (nếu vậy, giải thích tại sao trước khi đề xuất disable).
-3. Chỉ sửa phần code liên quan trực tiếp đến lỗi này, không refactor thêm gì khác trong file.
-
-Trả về đoạn code đã sửa (không cần trả toàn bộ file nếu chỉ sửa 1 đoạn nhỏ, nhưng phải nêu rõ vị trí/dòng để tôi dễ áp dụng).
-```
+Xem file: `prompts/Stage-5/40.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)

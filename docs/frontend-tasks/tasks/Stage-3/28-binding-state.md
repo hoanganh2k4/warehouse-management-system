@@ -71,21 +71,7 @@ Chuyển form từ uncontrolled (Task 27) sang controlled với 1 state object d
 - [ ] `npx tsc --noEmit` không lỗi.
 - [ ] Console log tạm `form` (xoá trước khi commit) để xác nhận state đúng shape khi gõ đủ 5 field.
 
-## Prompt AI (copy nguyên văn)
+## 🤖 Prompt hoàn chỉnh cho Claude/Cursor
 
-```
-Tôi cần sửa file apps/frontend/src/pages/products/ProductCreate.tsx trong dự án React + TypeScript.
-
-Nội dung hiện tại (form tĩnh chưa bind state, dán bản thật vào đây):
-[DÁN NỘI DUNG THẬT ProductCreate.tsx VÀO ĐÂY]
-
-Yêu cầu:
-1. Thêm type cục bộ ProductFormState = { skuCode: string; name: string; category: 'MILK' | 'CRACKER'; unit: string; isHeavy: boolean; }.
-2. Tạo 1 state duy nhất bằng useState<ProductFormState> khởi tạo giá trị rỗng (skuCode: '', name: '', category: 'MILK', unit: '', isHeavy: false) — KHÔNG tách thành 5 useState riêng lẻ.
-3. Viết 1 hàm generic updateField<K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) để cập nhật state theo field.
-4. Gắn value/checked + onChange cho đúng 5 input hiện có trong form, gọi updateField tương ứng. Input text/select dùng "value", checkbox dùng "checked".
-5. KHÔNG đổi cấu trúc JSX/layout đã có, chỉ thêm props value/checked/onChange vào các input.
-6. KHÔNG validate, KHÔNG gọi API ở bước này.
-
-Trả về toàn bộ nội dung file sau khi sửa.
-```
+Xem file: `prompts/Stage-3/28.txt`
+(Copy toàn bộ nội dung file đó, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật từ dự án, rồi gửi cho AI.)
