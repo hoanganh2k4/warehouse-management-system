@@ -58,7 +58,7 @@ jobs:
         run: npm ci
 
       - name: Generate Prisma Client
-        run: npm run --workspace=backend -- prisma generate
+        run: npx --workspace=backend prisma generate
 
       - name: Lint
         run: npm run lint --workspace=backend
