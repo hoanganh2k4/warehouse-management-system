@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import './App.css';
+import Layout from './components/Layout';
 import { ProductTable } from './components/ProductTable';
-import { Sidebar } from './components/Sidebar';
 import { StatCard } from './components/StatCard';
-import { Topbar } from './components/Topbar';
 import { BoxIcon, LayersIcon, ScaleIcon, TagIcon } from './components/icons';
 import type { Product } from './types';
 
@@ -11,7 +11,9 @@ function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [query, setQuery] = useState('');
+  // TẠM THỜI: Topbar (chứa ô search) giờ do Layout.tsx render với query rỗng cố định,
+  // nên state này chưa có ai cập nhật được nữa. Task 05 sẽ nối lại ô search thật.
+  const [query] = useState('');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -61,68 +63,70 @@ function App() {
   }, [products]);
 
   return (
-    <div className="app-shell">
-      <Sidebar />
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Navigate to="/products" replace />} />
+        <Route
+          path="products"
+          element={
+            <main className="app-content">
+              <div className="page-header">
+                <div>
+                  <p className="eyebrow">Catalog</p>
+                  <h1>Products</h1>
+                  <p className="page-desc">Every SKU seeded into the warehouse system, in one place.</p>
+                </div>
+              </div>
 
-      <div className="app-main">
-        <Topbar query={query} onQueryChange={setQuery} />
+              <div className="stat-row">
+                <StatCard
+                  label="Total SKUs"
+                  value={loading ? '—' : String(stats.total)}
+                  hint="Active products"
+                  icon={<BoxIcon />}
+                />
+                <StatCard
+                  label="Categories"
+                  value={loading ? '—' : String(stats.categories)}
+                  hint="Distinct groupings"
+                  icon={<TagIcon />}
+                />
+                <StatCard
+                  label="Units of measure"
+                  value={loading ? '—' : String(stats.units)}
+                  hint="Across the catalog"
+                  icon={<LayersIcon />}
+                />
+                <StatCard
+                  label="Heavy items"
+                  value={loading ? '—' : String(stats.heavy)}
+                  hint="Require special handling"
+                  icon={<ScaleIcon />}
+                />
+              </div>
 
-        <main className="app-content">
-          <div className="page-header">
-            <div>
-              <p className="eyebrow">Catalog</p>
-              <h1>Products</h1>
-              <p className="page-desc">Every SKU seeded into the warehouse system, in one place.</p>
-            </div>
-          </div>
-
-          <div className="stat-row">
-            <StatCard
-              label="Total SKUs"
-              value={loading ? '—' : String(stats.total)}
-              hint="Active products"
-              icon={<BoxIcon />}
-            />
-            <StatCard
-              label="Categories"
-              value={loading ? '—' : String(stats.categories)}
-              hint="Distinct groupings"
-              icon={<TagIcon />}
-            />
-            <StatCard
-              label="Units of measure"
-              value={loading ? '—' : String(stats.units)}
-              hint="Across the catalog"
-              icon={<LayersIcon />}
-            />
-            <StatCard
-              label="Heavy items"
-              value={loading ? '—' : String(stats.heavy)}
-              hint="Require special handling"
-              icon={<ScaleIcon />}
-            />
-          </div>
-
-          <section className="panel">
-            <div className="panel-header">
-              <h2>All products</h2>
-              {!loading && !error && (
-                <span className="result-count">
-                  {filteredProducts.length} of {products.length}
-                </span>
-              )}
-            </div>
-            <ProductTable
-              products={filteredProducts}
-              totalCount={products.length}
-              loading={loading}
-              error={error}
-              query={query}
-            />
-          </section>
-        </main>
-      </div>
-    </div>
+              <section className="panel">
+                <div className="panel-header">
+                  <h2>All products</h2>
+                  {!loading && !error && (
+                    <span className="result-count">
+                      {filteredProducts.length} of {products.length}
+                    </span>
+                  )}
+                </div>
+                <ProductTable
+                  products={filteredProducts}
+                  totalCount={products.length}
+                  loading={loading}
+                  error={error}
+                  query={query}
+                />
+              </section>
+            </main>
+          }
+        />
+      </Route>
+    </Routes>
   );
 }
 
