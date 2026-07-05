@@ -1,9 +1,11 @@
-import { createHash } from 'node:crypto';
+import * as bcrypt from 'bcryptjs';
 
-export function hashPassword(plain: string): string {
-  return createHash('sha256').update(plain).digest('hex');
+const SALT_ROUNDS = 10;
+
+export async function hashPassword(plain: string): Promise<string> {
+  return bcrypt.hash(plain, SALT_ROUNDS);
 }
 
-export function verifyPassword(plain: string, hash: string): boolean {
-  return hashPassword(plain) === hash;
+export async function verifyPassword(plain: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(plain, hash);
 }

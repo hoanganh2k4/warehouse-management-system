@@ -17,15 +17,11 @@ export class AuthService {
       include: { role: true },
     });
 
-    if (!user || !verifyPassword(dto.password, user.passwordHash)) {
+    if (!user || !(await verifyPassword(dto.password, user.passwordHash))) {
       throw new UnauthorizedException('Invalid username or password');
     }
 
-    const payload = {
-      sub: user.id,
-      username: user.username,
-      role: user.role.name,
-    };
+    const payload = { sub: user.id, username: user.username, role: user.role.name };
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 

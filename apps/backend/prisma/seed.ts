@@ -1,16 +1,22 @@
 import { PrismaClient, ProductCategory } from '../generated/prisma/client';
-import { createHash } from 'node:crypto';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { hashPassword } from '../src/common/utils/password.util';
 
 const connectionString = process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/smart_wms';
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter } as any);
 
-// NOTE: tạm dùng sha256 để không phụ thuộc thêm package bcrypt trong seed.
-// Khi viết module Auth thật, hãy thay bằng bcrypt.hash() và migrate lại passwordHash của user seed.
-function hashPassword(plain: string): string {
-  return createHash('sha256').update(plain).digest('hex');
+// Mật khẩu tài khoản seed đọc từ biến môi trường để không hardcode secret trong code.
+// Dev/local không set thì fallback về giá trị mặc định (chỉ dùng cho môi trường local, KHÔNG dùng cho production).
+// Ở production, PHẢI set SEED_ADMIN_PASSWORD / SEED_STAFF_PASSWORD trong biến môi trường trước khi chạy seed.
+if (process.env.NODE_ENV === 'production' && (!process.env.SEED_ADMIN_PASSWORD || !process.env.SEED_STAFF_PASSWORD)) {
+  throw new Error(
+    'SEED_ADMIN_PASSWORD và SEED_STAFF_PASSWORD phải được set khi seed ở môi trường production.',
+  );
 }
+
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'Admin@123';
+const STAFF_PASSWORD = process.env.SEED_STAFF_PASSWORD ?? 'Staff@123';
 
 const ZONES = ['A', 'B', 'C', 'D', 'E'];
 const RACKS_PER_ZONE = 20;
@@ -36,26 +42,28 @@ async function main() {
   });
 
   // ===================== Users =====================
+  const adminPasswordHash = await hashPassword(ADMIN_PASSWORD);
   await prisma.user.upsert({
     where: { username: 'admin' },
-    update: {},
+    update: { passwordHash: adminPasswordHash },
     create: {
       username: 'admin',
       email: 'admin@smartwms.local',
       fullName: 'Quản trị viên',
-      passwordHash: hashPassword('Admin@123'),
+      passwordHash: adminPasswordHash,
       roleId: managerRole.id,
     },
   });
 
+  const staffPasswordHash = await hashPassword(STAFF_PASSWORD);
   await prisma.user.upsert({
     where: { username: 'staff01' },
-    update: {},
+    update: { passwordHash: staffPasswordHash },
     create: {
       username: 'staff01',
       email: 'staff01@smartwms.local',
       fullName: 'Nhân viên kho 01',
-      passwordHash: hashPassword('Staff@123'),
+      passwordHash: staffPasswordHash,
       roleId: staffRole.id,
     },
   });
