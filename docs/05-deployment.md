@@ -22,13 +22,14 @@ GitHub repo (monorepo)
 
 1. Vào https://neon.tech → **Sign up** (dùng GitHub cho nhanh).
 2. Tạo project mới, đặt tên ví dụ `smart-wms`.
-3. Vào tab **Connection Details** (hoặc **Dashboard**), chọn:
+3. Ở bước tạo project, chọn Region là **AWS US East 1 (N. Virginia)** — `render.yaml` đã đặt sẵn Render chạy cùng vùng `virginia` để giảm độ trễ giữa backend và database. Nếu bạn đổi region Neon sang vùng khác, nhớ sửa lại `region:` trong `render.yaml` cho khớp.
+4. Vào tab **Connection Details** (hoặc **Dashboard**), chọn:
    - Connection type: **Direct connection** (KHÔNG chọn "Pooled connection" — app này chạy như 1 server thường trực trên Render, không phải serverless function, nên không cần PgBouncer).
    - Copy chuỗi kết nối, dạng:
      ```
      postgresql://<user>:<password>@<host>.neon.tech/<db>?sslmode=require
      ```
-4. Giữ lại chuỗi này — sẽ dán vào Render ở Bước 2.
+5. Giữ lại chuỗi này — sẽ dán vào Render ở Bước 2.
 
 📌 Giới hạn free: 0.5 GB lưu trữ/project, không giới hạn thời gian (không tự xoá như 1 số nền tảng khác), đủ dùng cho dự án học tập/demo.
 
@@ -120,6 +121,46 @@ Từ giờ, mọi thay đổi phải qua Pull Request + CI xanh mới được m
 
 ---
 
+## Bổ sung: Chạy seed data lên database Neon (production)
+
+Nếu bạn có sẵn script `npm run seed` (trong `apps/backend`) và muốn đổ dữ liệu mẫu vào đúng database Neon đang chạy production (thay vì database Docker ở local):
+
+1. Mở file `apps/backend/.env` ở máy local.
+2. **Tạm thời** đổi giá trị `DATABASE_URL` thành đúng chuỗi kết nối Neon (copy từ Render → tab **Environment** → biến `DATABASE_URL`, bấm icon con mắt để hiện giá trị thật).
+3. Chạy:
+   ```bash
+   cd apps/backend
+   npm run seed
+   ```
+4. Kiểm tra lại bằng cách mở Neon Console → **Tables**, hoặc gọi thử API `GET /api/products` trên domain Render.
+5. ⚠️ **Bước quan trọng nhất — đừng quên:** đổi `DATABASE_URL` trong `.env` local **về lại** database Postgres chạy Docker ở local (giá trị ban đầu trong `.env.example`). Nếu quên bước này, những lần chạy `npm run start:dev` / migrate / test sau đó ở máy bạn sẽ vô tình đọc/ghi thẳng vào database production thật — rất rủi ro.
+
+Mẹo: có thể lưu 2 dòng `DATABASE_URL` riêng (1 dòng comment sẵn cho Neon, 1 dòng đang active cho local) trong `.env` để đổi qua lại nhanh, khỏi phải gõ lại chuỗi kết nối mỗi lần.
+
+---
+
+## Bổ sung: Phát triển frontend dùng thẳng backend đã deploy (khỏi chạy Docker/backend local)
+
+Mặc định, chạy `npm run dev` ở `apps/frontend` sẽ proxy `/api/*` về `http://localhost:3000` (backend chạy local). Nếu muốn khỏi cần bật Docker + backend ở máy, gọi thẳng vào backend đã deploy trên Render:
+
+1. Trong thư mục `apps/frontend`, copy file `.env.example` thành `.env.local`:
+   ```bash
+   cd apps/frontend
+   cp .env.example .env.local
+   ```
+2. Mở `.env.local`, giữ nguyên (hoặc sửa lại đúng domain Render thật của bạn):
+   ```
+   VITE_API_PROXY_TARGET=https://smart-wms-backend-rr9e.onrender.com
+   ```
+3. Chạy `npm run dev` như bình thường — giờ mọi request `/api/*` từ frontend sẽ được proxy sang backend production.
+
+File `.env.local` không bị commit lên git (đã có trong `.gitignore`), nên mỗi thành viên trong nhóm tự quyết định máy mình muốn gọi backend local hay backend đã deploy, không ảnh hưởng người khác.
+
+⚠️ Lưu ý: vì đang gọi thẳng vào database Neon thật, mọi hành động tạo/sửa/xoá lúc dev (test tính năng CRUD chẳng hạn) sẽ ảnh hưởng thật tới dữ liệu production — cẩn thận khi test các thao tác xoá.
+
+---
+
 ## Bí mật (Secrets) cần biết
+
 
 Dự án này **không cần khai báo GitHub Secrets** cho việc deploy, vì Render và Vercel tự kết nối trực tiếp với GitHub (không đi qua GitHub Actions để deploy). GitHub Actions chỉ dùng để **kiểm tra chất lượng code (CI)**, không cần token của Render/Vercel.
