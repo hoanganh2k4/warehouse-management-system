@@ -16,7 +16,7 @@ services:
     plan: free
     region: virginia # đặt cùng vùng với Neon Postgres (US East 1 / N. Virginia) để giảm độ trễ
     rootDir: apps/backend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npx prisma migrate deploy && npm run start:prod
     healthCheckPath: /api/health
     autoDeployTrigger: commit
