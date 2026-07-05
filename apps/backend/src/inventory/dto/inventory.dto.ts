@@ -1,12 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-  IsDateString,
-  IsInt,
-  IsOptional,
-  IsUUID,
-  Min,
-} from 'class-validator';
+import { IsDateString, IsInt, IsOptional, IsUUID, Min } from 'class-validator';
 
 export class InboundDto {
   @ApiProperty()

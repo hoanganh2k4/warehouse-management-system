@@ -20,7 +20,10 @@ import {
   ApiSuccessExample,
   ApiValidationError,
 } from '../common/decorators/api-responses.decorator';
-import { ERROR_EXAMPLES, SUCCESS_EXAMPLES } from '../common/swagger/swagger-examples';
+import {
+  ERROR_EXAMPLES,
+  SUCCESS_EXAMPLES,
+} from '../common/swagger/swagger-examples';
 
 @ApiTags('Products')
 @Controller('products')
@@ -29,7 +32,10 @@ export class ProductsController {
 
   @Public()
   @Get()
-  @ApiSuccessExample(SUCCESS_EXAMPLES.productList, '200 OK — Danh sách sản phẩm (phân trang)')
+  @ApiSuccessExample(
+    SUCCESS_EXAMPLES.productList,
+    '200 OK — Danh sách sản phẩm (phân trang)',
+  )
   @ApiValidationError()
   findAll(@Query() query: PaginationDto) {
     return this.productsService.findAll(query);

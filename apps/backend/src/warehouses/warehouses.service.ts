@@ -45,7 +45,9 @@ export class WarehousesService {
     await this.findOne(id);
     const zones = await this.prisma.zone.count({ where: { warehouseId: id } });
     if (zones > 0) {
-      throw new ConflictException('Cannot delete warehouse with existing zones');
+      throw new ConflictException(
+        'Cannot delete warehouse with existing zones',
+      );
     }
     return this.prisma.warehouse.delete({ where: { id } });
   }

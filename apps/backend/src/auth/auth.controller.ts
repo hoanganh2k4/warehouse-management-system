@@ -3,7 +3,10 @@ import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Public } from '../common/decorators/public.decorator';
-import { CurrentUser, AuthUser } from '../common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  AuthUser,
+} from '../common/decorators/current-user.decorator';
 import {
   ApiSuccessExample,
   ApiUnauthorizedError,

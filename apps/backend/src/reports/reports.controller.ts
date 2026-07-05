@@ -16,7 +16,10 @@ export class ReportsController {
   constructor(private readonly service: ReportsService) {}
 
   @Get('inventory')
-  @ApiSuccessExample(SUCCESS_EXAMPLES.reportInventory, '200 OK — Báo cáo tồn kho')
+  @ApiSuccessExample(
+    SUCCESS_EXAMPLES.reportInventory,
+    '200 OK — Báo cáo tồn kho',
+  )
   @ApiValidationError()
   @ApiAuthReadErrors()
   inventory(@Query() query: ReportQueryDto) {
@@ -24,7 +27,10 @@ export class ReportsController {
   }
 
   @Get('inbound')
-  @ApiSuccessExample(SUCCESS_EXAMPLES.reportTransactions, '200 OK — Báo cáo nhập kho')
+  @ApiSuccessExample(
+    SUCCESS_EXAMPLES.reportTransactions,
+    '200 OK — Báo cáo nhập kho',
+  )
   @ApiValidationError()
   @ApiAuthReadErrors()
   inbound(@Query() query: ReportQueryDto) {
@@ -32,7 +38,10 @@ export class ReportsController {
   }
 
   @Get('outbound')
-  @ApiSuccessExample(SUCCESS_EXAMPLES.reportTransactions, '200 OK — Báo cáo xuất kho')
+  @ApiSuccessExample(
+    SUCCESS_EXAMPLES.reportTransactions,
+    '200 OK — Báo cáo xuất kho',
+  )
   @ApiValidationError()
   @ApiAuthReadErrors()
   outbound(@Query() query: ReportQueryDto) {

@@ -11,7 +11,8 @@ export class ApiErrorResponseDto {
       { type: 'string', example: 'Product not found' },
       {
         type: 'string',
-        example: 'skuCode must not be empty, category must be a valid enum value',
+        example:
+          'skuCode must not be empty, category must be a valid enum value',
       },
     ],
   })

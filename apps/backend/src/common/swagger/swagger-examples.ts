@@ -295,7 +295,11 @@ export const SUCCESS_EXAMPLES = {
   outbound: {
     success: true,
     data: {
-      product: { id: 'product-uuid', skuCode: 'VINA001', name: 'Vinamilk Có Đường 180ml' },
+      product: {
+        id: 'product-uuid',
+        skuCode: 'VINA001',
+        name: 'Vinamilk Có Đường 180ml',
+      },
       totalQuantity: 50,
       pickingList: [
         {

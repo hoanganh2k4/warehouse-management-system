@@ -33,7 +33,9 @@ export class ReportsService {
       orderBy: { skuCode: 'asc' },
     });
 
-    const total = await this.prisma.product.count({ where: { deletedAt: null } });
+    const total = await this.prisma.product.count({
+      where: { deletedAt: null },
+    });
 
     const items = products.map((product) => {
       let totalQty = 0;
@@ -76,7 +78,10 @@ export class ReportsService {
   async transactionReport(type: TransactionType, query: ReportQueryDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 50;
-    const where: { type: TransactionType; createdAt?: { gte?: Date; lte?: Date } } = {
+    const where: {
+      type: TransactionType;
+      createdAt?: { gte?: Date; lte?: Date };
+    } = {
       type,
     };
 

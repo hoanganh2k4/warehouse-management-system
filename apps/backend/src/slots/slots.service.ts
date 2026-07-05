@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma.service';
 import { paginate, skipTake } from '../common/utils/pagination.util';
@@ -30,8 +34,16 @@ export class SlotsService {
     if (query.keyword) {
       where.OR = [
         { code: { contains: query.keyword, mode: 'insensitive' } },
-        { currentProduct: { name: { contains: query.keyword, mode: 'insensitive' } } },
-        { currentProduct: { skuCode: { contains: query.keyword, mode: 'insensitive' } } },
+        {
+          currentProduct: {
+            name: { contains: query.keyword, mode: 'insensitive' },
+          },
+        },
+        {
+          currentProduct: {
+            skuCode: { contains: query.keyword, mode: 'insensitive' },
+          },
+        },
       ];
     }
 
@@ -80,7 +92,8 @@ export class SlotsService {
         ...(dto.maxCapacity !== undefined
           ? {
               availableCapacity: maxCapacity - usedCapacity,
-              occupancyRate: maxCapacity > 0 ? (usedCapacity / maxCapacity) * 100 : 0,
+              occupancyRate:
+                maxCapacity > 0 ? (usedCapacity / maxCapacity) * 100 : 0,
             }
           : {}),
       },

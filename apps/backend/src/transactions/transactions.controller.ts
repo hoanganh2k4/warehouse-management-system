@@ -16,7 +16,10 @@ export class TransactionsController {
   constructor(private readonly service: TransactionsService) {}
 
   @Get()
-  @ApiSuccessExample(SUCCESS_EXAMPLES.transactionList, '200 OK — Lịch sử giao dịch')
+  @ApiSuccessExample(
+    SUCCESS_EXAMPLES.transactionList,
+    '200 OK — Lịch sử giao dịch',
+  )
   @ApiValidationError()
   @ApiAuthReadErrors()
   findAll(@Query() query: TransactionQueryDto) {

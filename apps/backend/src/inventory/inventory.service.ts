@@ -8,9 +8,14 @@ import { PrismaService } from '../prisma.service';
 import { SlotScoringService } from '../common/services/slot-scoring.service';
 import { SlotCapacityService } from '../common/services/slot-capacity.service';
 import { FefoService } from '../common/services/fefo.service';
+import type { PickLine } from '../common/services/fefo.service';
 import { paginate, skipTake } from '../common/utils/pagination.util';
 import { AuthUser } from '../common/decorators/current-user.decorator';
-import { InboundDto, InventoryQueryDto, OutboundDto } from './dto/inventory.dto';
+import {
+  InboundDto,
+  InventoryQueryDto,
+  OutboundDto,
+} from './dto/inventory.dto';
 
 @Injectable()
 export class InventoryService {
@@ -157,9 +162,12 @@ export class InventoryService {
     });
     if (!product) throw new NotFoundException('Product not found');
 
-    let pickingList;
+    let pickingList: PickLine[];
     try {
-      pickingList = await this.fefo.buildPickingList(dto.productId, dto.quantity);
+      pickingList = await this.fefo.buildPickingList(
+        dto.productId,
+        dto.quantity,
+      );
     } catch (e) {
       throw new BadRequestException(
         e instanceof Error ? e.message : 'Insufficient stock',
@@ -167,9 +175,8 @@ export class InventoryService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      const transactions: Awaited<
-        ReturnType<typeof tx.transaction.create>
-      >[] = [];
+      const transactions: Awaited<ReturnType<typeof tx.transaction.create>>[] =
+        [];
 
       for (const line of pickingList) {
         const inv = await tx.inventory.findUnique({
@@ -207,7 +214,11 @@ export class InventoryService {
       }
 
       return {
-        product: { id: product.id, skuCode: product.skuCode, name: product.name },
+        product: {
+          id: product.id,
+          skuCode: product.skuCode,
+          name: product.name,
+        },
         totalQuantity: dto.quantity,
         pickingList,
         transactions,

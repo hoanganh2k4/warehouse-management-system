@@ -39,7 +39,8 @@ export class RacksService {
   async remove(id: string) {
     await this.findOne(id);
     const levels = await this.prisma.level.count({ where: { rackId: id } });
-    if (levels > 0) throw new ConflictException('Cannot delete rack with levels');
+    if (levels > 0)
+      throw new ConflictException('Cannot delete rack with levels');
     return this.prisma.rack.delete({ where: { id } });
   }
 }

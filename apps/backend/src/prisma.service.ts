@@ -3,14 +3,18 @@ import { PrismaClient } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   constructor() {
     super({
       adapter: new PrismaPg({
         connectionString:
-          process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/smart_wms',
+          process.env.DATABASE_URL ||
+          'postgresql://postgres:postgres@localhost:5432/smart_wms',
       }),
-    } as any);
+    });
   }
 
   async onModuleInit() {

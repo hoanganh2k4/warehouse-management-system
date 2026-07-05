@@ -16,7 +16,10 @@ export class SearchController {
 
   @Public()
   @Get()
-  @ApiSuccessExample(SUCCESS_EXAMPLES.search, '200 OK — Tìm kiếm SKU → Batch → Slot')
+  @ApiSuccessExample(
+    SUCCESS_EXAMPLES.search,
+    '200 OK — Tìm kiếm SKU → Batch → Slot',
+  )
   @ApiValidationError()
   search(@Query() query: SearchQueryDto) {
     return this.service.search(query.keyword);

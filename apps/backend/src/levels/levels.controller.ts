@@ -17,7 +17,10 @@ import {
   ApiCreatedExample,
   ApiSuccessExample,
 } from '../common/decorators/api-responses.decorator';
-import { ERROR_EXAMPLES, SUCCESS_EXAMPLES } from '../common/swagger/swagger-examples';
+import {
+  ERROR_EXAMPLES,
+  SUCCESS_EXAMPLES,
+} from '../common/swagger/swagger-examples';
 
 @ApiBearerAuth()
 @ApiTags('Levels')
@@ -26,7 +29,10 @@ export class LevelsController {
   constructor(private readonly service: LevelsService) {}
 
   @Get()
-  @ApiSuccessExample({ success: true, data: [SUCCESS_EXAMPLES.level.data] }, '200 OK — Danh sách level')
+  @ApiSuccessExample(
+    { success: true, data: [SUCCESS_EXAMPLES.level.data] },
+    '200 OK — Danh sách level',
+  )
   @ApiAuthReadErrors()
   findAll(@Query('rackId') rackId?: string) {
     return this.service.findAll(rackId);

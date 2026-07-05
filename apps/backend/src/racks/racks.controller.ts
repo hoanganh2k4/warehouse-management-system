@@ -17,7 +17,10 @@ import {
   ApiCreatedExample,
   ApiSuccessExample,
 } from '../common/decorators/api-responses.decorator';
-import { ERROR_EXAMPLES, SUCCESS_EXAMPLES } from '../common/swagger/swagger-examples';
+import {
+  ERROR_EXAMPLES,
+  SUCCESS_EXAMPLES,
+} from '../common/swagger/swagger-examples';
 
 @ApiBearerAuth()
 @ApiTags('Racks')
@@ -26,7 +29,10 @@ export class RacksController {
   constructor(private readonly service: RacksService) {}
 
   @Get()
-  @ApiSuccessExample({ success: true, data: [SUCCESS_EXAMPLES.rack.data] }, '200 OK — Danh sách rack')
+  @ApiSuccessExample(
+    { success: true, data: [SUCCESS_EXAMPLES.rack.data] },
+    '200 OK — Danh sách rack',
+  )
   @ApiAuthReadErrors()
   findAll(@Query('zoneId') zoneId?: string) {
     return this.service.findAll(zoneId);

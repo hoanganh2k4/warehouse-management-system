@@ -19,7 +19,10 @@ import {
   ApiSuccessExample,
   ApiValidationError,
 } from '../common/decorators/api-responses.decorator';
-import { ERROR_EXAMPLES, SUCCESS_EXAMPLES } from '../common/swagger/swagger-examples';
+import {
+  ERROR_EXAMPLES,
+  SUCCESS_EXAMPLES,
+} from '../common/swagger/swagger-examples';
 
 @ApiTags('Slots')
 @Controller('slots')
@@ -28,7 +31,10 @@ export class SlotsController {
 
   @Public()
   @Get()
-  @ApiSuccessExample(SUCCESS_EXAMPLES.slotList, '200 OK — Danh sách slot (phân trang)')
+  @ApiSuccessExample(
+    SUCCESS_EXAMPLES.slotList,
+    '200 OK — Danh sách slot (phân trang)',
+  )
   @ApiValidationError()
   findAll(@Query() query: SlotQueryDto) {
     return this.service.findAll(query);

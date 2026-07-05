@@ -16,7 +16,10 @@ export class SlotCapacityService {
     });
 
     const slot = await db.slot.findUniqueOrThrow({ where: { id: slotId } });
-    const usedCapacity = inventories.reduce((sum, inv) => sum + inv.quantity, 0);
+    const usedCapacity = inventories.reduce(
+      (sum, inv) => sum + inv.quantity,
+      0,
+    );
     const occupancyRate =
       slot.maxCapacity > 0 ? (usedCapacity / slot.maxCapacity) * 100 : 0;
     const currentProductId =

@@ -39,7 +39,8 @@ export class LevelsService {
   async remove(id: string) {
     await this.findOne(id);
     const slots = await this.prisma.slot.count({ where: { levelId: id } });
-    if (slots > 0) throw new ConflictException('Cannot delete level with slots');
+    if (slots > 0)
+      throw new ConflictException('Cannot delete level with slots');
     return this.prisma.level.delete({ where: { id } });
   }
 }

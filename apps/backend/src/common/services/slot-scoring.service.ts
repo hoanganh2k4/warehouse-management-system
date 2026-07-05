@@ -25,23 +25,31 @@ export class SlotScoringService {
       },
     });
 
-    const valid = slots.filter((slot) =>
-      this.isValidSlot(slot, product, incomingExpiry),
-    );
+    const valid = slots.filter((slot) => this.isValidSlot(slot, product));
 
     if (valid.length === 0) return [];
 
     const maxDistance = Math.max(...valid.map((s) => s.distanceToGate), 1);
-    const maxFrequency = Math.max(...valid.map((s) => s.outboundFrequencyScore), 1);
+    const maxFrequency = Math.max(
+      ...valid.map((s) => s.outboundFrequencyScore),
+      1,
+    );
 
     const scored: ScoredSlot[] = valid.map((slot) => ({
       ...slot,
-      score: this.computeScore(slot, product, incomingExpiry, maxDistance, maxFrequency),
+      score: this.computeScore(
+        slot,
+        product,
+        incomingExpiry,
+        maxDistance,
+        maxFrequency,
+      ),
     }));
 
     scored.sort((a, b) => b.score - a.score);
 
-    const allocations: { slot: Slot; allocateQty: number; score: number }[] = [];
+    const allocations: { slot: Slot; allocateQty: number; score: number }[] =
+      [];
     let remaining = quantity;
 
     for (const slot of scored) {
@@ -61,7 +69,6 @@ export class SlotScoringService {
       inventories: { batch: { expiryDate: Date; productId: string } }[];
     },
     product: Product,
-    _incomingExpiry: Date,
   ): boolean {
     if (slot.availableCapacity <= 0) return false;
 
@@ -107,8 +114,11 @@ export class SlotScoringService {
   ): number {
     if (!slot.currentProductId || slot.inventories.length === 0) return 1;
 
-    const slotExpiries = slot.inventories.map((i) => i.batch.expiryDate.getTime());
-    const avgExpiry = slotExpiries.reduce((a, b) => a + b, 0) / slotExpiries.length;
+    const slotExpiries = slot.inventories.map((i) =>
+      i.batch.expiryDate.getTime(),
+    );
+    const avgExpiry =
+      slotExpiries.reduce((a, b) => a + b, 0) / slotExpiries.length;
     const daysDiff =
       Math.abs(incomingExpiry.getTime() - avgExpiry) / (1000 * 60 * 60 * 24);
 

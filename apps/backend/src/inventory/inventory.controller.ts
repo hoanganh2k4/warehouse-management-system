@@ -1,8 +1,15 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
-import { InboundDto, InventoryQueryDto, OutboundDto } from './dto/inventory.dto';
-import { CurrentUser, AuthUser } from '../common/decorators/current-user.decorator';
+import {
+  InboundDto,
+  InventoryQueryDto,
+  OutboundDto,
+} from './dto/inventory.dto';
+import {
+  CurrentUser,
+  AuthUser,
+} from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import {
   ApiAuthWriteErrors,
@@ -11,7 +18,10 @@ import {
   ApiSuccessExample,
   ApiValidationError,
 } from '../common/decorators/api-responses.decorator';
-import { ERROR_EXAMPLES, SUCCESS_EXAMPLES } from '../common/swagger/swagger-examples';
+import {
+  ERROR_EXAMPLES,
+  SUCCESS_EXAMPLES,
+} from '../common/swagger/swagger-examples';
 
 @ApiTags('Inventory')
 @Controller('inventory')
@@ -45,7 +55,10 @@ export class InventoryController {
 
   @ApiBearerAuth()
   @Post('inbound')
-  @ApiCreatedExample(SUCCESS_EXAMPLES.inbound, '201 Created — Nhập kho thành công')
+  @ApiCreatedExample(
+    SUCCESS_EXAMPLES.inbound,
+    '201 Created — Nhập kho thành công',
+  )
   @ApiAuthWriteErrors({
     notFound: ERROR_EXAMPLES.productNotFound,
     conflict: {
@@ -59,7 +72,10 @@ export class InventoryController {
 
   @ApiBearerAuth()
   @Post('outbound')
-  @ApiCreatedExample(SUCCESS_EXAMPLES.outbound, '201 Created — Xuất kho thành công (FEFO + Picking List)')
+  @ApiCreatedExample(
+    SUCCESS_EXAMPLES.outbound,
+    '201 Created — Xuất kho thành công (FEFO + Picking List)',
+  )
   @ApiAuthWriteErrors({
     notFound: ERROR_EXAMPLES.productNotFound,
     conflict: { insufficientStock: ERROR_EXAMPLES.insufficientStock },

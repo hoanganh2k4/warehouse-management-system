@@ -11,7 +11,9 @@ async function bootstrap() {
   // Cho phép frontend (Vercel) gọi API. FRONTEND_URL có thể liệt kê nhiều domain,
   // phân tách bởi dấu phẩy, ví dụ: "https://wms.vercel.app,https://wms-git-main.vercel.app"
   // Nếu không đặt FRONTEND_URL (ví dụ khi chạy local), mặc định cho phép mọi origin.
-  const allowedOrigins = process.env.FRONTEND_URL?.split(',').map((o) => o.trim());
+  const allowedOrigins = process.env.FRONTEND_URL?.split(',').map((o) =>
+    o.trim(),
+  );
   app.enableCors({
     origin: allowedOrigins && allowedOrigins.length > 0 ? allowedOrigins : true,
     credentials: true,

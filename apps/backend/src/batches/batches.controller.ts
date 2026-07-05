@@ -8,7 +8,10 @@ import {
   ApiCreatedExample,
   ApiSuccessExample,
 } from '../common/decorators/api-responses.decorator';
-import { ERROR_EXAMPLES, SUCCESS_EXAMPLES } from '../common/swagger/swagger-examples';
+import {
+  ERROR_EXAMPLES,
+  SUCCESS_EXAMPLES,
+} from '../common/swagger/swagger-examples';
 
 @ApiBearerAuth()
 @ApiTags('Batches')

@@ -14,7 +14,9 @@ import { ERROR_EXAMPLES } from '../swagger/swagger-examples';
 
 type ErrorExample = (typeof ERROR_EXAMPLES)[keyof typeof ERROR_EXAMPLES];
 
-function errorContent(examples: Record<string, { summary: string; value: ErrorExample }>) {
+function errorContent(
+  examples: Record<string, { summary: string; value: ErrorExample }>,
+) {
   return {
     'application/json': {
       schema: { $ref: getSchemaPath(ApiErrorResponseDto) },
@@ -24,11 +26,16 @@ function errorContent(examples: Record<string, { summary: string; value: ErrorEx
 }
 
 /** 400 — Lỗi validation */
-export function ApiValidationError(extraExamples: Record<string, ErrorExample> = {}) {
+export function ApiValidationError(
+  extraExamples: Record<string, ErrorExample> = {},
+) {
   const examples: Record<string, { summary: string; value: ErrorExample }> = {
     validation: { summary: 'Lỗi validation', value: ERROR_EXAMPLES.validation },
     ...Object.fromEntries(
-      Object.entries(extraExamples).map(([key, value]) => [key, { summary: key, value }]),
+      Object.entries(extraExamples).map(([key, value]) => [
+        key,
+        { summary: key, value },
+      ]),
     ),
   };
   return ApiBadRequestResponse({
@@ -42,7 +49,10 @@ export function ApiUnauthorizedError() {
   return ApiUnauthorizedResponse({
     description: '401 Unauthorized — Thiếu hoặc sai JWT token',
     content: errorContent({
-      unauthorized: { summary: 'Token không hợp lệ', value: ERROR_EXAMPLES.unauthorized },
+      unauthorized: {
+        summary: 'Token không hợp lệ',
+        value: ERROR_EXAMPLES.unauthorized,
+      },
       invalidCredentials: {
         summary: 'Sai tài khoản/mật khẩu',
         value: ERROR_EXAMPLES.invalidCredentials,
@@ -115,7 +125,10 @@ export function ApiSuccessExample(
 }
 
 /** Response tạo mới 201 với example */
-export function ApiCreatedExample(example: object, description = '201 Created — Tạo thành công') {
+export function ApiCreatedExample(
+  example: object,
+  description = '201 Created — Tạo thành công',
+) {
   return ApiCreatedResponse({
     description,
     content: {
@@ -129,7 +142,9 @@ export function ApiCreatedExample(example: object, description = '201 Created �
 }
 
 /** Bộ lỗi chuẩn cho endpoint cần auth (GET/PUT/DELETE theo id) */
-export function ApiAuthReadErrors(notFound: ErrorExample = ERROR_EXAMPLES.notFound) {
+export function ApiAuthReadErrors(
+  notFound: ErrorExample = ERROR_EXAMPLES.notFound,
+) {
   return applyDecorators(
     ApiUnauthorizedError(),
     ApiForbiddenError(),
@@ -152,6 +167,8 @@ export function ApiAuthWriteErrors(options?: {
 }
 
 /** Bộ lỗi chuẩn cho endpoint public GET */
-export function ApiPublicReadErrors(notFound: ErrorExample = ERROR_EXAMPLES.notFound) {
+export function ApiPublicReadErrors(
+  notFound: ErrorExample = ERROR_EXAMPLES.notFound,
+) {
   return applyDecorators(ApiNotFoundError({ notFound }));
 }

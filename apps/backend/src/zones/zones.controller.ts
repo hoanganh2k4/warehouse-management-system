@@ -17,7 +17,10 @@ import {
   ApiCreatedExample,
   ApiSuccessExample,
 } from '../common/decorators/api-responses.decorator';
-import { ERROR_EXAMPLES, SUCCESS_EXAMPLES } from '../common/swagger/swagger-examples';
+import {
+  ERROR_EXAMPLES,
+  SUCCESS_EXAMPLES,
+} from '../common/swagger/swagger-examples';
 
 @ApiBearerAuth()
 @ApiTags('Zones')
@@ -26,7 +29,10 @@ export class ZonesController {
   constructor(private readonly service: ZonesService) {}
 
   @Get()
-  @ApiSuccessExample({ success: true, data: [SUCCESS_EXAMPLES.zone.data] }, '200 OK — Danh sách zone')
+  @ApiSuccessExample(
+    { success: true, data: [SUCCESS_EXAMPLES.zone.data] },
+    '200 OK — Danh sách zone',
+  )
   @ApiAuthReadErrors()
   findAll(@Query('warehouseId') warehouseId?: string) {
     return this.service.findAll(warehouseId);

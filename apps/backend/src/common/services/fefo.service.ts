@@ -19,7 +19,10 @@ export interface PickLine {
 export class FefoService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async buildPickingList(productId: string, quantity: number): Promise<PickLine[]> {
+  async buildPickingList(
+    productId: string,
+    quantity: number,
+  ): Promise<PickLine[]> {
     const product = await this.prisma.product.findFirstOrThrow({
       where: { id: productId, deletedAt: null },
     });

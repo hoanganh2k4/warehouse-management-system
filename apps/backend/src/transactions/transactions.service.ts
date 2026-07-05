@@ -17,8 +17,16 @@ export class TransactionsService {
     if (query.productId) where.batch = { productId: query.productId };
     if (query.warehouseId) {
       where.OR = [
-        { slotTo: { level: { rack: { zone: { warehouseId: query.warehouseId } } } } },
-        { slotFrom: { level: { rack: { zone: { warehouseId: query.warehouseId } } } } },
+        {
+          slotTo: {
+            level: { rack: { zone: { warehouseId: query.warehouseId } } },
+          },
+        },
+        {
+          slotFrom: {
+            level: { rack: { zone: { warehouseId: query.warehouseId } } },
+          },
+        },
       ];
     }
     if (query.from || query.to) {
