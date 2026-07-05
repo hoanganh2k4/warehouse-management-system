@@ -6,6 +6,10 @@
       "destination": "https://smart-wms-backend-rr9e.onrender.com/api/$1"
     },
     {
+      "source": "/api-docs(.*)",
+      "destination": "https://smart-wms-backend-rr9e.onrender.com/api-docs$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

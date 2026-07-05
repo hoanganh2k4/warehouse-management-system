@@ -22,7 +22,7 @@ export function Topbar({ query, onQueryChange }: TopbarProps) {
       <div className="topbar-actions">
         <a
           className="docs-link"
-          href="http://localhost:3000/api-docs"
+          href="/api-docs"
           target="_blank"
           rel="noreferrer"
         >
