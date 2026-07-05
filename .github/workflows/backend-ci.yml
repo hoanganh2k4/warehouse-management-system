@@ -1,0 +1,76 @@
+name: Backend CI
+
+# Chỉ chạy khi có thay đổi liên quan tới backend, tránh chạy lãng phí khi
+# người khác chỉ sửa frontend hoặc docs.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/backend/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/backend-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/backend/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/backend-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Spin lên 1 Postgres thật để chạy migrate + test, giống hệt production.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: smart_wms_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/smart_wms_test
+      JWT_SECRET: ci_test_secret
+      JWT_EXPIRES_IN: 1d
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies (toàn bộ workspace)
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run --workspace=backend -- prisma generate
+
+      - name: Lint
+        run: npm run lint --workspace=backend
+
+      - name: Type-check & build
+        run: npm run build --workspace=backend
+
+      - name: Apply database migrations
+        run: npx --workspace=backend prisma migrate deploy
+
+      - name: Run unit tests
+        run: npm run test --workspace=backend
+
+      - name: Run e2e tests
+        run: npm run test:e2e --workspace=backend

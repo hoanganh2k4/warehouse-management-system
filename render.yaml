@@ -1,0 +1,34 @@
+# Render Blueprint — deploy backend (NestJS) miễn phí.
+#
+# Cách dùng:
+# 1. Push code này lên GitHub.
+# 2. Vào https://dashboard.render.com > New > Blueprint > chọn repo này.
+# 3. Render sẽ đọc file này và tạo sẵn 1 Web Service tên "smart-wms-backend".
+# 4. Sau khi tạo xong, vào tab "Environment" của service, điền giá trị thật cho
+#    các biến đánh dấu "sync: false" bên dưới (DATABASE_URL từ Neon, JWT_SECRET, FRONTEND_URL).
+#
+# Chi tiết: xem docs/deployment.md
+
+services:
+  - type: web
+    name: smart-wms-backend
+    runtime: node
+    plan: free
+    region: virginia # đặt cùng vùng với Neon Postgres (US East 1 / N. Virginia) để giảm độ trễ
+    rootDir: apps/backend
+    buildCommand: npm install && npm run build
+    startCommand: npx prisma migrate deploy && npm run start:prod
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render tự cấp PORT, NestJS đọc process.env.PORT sẵn trong main.ts — không cần set tay.
+      - key: DATABASE_URL
+        sync: false # Dán connection string từ Neon vào đây (dạng postgresql://...?sslmode=require)
+      - key: JWT_SECRET
+        generateValue: true # Render tự sinh 1 chuỗi ngẫu nhiên an toàn
+      - key: JWT_EXPIRES_IN
+        value: 1d
+      - key: FRONTEND_URL
+        sync: false # Dán domain Vercel vào đây sau khi tạo xong, ví dụ: https://wms.vercel.app
