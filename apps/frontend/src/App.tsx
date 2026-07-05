@@ -7,6 +7,10 @@ import { StatCard } from './components/StatCard';
 import { BoxIcon, LayersIcon, ScaleIcon, TagIcon } from './components/icons';
 import type { Product } from './types';
 
+// Khoảng thời gian giữa các lần tự động gọi lại API (mili-giây).
+// Đổi số này nếu muốn polling nhanh/chậm hơn.
+const POLL_INTERVAL_MS = 10_000;
+
 function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,26 +21,38 @@ function App() {
 
   useEffect(() => {
     const controller = new AbortController();
+    let isMounted = true;
 
-    const fetchProducts = async () => {
+    // isBackgroundRefresh = true: gọi lại từ polling, không bật lại "loading"
+    // để tránh giao diện bị nhấp nháy mỗi 15 giây.
+    const fetchProducts = async (isBackgroundRefresh = false) => {
+      if (!isBackgroundRefresh) setLoading(true);
       try {
         const response = await fetch('/api/products', { signal: controller.signal });
         if (!response.ok) {
           throw new Error('Failed to load products');
         }
         const json = (await response.json()) as { success: boolean; data: { items: Product[] } };
+        if (!isMounted) return;
         setProducts(json.data?.items ?? []);
         setError(null);
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return;
+        if (!isMounted) return;
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
-        setLoading(false);
+        if (isMounted && !isBackgroundRefresh) setLoading(false);
       }
     };
 
     fetchProducts();
-    return () => controller.abort();
+    const intervalId = setInterval(() => fetchProducts(true), POLL_INTERVAL_MS);
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+      clearInterval(intervalId);
+    };
   }, []);
 
   const filteredProducts = useMemo(() => {
