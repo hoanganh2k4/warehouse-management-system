@@ -1,24 +1,8 @@
-import { ExternalLinkIcon, SearchIcon } from './icons';
+import { ExternalLinkIcon } from './icons';
 
-type TopbarProps = {
-  query: string;
-  onQueryChange: (value: string) => void;
-};
-
-export function Topbar({ query, onQueryChange }: TopbarProps) {
+export function Topbar() {
   return (
     <header className="topbar">
-      <label className="topbar-search">
-        <SearchIcon />
-        <input
-          type="search"
-          placeholder="Search by name, SKU or category..."
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-          aria-label="Search products"
-        />
-      </label>
-
       <div className="topbar-actions">
         <a
           className="docs-link"

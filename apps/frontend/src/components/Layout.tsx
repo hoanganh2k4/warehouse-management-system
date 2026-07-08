@@ -8,9 +8,7 @@ export default function Layout() {
       <Sidebar />
 
       <div className="app-main">
-        {/* TẠM THỜI truyền query rỗng + hàm rỗng — Task 05 sẽ xoá 2 props này
-           khỏi Topbar hẳn và chuyển ô search vào ProductList.tsx */}
-        <Topbar query="" onQueryChange={() => {}} />
+        <Topbar />
         <Outlet />
       </div>
     </div>
