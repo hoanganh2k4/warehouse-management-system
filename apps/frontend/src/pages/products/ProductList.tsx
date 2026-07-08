@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import '../../App.css';
 import { ProductTable } from '../../components/ProductTable';
 import { StatCard } from '../../components/StatCard';
-import { BoxIcon, LayersIcon, ScaleIcon, TagIcon } from '../../components/icons';
+import { BoxIcon, LayersIcon, ScaleIcon, SearchIcon, TagIcon } from '../../components/icons';
 import type { Product } from '../../types';
 
 // Khoảng thời gian giữa các lần tự động gọi lại API (mili-giây).
@@ -13,9 +13,7 @@ export default function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // TẠM THỜI: Topbar (chứa ô search) giờ do Layout.tsx render với query rỗng cố định,
-  // nên state này chưa có ai cập nhật được nữa. Task 05 sẽ nối lại ô search thật.
-  const [query] = useState('');
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -84,6 +82,17 @@ export default function ProductList() {
           <h1>Products</h1>
           <p className="page-desc">Every SKU seeded into the warehouse system, in one place.</p>
         </div>
+
+        <label className="topbar-search">
+          <SearchIcon />
+          <input
+            type="search"
+            placeholder="Search by name, SKU or category..."
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            aria-label="Search products"
+          />
+        </label>
       </div>
 
       <div className="stat-row">
