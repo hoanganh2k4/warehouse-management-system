@@ -1,13 +1,25 @@
 import { useState } from 'react';
+import { login } from '../../services/auth.service';
 import './Login.css';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log({ username, password }); // Task 09 sẽ thay dòng này bằng gọi API thật
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await login(username, password);
+      console.log(result); // Task 10 sẽ thay dòng này bằng việc lưu token thật
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Đăng nhập thất bại');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,8 +43,9 @@ export default function Login() {
             placeholder="Nhập mật khẩu"
           />
         </label>
-        <button type="submit" className="login-submit">
-          Đăng nhập
+        {error && <div className="state-panel state-error">{error}</div>}
+        <button type="submit" className="login-submit" disabled={loading}>
+          {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </button>
       </form>
     </div>
