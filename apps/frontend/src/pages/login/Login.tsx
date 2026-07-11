@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { login } from '../../services/auth.service';
+import { useAuth } from '../../hooks/useAuth';
 import './Login.css';
 
 export default function Login() {
@@ -7,6 +9,8 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { saveToken } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -14,7 +18,8 @@ export default function Login() {
     setError(null);
     try {
       const result = await login(username, password);
-      console.log(result); // Task 10 sẽ thay dòng này bằng việc lưu token thật
+      saveToken(result.accessToken);
+      navigate('/products');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đăng nhập thất bại');
     } finally {

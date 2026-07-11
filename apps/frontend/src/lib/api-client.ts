@@ -19,6 +19,19 @@ export const apiClient = axios.create({
   baseURL: '/api',
 });
 
+// Key phải khớp với key dùng ở hooks/useAuth.ts (Task 10).
+// Không import useAuth (hook React) vào đây vì file này không phải component/hook.
+const TOKEN_KEY = 'wms_access_token';
+
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 apiClient.interceptors.response.use(
   (response) => {
     const body = response.data;
