@@ -1,7 +1,53 @@
 import { useParams, Link } from 'react-router-dom';
+import { useProductDetail } from '../../hooks/useProductDetail';
+import { ScaleIcon } from '../../components/icons';
+
+function formatDate(value: string) {
+  try {
+    return new Date(value).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  } catch {
+    return value;
+  }
+}
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
+  const { product, loading, error, refetch } = useProductDetail(id);
+
+  if (loading) {
+    return (
+      <main className="app-content">
+        <span className="skeleton" style={{ width: '200px', height: '28px' }} />
+        <span className="skeleton" style={{ width: '120px', height: '18px', marginTop: 12 }} />
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="app-content">
+        <div className="state-panel state-error">
+          <p className="state-title">Không tải được chi tiết sản phẩm</p>
+          <p className="state-body">{error}</p>
+          <button onClick={refetch}>Thử lại</button>
+        </div>
+      </main>
+    );
+  }
+
+  if (!product) {
+    return (
+      <main className="app-content">
+        <div className="state-panel">
+          <p className="state-title">Không tìm thấy sản phẩm</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="app-content">
@@ -11,11 +57,90 @@ export default function ProductDetail() {
             ← Quay lại danh sách
           </Link>
           <p className="eyebrow">Catalog</p>
-          <h1>Chi tiết sản phẩm</h1>
-          <p className="page-desc">ID: {id}</p>
+          <h1>{product.name}</h1>
+          <p className="page-desc">
+            <span className="sku-code">{product.skuCode}</span>
+          </p>
         </div>
       </div>
-      {/* Nội dung chi tiết thật sẽ thêm ở Task 26 */}
+
+      <section className="panel">
+        <div className="panel-header">
+          <h2>Thông tin sản phẩm</h2>
+        </div>
+
+        <div className="table-wrap">
+          <table className="product-table">
+            <tbody>
+              <tr>
+                <td className="muted-cell">Danh mục</td>
+                <td>
+                  <span className="chip">{product.category}</span>
+                </td>
+              </tr>
+              <tr>
+                <td className="muted-cell">Đơn vị</td>
+                <td className="unit-cell">{product.unit}</td>
+              </tr>
+              <tr>
+                <td className="muted-cell">Xử lý</td>
+                <td>
+                  {product.isHeavy ? (
+                    <span className="badge badge-heavy">
+                      <ScaleIcon size={13} />
+                      Heavy
+                    </span>
+                  ) : (
+                    <span className="badge badge-standard">Standard</span>
+                  )}
+                </td>
+              </tr>
+              <tr>
+                <td className="muted-cell">Ngày tạo</td>
+                <td className="muted-cell">{formatDate(product.createdAt)}</td>
+              </tr>
+              <tr>
+                <td className="muted-cell">Cập nhật lần cuối</td>
+                <td className="muted-cell">{formatDate(product.updatedAt)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="panel-header">
+          <h2>Lô hàng (Batches)</h2>
+          <span className="result-count">{product.batches.length} lô</span>
+        </div>
+
+        {product.batches.length === 0 ? (
+          <div className="state-panel">
+            <p className="state-title">Chưa có lô hàng nào</p>
+          </div>
+        ) : (
+          <div className="table-wrap">
+            <table className="product-table">
+              <thead>
+                <tr>
+                  <th>Batch Code</th>
+                  <th>Ngày sản xuất</th>
+                  <th>Ngày hết hạn</th>
+                </tr>
+              </thead>
+              <tbody>
+                {product.batches.map((batch) => (
+                  <tr key={batch.id}>
+                    <td className="sku-code">{batch.batchCode}</td>
+                    <td className="muted-cell">{formatDate(batch.manufactureDate)}</td>
+                    <td className="muted-cell">{formatDate(batch.expiryDate)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </main>
   );
 }
