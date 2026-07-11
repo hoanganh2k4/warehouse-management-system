@@ -69,6 +69,7 @@ export default function ProductList() {
         </label>
 
         <select
+          className="sort-select"
           value={sort}
           onChange={(event) => setSort(event.target.value as ProductSort)}
           aria-label="Sort products"
