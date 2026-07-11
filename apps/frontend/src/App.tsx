@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import './App.css';
 import Layout from './components/Layout';
 import ProductList from './pages/products/ProductList';
+import ProductDetail from './pages/products/ProductDetail';
 import Login from './pages/login/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -13,6 +14,7 @@ function App() {
       <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to="/products" replace />} />
         <Route path="products" element={<ProductList />} />
+        <Route path="products/:id" element={<ProductDetail />} />
 
         {/* Chỉ những route ghi dữ liệu (create/edit) mới cần đăng nhập */}
         <Route element={<ProtectedRoute />}>
