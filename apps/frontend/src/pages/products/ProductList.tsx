@@ -3,76 +3,50 @@ import '../../App.css';
 import { ProductTable } from '../../components/ProductTable';
 import { StatCard } from '../../components/StatCard';
 import { BoxIcon, LayersIcon, ScaleIcon, SearchIcon, TagIcon } from '../../components/icons';
-import type { Product } from '../../types';
-
-// Khoảng thời gian giữa các lần tự động gọi lại API (mili-giây).
-// Đổi số này nếu muốn polling nhanh/chậm hơn.
-const POLL_INTERVAL_MS = 10_000;
+import { useProducts } from '../../hooks/useProducts';
+import type { ProductSort } from '../../types';
 
 export default function ProductList() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [query, setQuery] = useState('');
+  // inputValue: cập nhật ngay theo từng keystroke, bind vào ô input.
+  // debouncedKeyword: cập nhật sau 350ms, dùng làm param gọi API (Task 17).
+  const [inputValue, setInputValue] = useState('');
+  const [debouncedKeyword, setDebouncedKeyword] = useState('');
+  const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<ProductSort>('name');
 
   useEffect(() => {
-    const controller = new AbortController();
-    let isMounted = true;
+    const timer = setTimeout(() => setDebouncedKeyword(inputValue), 350);
+    return () => clearTimeout(timer);
+  }, [inputValue]);
 
-    // isBackgroundRefresh = true: gọi lại từ polling, không bật lại "loading"
-    // để tránh giao diện bị nhấp nháy mỗi 15 giây.
-    const fetchProducts = async (isBackgroundRefresh = false) => {
-      if (!isBackgroundRefresh) setLoading(true);
-      try {
-        const response = await fetch('/api/products', { signal: controller.signal });
-        if (!response.ok) {
-          throw new Error('Failed to load products');
-        }
-        const json = (await response.json()) as { success: boolean; data: { items: Product[] } };
-        if (!isMounted) return;
-        setProducts(json.data?.items ?? []);
-        setError(null);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === 'AbortError') return;
-        if (!isMounted) return;
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        if (isMounted && !isBackgroundRefresh) setLoading(false);
-      }
-    };
+  // Tìm kiếm/sắp xếp mới -> quay lại trang 1, tránh đứng ở trang không tồn tại (Task 18/19).
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedKeyword, sort]);
 
-    fetchProducts();
-    const intervalId = setInterval(() => fetchProducts(true), POLL_INTERVAL_MS);
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-      clearInterval(intervalId);
-    };
-  }, []);
-
-  const filteredProducts = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    if (!term) return products;
-    return products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(term) ||
-        product.skuCode.toLowerCase().includes(term) ||
-        product.category.toLowerCase().includes(term),
-    );
-  }, [products, query]);
+  const { items, meta, loading, error, refetch } = useProducts({
+    page,
+    limit: 20,
+    keyword: debouncedKeyword || undefined,
+    sort,
+  });
+  // refetch chưa được dùng ở task này — sẽ dùng ở Task 38 (xoá sản phẩm xong thì gọi lại).
+  // Giữ tham chiếu để tsconfig (noUnusedLocals) không báo lỗi trong lúc chờ Task 38.
+  void refetch;
 
   const stats = useMemo(() => {
-    const categories = new Set(products.map((p) => p.category));
-    const units = new Set(products.map((p) => p.unit));
-    const heavy = products.filter((p) => p.isHeavy).length;
+    const categories = new Set(items.map((p) => p.category));
+    const units = new Set(items.map((p) => p.unit));
+    const heavy = items.filter((p) => p.isHeavy).length;
     return {
-      total: products.length,
+      total: meta?.total ?? items.length,
       categories: categories.size,
       units: units.size,
       heavy,
     };
-  }, [products]);
+  }, [items, meta]);
+
+  const totalCount = meta?.total ?? 0;
 
   return (
     <main className="app-content">
@@ -87,12 +61,22 @@ export default function ProductList() {
           <SearchIcon />
           <input
             type="search"
-            placeholder="Search by name, SKU or category..."
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search by name or SKU..."
+            value={inputValue}
+            onChange={(event) => setInputValue(event.target.value)}
             aria-label="Search products"
           />
         </label>
+
+        <select
+          value={sort}
+          onChange={(event) => setSort(event.target.value as ProductSort)}
+          aria-label="Sort products"
+        >
+          <option value="name">Tên sản phẩm</option>
+          <option value="sku">Mã SKU</option>
+          <option value="category">Danh mục</option>
+        </select>
       </div>
 
       <div className="stat-row">
@@ -127,17 +111,32 @@ export default function ProductList() {
           <h2>All products</h2>
           {!loading && !error && (
             <span className="result-count">
-              {filteredProducts.length} of {products.length}
+              {items.length} of {totalCount}
             </span>
           )}
         </div>
         <ProductTable
-          products={filteredProducts}
-          totalCount={products.length}
+          products={items}
+          totalCount={totalCount}
           loading={loading}
           error={error}
-          query={query}
+          query={inputValue}
         />
+
+        <div className="pagination-controls">
+          <button disabled={loading || page <= 1} onClick={() => setPage((p) => p - 1)}>
+            Trang trước
+          </button>
+          <span>
+            Trang {page} / {meta?.totalPages ?? 1}
+          </span>
+          <button
+            disabled={loading || !meta || page >= meta.totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Trang sau
+          </button>
+        </div>
       </section>
     </main>
   );
