@@ -3,6 +3,7 @@ import './App.css';
 import Layout from './components/Layout';
 import ProductList from './pages/products/ProductList';
 import ProductDetail from './pages/products/ProductDetail';
+import ProductCreate from './pages/products/ProductCreate';
 import Login from './pages/login/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -18,7 +19,7 @@ function App() {
 
         {/* Chỉ những route ghi dữ liệu (create/edit) mới cần đăng nhập */}
         <Route element={<ProtectedRoute />}>
-          <Route path="products/new" element={<div>Coming soon (Task 27)</div>} />
+          <Route path="products/new" element={<ProductCreate />} />
           <Route path="products/:id/edit" element={<div>Coming soon (Task 33)</div>} />
         </Route>
       </Route>

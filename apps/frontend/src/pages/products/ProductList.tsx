@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import '../../App.css';
 import { ProductTable } from '../../components/ProductTable';
 import { StatCard } from '../../components/StatCard';
@@ -53,7 +54,12 @@ export default function ProductList() {
       <div className="page-header">
         <div>
           <p className="eyebrow">Catalog</p>
-          <h1>Products</h1>
+          <div className="page-title-row">
+            <h1>Products</h1>
+            <Link to="/products/new" className="btn-primary">
+              + Thêm sản phẩm
+            </Link>
+          </div>
           <p className="page-desc">Every SKU seeded into the warehouse system, in one place.</p>
         </div>
 
