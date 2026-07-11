@@ -32,3 +32,17 @@ export type GetProductsParams = {
   sort?: ProductSort;
 };
 
+export type Batch = {
+  id: string;
+  productId: string;
+  batchCode: string;
+  manufactureDate: string;
+  expiryDate: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ProductDetail = Product & {
+  batches: Batch[];
+};
+
