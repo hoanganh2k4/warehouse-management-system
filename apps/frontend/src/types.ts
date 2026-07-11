@@ -1,10 +1,34 @@
+export type ProductCategory = 'MILK' | 'CRACKER';
+
 export type Product = {
   id: string;
   skuCode: string;
   name: string;
-  category: string;
+  category: ProductCategory;
   unit: string;
   isHeavy: boolean;
   createdAt: string;
   updatedAt: string;
 };
+
+export type PaginationMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
+export type PaginatedResult<T> = {
+  items: T[];
+  meta: PaginationMeta;
+};
+
+export type ProductSort = 'name' | 'sku' | 'category';
+
+export type GetProductsParams = {
+  page?: number;
+  limit?: number;
+  keyword?: string;
+  sort?: ProductSort;
+};
+

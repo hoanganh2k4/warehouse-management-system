@@ -545,18 +545,3 @@ inventory, transactions
 
 ---
 
-## 13. Đánh giá đồ án
-
-**Điểm đánh giá đề xuất: 9.5/10** cho một bài tập lớn.
-
-### Ưu điểm
-
-- Không chỉ là CRUD mà có **thuật toán tối ưu vị trí lưu kho** thực sự, đã được **chuẩn hóa đúng về mặt toán học**.
-- Phạm vi vừa phải (2 nhóm hàng: sữa và bánh) – khả thi trong thời gian một môn học.
-- Có Dashboard, biểu đồ, phân quyền, lịch sử thao tác đầy đủ.
-- Có **Search Engine** trung tâm, **Picking List** chi tiết và **Interactive Warehouse Map** – ba điểm nhấn giúp đồ án nổi bật và mô phỏng đúng nghiệp vụ WMS thực tế.
-- Stack công nghệ (React + Node.js + PostgreSQL) phù hợp và phổ biến.
-
-### Kết luận
-
-Nếu triển khai tốt, đây là một đồ án có **tính thực tiễn cao**, mô phỏng đúng nghiệp vụ của một hệ thống WMS thực tế, đồng thời vẫn nằm trong khả năng hoàn thành của một sinh viên/nhóm sinh viên trong thời lượng một môn học.
