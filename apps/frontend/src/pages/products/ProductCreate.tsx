@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { productService } from '../../services/product.service';
+import { useCategories } from '../../hooks/useCategories';
 import { Toast } from '../../components/Toast';
 
 type ProductFormState = {
   skuCode: string;
   name: string;
-  category: 'MILK' | 'CRACKER';
+  categoryId: string;
   unit: string;
   isHeavy: boolean;
 };
@@ -15,10 +16,11 @@ type ProductFormState = {
 type FormErrors = Partial<Record<keyof ProductFormState, string>>;
 
 export default function ProductCreate() {
+  const { items: categories, loading: categoriesLoading } = useCategories();
   const [form, setForm] = useState<ProductFormState>({
     skuCode: '',
     name: '',
-    category: 'MILK',
+    categoryId: '',
     unit: '',
     isHeavy: false,
   });
@@ -26,6 +28,12 @@ export default function ProductCreate() {
   const [submitting, setSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Khi danh sách category tải xong, tự chọn category đầu tiên làm mặc định
+  // (thay cho giá trị cứng 'MILK' trước đây) — chỉ set nếu form chưa chọn gì.
+  if (!categoriesLoading && categories.length > 0 && !form.categoryId) {
+    setForm((prev) => ({ ...prev, categoryId: categories[0].id }));
+  }
 
   function updateField<K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -41,6 +49,7 @@ export default function ProductCreate() {
     const next: FormErrors = {};
     if (!form.skuCode.trim()) next.skuCode = 'Vui lòng nhập mã SKU';
     if (!form.name.trim()) next.name = 'Vui lòng nhập tên sản phẩm';
+    if (!form.categoryId) next.categoryId = 'Vui lòng chọn danh mục';
     if (!form.unit.trim()) next.unit = 'Vui lòng nhập đơn vị tính';
     return next;
   }
@@ -56,7 +65,7 @@ export default function ProductCreate() {
       const created = await productService.createProduct({
         skuCode: form.skuCode.trim(),
         name: form.name.trim(),
-        category: form.category,
+        categoryId: form.categoryId,
         unit: form.unit.trim(),
         isHeavy: form.isHeavy,
       });
@@ -134,12 +143,26 @@ export default function ProductCreate() {
               id="category"
               name="category"
               className="form-input"
-              value={form.category}
-              onChange={(e) => updateField('category', e.target.value as 'MILK' | 'CRACKER')}
+              value={form.categoryId}
+              disabled={categoriesLoading}
+              onChange={(e) => updateField('categoryId', e.target.value)}
             >
-              <option value="MILK">Sữa (MILK)</option>
-              <option value="CRACKER">Bánh quy (CRACKER)</option>
+              {categoriesLoading && <option value="">Đang tải danh mục...</option>}
+              {!categoriesLoading && categories.length === 0 && (
+                <option value="">Chưa có danh mục nào</option>
+              )}
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
             </select>
+            {errors.categoryId && <p className="form-error">{errors.categoryId}</p>}
+            {!categoriesLoading && categories.length === 0 && (
+              <p className="form-error">
+                Chưa có danh mục nào. <Link to="/categories/new">Tạo danh mục mới</Link> trước.
+              </p>
+            )}
           </div>
 
           <div className="form-group">

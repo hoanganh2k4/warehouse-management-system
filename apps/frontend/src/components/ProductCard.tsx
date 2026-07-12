@@ -12,7 +12,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <strong>SKU:</strong> {product.skuCode}
       </p>
       <p>
-        <strong>Category:</strong> {product.category}
+        <strong>Category:</strong> {product.category.name}
       </p>
       <p>
         <strong>Unit:</strong> {product.unit}

@@ -104,7 +104,7 @@ export function ProductTable({ products, totalCount, loading, error, query }: Pr
               </td>
               <td className="product-name">{product.name}</td>
               <td>
-                <span className="chip">{product.category}</span>
+                <span className="chip">{product.category.name}</span>
               </td>
               <td className="unit-cell">{product.unit}</td>
               <td>

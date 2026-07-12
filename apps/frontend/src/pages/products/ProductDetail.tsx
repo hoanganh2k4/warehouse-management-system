@@ -79,7 +79,7 @@ export default function ProductDetail() {
               <tr>
                 <td className="muted-cell">Danh mục</td>
                 <td>
-                  <span className="chip">{product.category}</span>
+                  <span className="chip">{product.category.name}</span>
                 </td>
               </tr>
               <tr>

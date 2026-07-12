@@ -5,6 +5,9 @@ import ProductList from './pages/products/ProductList';
 import ProductDetail from './pages/products/ProductDetail';
 import ProductCreate from './pages/products/ProductCreate';
 import { ProductEdit } from './pages/products/ProductEdit';
+import CategoryList from './pages/categories/CategoryList';
+import CategoryCreate from './pages/categories/CategoryCreate';
+import CategoryEdit from './pages/categories/CategoryEdit';
 import TeamList from './pages/team/TeamList';
 import Login from './pages/login/Login';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -18,11 +21,14 @@ function App() {
         <Route index element={<Navigate to="/products" replace />} />
         <Route path="products" element={<ProductList />} />
         <Route path="products/:id" element={<ProductDetail />} />
+        <Route path="categories" element={<CategoryList />} />
 
         {/* Chỉ những route ghi dữ liệu (create/edit) mới cần đăng nhập */}
         <Route element={<ProtectedRoute />}>
           <Route path="products/new" element={<ProductCreate />} />
           <Route path="products/:id/edit" element={<ProductEdit />} />
+          <Route path="categories/new" element={<CategoryCreate />} />
+          <Route path="categories/:id/edit" element={<CategoryEdit />} />
           <Route path="team" element={<TeamList />} />
         </Route>
       </Route>

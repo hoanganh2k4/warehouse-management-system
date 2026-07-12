@@ -1,24 +1,20 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
-import { useProductDetail } from '../../hooks/useProductDetail';
-import { useCategories } from '../../hooks/useCategories';
-import { productService } from '../../services/product.service';
+import { useCategoryDetail } from '../../hooks/useCategoryDetail';
+import { categoryService } from '../../services/category.service';
 import { Toast } from '../../components/Toast';
 
 type EditFormState = {
   name: string;
-  categoryId: string;
-  unit: string;
-  isHeavy: boolean;
+  description: string;
 };
 
 type EditFormErrors = Partial<Record<keyof EditFormState, string>>;
 
-export function ProductEdit() {
+export default function CategoryEdit() {
   const { id } = useParams<{ id: string }>();
-  const { product, loading, error, refetch } = useProductDetail(id);
-  const { items: categories, loading: categoriesLoading } = useCategories();
+  const { category, loading, error, refetch } = useCategoryDetail(id);
 
   const [form, setForm] = useState<EditFormState | null>(null);
   const [formInitializedFor, setFormInitializedFor] = useState<string | undefined>(undefined);
@@ -27,17 +23,9 @@ export function ProductEdit() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Chỉ khởi tạo form 1 lần khi product load xong — không ghi đè lại sau đó
-  // để không mất dữ liệu người dùng đang gõ dở nếu refetch() được gọi lại.
-  // Đây là pattern "adjust state during render" của React thay vì dùng effect,
-  // vì đây là suy ra state từ prop (product) chứ không phải đồng bộ hệ thống ngoài.
-  if (product && formInitializedFor !== id) {
-    setForm({
-      name: product.name,
-      categoryId: product.categoryId,
-      unit: product.unit,
-      isHeavy: product.isHeavy,
-    });
+  // Chỉ khởi tạo form 1 lần khi category load xong, giống pattern ProductEdit.
+  if (category && formInitializedFor !== id) {
+    setForm({ name: category.name, description: category.description ?? '' });
     setFormInitializedFor(id);
   }
 
@@ -54,8 +42,7 @@ export function ProductEdit() {
   function validate(): EditFormErrors {
     if (!form) return {};
     const next: EditFormErrors = {};
-    if (!form.name.trim()) next.name = 'Vui lòng nhập tên sản phẩm';
-    if (!form.unit.trim()) next.unit = 'Vui lòng nhập đơn vị tính';
+    if (!form.name.trim()) next.name = 'Vui lòng nhập tên danh mục';
     return next;
   }
 
@@ -69,16 +56,16 @@ export function ProductEdit() {
 
     setSubmitting(true);
     try {
-      await productService.updateProduct(id, {
+      await categoryService.updateCategory(id, {
         name: form.name.trim(),
-        categoryId: form.categoryId,
-        unit: form.unit.trim(),
-        isHeavy: form.isHeavy,
+        description: form.description.trim() || undefined,
       });
-      navigate(`/products/${id}`);
+      navigate('/categories');
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 404) {
-        setToastMessage('Sản phẩm không còn tồn tại (có thể đã bị xoá).');
+        setToastMessage('Danh mục không còn tồn tại (có thể đã bị xoá).');
+      } else if (isAxiosError(err) && err.response?.status === 409) {
+        setToastMessage('Tên danh mục này đã tồn tại. Vui lòng chọn tên khác.');
       } else {
         setToastMessage('Không thể lưu thay đổi. Vui lòng thử lại.');
       }
@@ -100,7 +87,7 @@ export function ProductEdit() {
     return (
       <main className="app-content">
         <div className="state-panel state-error">
-          <p className="state-title">Không tải được thông tin sản phẩm</p>
+          <p className="state-title">Không tải được thông tin danh mục</p>
           <p className="state-body">{error}</p>
           <button onClick={refetch}>Thử lại</button>
         </div>
@@ -108,7 +95,7 @@ export function ProductEdit() {
     );
   }
 
-  if (!product || !form) {
+  if (!category || !form) {
     return null;
   }
 
@@ -120,28 +107,23 @@ export function ProductEdit() {
 
       <div className="page-header">
         <div>
-          <Link to={`/products/${id}`} className="back-link">
-            ← Quay lại chi tiết
+          <Link to="/categories" className="back-link">
+            ← Quay lại danh sách
           </Link>
           <p className="eyebrow">Catalog</p>
-          <h1>Sửa sản phẩm</h1>
+          <h1>Sửa danh mục</h1>
         </div>
       </div>
 
       <section className="panel">
         <div className="panel-header">
-          <h2>Thông tin sản phẩm</h2>
+          <h2>Thông tin danh mục</h2>
         </div>
 
         <form className="product-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Mã SKU</label>
-            <p className="muted-cell">{product.skuCode} (không thể chỉnh sửa)</p>
-          </div>
-
-          <div className="form-group">
             <label className="form-label" htmlFor="name">
-              Tên sản phẩm
+              Tên danh mục
             </label>
             <input
               id="name"
@@ -155,60 +137,24 @@ export function ProductEdit() {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="category">
-              Danh mục
-            </label>
-            <select
-              id="category"
-              name="category"
-              className="form-input"
-              value={form.categoryId}
-              disabled={categoriesLoading}
-              onChange={(e) => updateField('categoryId', e.target.value)}
-            >
-              {categoriesLoading && <option value="">Đang tải danh mục...</option>}
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" htmlFor="unit">
-              Đơn vị
+            <label className="form-label" htmlFor="description">
+              Mô tả (không bắt buộc)
             </label>
             <input
-              id="unit"
-              name="unit"
+              id="description"
+              name="description"
               type="text"
               className="form-input"
-              placeholder="ví dụ: hộp, thùng, kg"
-              value={form.unit}
-              onChange={(e) => updateField('unit', e.target.value)}
+              value={form.description}
+              onChange={(e) => updateField('description', e.target.value)}
             />
-            {errors.unit && <p className="form-error">{errors.unit}</p>}
-          </div>
-
-          <div className="form-group form-group-checkbox">
-            <label className="form-label form-label-checkbox" htmlFor="isHeavy">
-              <input
-                id="isHeavy"
-                name="isHeavy"
-                type="checkbox"
-                checked={form.isHeavy}
-                onChange={(e) => updateField('isHeavy', e.target.checked)}
-              />
-              Hàng nặng (cần xử lý đặc biệt)
-            </label>
           </div>
 
           <div className="form-actions">
             <button type="submit" className="btn-primary" disabled={submitting}>
               {submitting ? 'Đang lưu...' : 'Lưu thay đổi'}
             </button>
-            <Link to={`/products/${id}`} className="btn-secondary">
+            <Link to="/categories" className="btn-secondary">
               Huỷ
             </Link>
           </div>

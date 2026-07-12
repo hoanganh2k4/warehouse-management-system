@@ -1,10 +1,28 @@
-export type ProductCategory = 'MILK' | 'CRACKER';
+export type Category = {
+  id: string;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { products: number };
+};
+
+export type CreateCategoryPayload = {
+  name: string;
+  description?: string;
+};
+
+export type UpdateCategoryPayload = {
+  name?: string;
+  description?: string;
+};
 
 export type Product = {
   id: string;
   skuCode: string;
   name: string;
-  category: ProductCategory;
+  categoryId: string;
+  category: { id: string; name: string; description?: string | null };
   unit: string;
   isHeavy: boolean;
   createdAt: string;
@@ -49,14 +67,14 @@ export type ProductDetail = Product & {
 export type CreateProductPayload = {
   skuCode: string;
   name: string;
-  category: ProductCategory;
+  categoryId: string;
   unit: string;
   isHeavy?: boolean;
 };
 
 export type UpdateProductPayload = {
   name?: string;
-  category?: ProductCategory;
+  categoryId?: string;
   unit?: string;
   isHeavy?: boolean;
 };

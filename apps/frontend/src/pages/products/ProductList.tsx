@@ -35,7 +35,7 @@ export default function ProductList() {
   void refetch;
 
   const stats = useMemo(() => {
-    const categories = new Set(items.map((p) => p.category));
+    const categories = new Set(items.map((p) => p.category.id));
     const units = new Set(items.map((p) => p.unit));
     const heavy = items.filter((p) => p.isHeavy).length;
     return {
