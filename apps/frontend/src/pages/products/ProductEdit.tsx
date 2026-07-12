@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { useProductDetail } from '../../hooks/useProductDetail';
@@ -19,6 +19,7 @@ export function ProductEdit() {
   const { product, loading, error, refetch } = useProductDetail(id);
 
   const [form, setForm] = useState<EditFormState | null>(null);
+  const [formInitializedFor, setFormInitializedFor] = useState<string | undefined>(undefined);
   const [errors, setErrors] = useState<EditFormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -26,16 +27,17 @@ export function ProductEdit() {
 
   // Chỉ khởi tạo form 1 lần khi product load xong — không ghi đè lại sau đó
   // để không mất dữ liệu người dùng đang gõ dở nếu refetch() được gọi lại.
-  useEffect(() => {
-    if (product && form === null) {
-      setForm({
-        name: product.name,
-        category: product.category,
-        unit: product.unit,
-        isHeavy: product.isHeavy,
-      });
-    }
-  }, [product, form]);
+  // Đây là pattern "adjust state during render" của React thay vì dùng effect,
+  // vì đây là suy ra state từ prop (product) chứ không phải đồng bộ hệ thống ngoài.
+  if (product && formInitializedFor !== id) {
+    setForm({
+      name: product.name,
+      category: product.category,
+      unit: product.unit,
+      isHeavy: product.isHeavy,
+    });
+    setFormInitializedFor(id);
+  }
 
   function updateField<K extends keyof EditFormState>(key: K, value: EditFormState[K]) {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));

@@ -10,35 +10,39 @@ export function useProductDetail(id: string | undefined) {
 
   useEffect(() => {
     if (!id) {
-      setProduct(null);
-      setLoading(false);
-      setError('Thiếu id sản phẩm');
       return;
     }
 
     let cancelled = false;
-    setLoading(true);
 
-    productService
-      .getProductById(id)
-      .then((result) => {
+    async function load() {
+      setLoading(true);
+      try {
+        const result = await productService.getProductById(id as string);
         if (cancelled) return;
         setProduct(result);
         setError(null);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
         setProduct(null);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
+
+    load();
 
     return () => {
       cancelled = true;
     };
   }, [id, reloadToken]);
 
-  return { product, loading, error, refetch: () => setReloadToken((t) => t + 1) };
+  const refetch = () => setReloadToken((t) => t + 1);
+
+  if (!id) {
+    return { product: null, loading: false, error: 'Thiếu id sản phẩm', refetch };
+  }
+
+  return { product, loading, error, refetch };
 }
