@@ -61,3 +61,16 @@ export type UpdateProductPayload = {
   isHeavy?: boolean;
 };
 
+export type TeamMember = {
+  id: string;
+  username: string;
+  email: string | null;
+  fullName: string | null;
+  role: { id: string; name: string };
+  createdAt: string;
+};
+
+export type GetTeamMembersParams = {
+  page?: number;
+  limit?: number;
+};
