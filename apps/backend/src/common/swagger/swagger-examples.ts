@@ -161,6 +161,22 @@ export const SUCCESS_EXAMPLES = {
       meta: { page: 1, limit: 20, total: 4, totalPages: 1 },
     },
   },
+  userList: {
+    success: true,
+    data: {
+      items: [
+        {
+          id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+          username: 'admin',
+          email: 'admin@smartwms.local',
+          fullName: 'Quản trị viên',
+          role: { id: 'b2c3d4e5-f6a7-8901-bcde-f23456789012', name: 'Quản lý' },
+          createdAt: ts,
+        },
+      ],
+      meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    },
+  },
   warehouse: {
     success: true,
     data: {
