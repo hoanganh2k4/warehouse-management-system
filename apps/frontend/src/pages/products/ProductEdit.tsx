@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { isAxiosError } from 'axios';
 import { useProductDetail } from '../../hooks/useProductDetail';
 import { productService } from '../../services/product.service';
+import { Toast } from '../../components/Toast';
 
 type EditFormState = {
   name: string;
@@ -10,12 +12,16 @@ type EditFormState = {
   isHeavy: boolean;
 };
 
+type EditFormErrors = Partial<Record<keyof EditFormState, string>>;
+
 export function ProductEdit() {
   const { id } = useParams<{ id: string }>();
   const { product, loading, error, refetch } = useProductDetail(id);
 
   const [form, setForm] = useState<EditFormState | null>(null);
+  const [errors, setErrors] = useState<EditFormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Chỉ khởi tạo form 1 lần khi product load xong — không ghi đè lại sau đó
@@ -33,11 +39,29 @@ export function ProductEdit() {
 
   function updateField<K extends keyof EditFormState>(key: K, value: EditFormState[K]) {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }
+
+  function validate(): EditFormErrors {
+    if (!form) return {};
+    const next: EditFormErrors = {};
+    if (!form.name.trim()) next.name = 'Vui lòng nhập tên sản phẩm';
+    if (!form.unit.trim()) next.unit = 'Vui lòng nhập đơn vị tính';
+    return next;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form || !id) return;
+
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
 
     setSubmitting(true);
     try {
@@ -49,7 +73,11 @@ export function ProductEdit() {
       });
       navigate(`/products/${id}`);
     } catch (err) {
-      console.error(err); // Task 36 sẽ thay bằng Toast thật
+      if (isAxiosError(err) && err.response?.status === 404) {
+        setToastMessage('Sản phẩm không còn tồn tại (có thể đã bị xoá).');
+      } else {
+        setToastMessage('Không thể lưu thay đổi. Vui lòng thử lại.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -82,6 +110,10 @@ export function ProductEdit() {
 
   return (
     <main className="app-content">
+      {toastMessage && (
+        <Toast message={toastMessage} type="error" onClose={() => setToastMessage(null)} />
+      )}
+
       <div className="page-header">
         <div>
           <Link to={`/products/${id}`} className="back-link">
@@ -115,6 +147,7 @@ export function ProductEdit() {
               value={form.name}
               onChange={(e) => updateField('name', e.target.value)}
             />
+            {errors.name && <p className="form-error">{errors.name}</p>}
           </div>
 
           <div className="form-group">
@@ -146,6 +179,7 @@ export function ProductEdit() {
               value={form.unit}
               onChange={(e) => updateField('unit', e.target.value)}
             />
+            {errors.unit && <p className="form-error">{errors.unit}</p>}
           </div>
 
           <div className="form-group form-group-checkbox">
