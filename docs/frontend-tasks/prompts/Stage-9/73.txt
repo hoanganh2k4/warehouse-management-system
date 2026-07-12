@@ -1,0 +1,11 @@
+Tôi cần tạo file mới apps/frontend/src/services/transaction.service.ts (React + TypeScript + axios).
+
+Bối cảnh:
+- apiClient (../lib/api-client) đã cấu hình sẵn.
+- Type GetTransactionsParams, Transaction, PaginatedResult<T> đã có trong ../types.
+- Backend GET /transactions yêu cầu đăng nhập, nhận query params (from, to, type, productId, warehouseId, page, limit), trả PaginatedResult<Transaction>.
+
+Yêu cầu:
+1. Export transactionService với đúng 1 hàm: getTransactions(params: GetTransactionsParams): Promise<PaginatedResult<Transaction>>, gọi apiClient.get('/transactions', { params }).
+2. KHÔNG thêm hàm khác.
+3. Trả về toàn bộ nội dung file.

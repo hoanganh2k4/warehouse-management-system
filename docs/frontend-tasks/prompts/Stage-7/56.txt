@@ -1,0 +1,6 @@
+Tôi cần một checklist test thủ công dạng markdown cho module Inventory (Nhập kho / Xuất kho / Danh sách tồn kho) của một dự án Warehouse Management System.
+
+Yêu cầu: liệt kê danh sách test case dạng bảng (STT | Kịch bản | Bước thực hiện | Kết quả mong đợi | Pass/Fail),
+bao gồm tối thiểu các case: xem danh sách không cần đăng nhập, nhập kho thành công, nhập kho lỗi hết slot,
+xuất kho thành công, xuất kho lỗi không đủ tồn, phân trang, responsive mobile.
+Trả về nội dung markdown, cột Pass/Fail để trống cho tôi tự điền sau khi test.

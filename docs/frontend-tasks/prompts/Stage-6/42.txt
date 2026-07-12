@@ -1,0 +1,19 @@
+Tôi cần tạo file mới: apps/frontend/src/services/dashboard.service.ts trong dự án React + TypeScript + axios.
+
+Bối cảnh:
+- Đã có sẵn apps/frontend/src/lib/api-client.ts export axios instance "apiClient" (tự gắn Bearer token, tự bóc envelope {success, data}).
+- Backend có endpoint GET /dashboard/summary, YÊU CẦU đăng nhập (Bearer token), KHÔNG nhận query param, trả về:
+  { products: number, batches: number, totalSlots: number, availableSlots: number, occupiedSlots: number,
+    occupancyPercent: number, inventory: number, expiringSoon: number, inboundToday: number, outboundToday: number }
+
+Yêu cầu:
+1. Thêm type "DashboardSummary" vào apps/frontend/src/types.ts với đúng 10 field trên (đều kiểu number).
+2. Import apiClient từ '../lib/api-client'.
+3. Tạo object "dashboardService" export ra, có 1 hàm duy nhất:
+   getSummary(): Promise<DashboardSummary>
+   gọi apiClient.get('/dashboard/summary') và trả về kết quả.
+4. KHÔNG thêm hàm nào khác, KHÔNG tự tính lại occupancyPercent.
+5. Trả về toàn bộ nội dung 2 file (types.ts phần bổ sung + dashboard.service.ts).
+
+Nội dung thật của types.ts hiện tại (để bạn chèn type mới vào đúng vị trí, không xoá type cũ):
+[DÁN NỘI DUNG types.ts VÀO ĐÂY]

@@ -1,0 +1,14 @@
+Tôi cần tạo component form React + TypeScript: apps/frontend/src/components/InboundForm.tsx (form Nhập kho).
+
+Bối cảnh:
+- Type InboundPayload = { productId: string; quantity: number; manufactureDate: string; expiryDate: string; note?: string } đã có trong ../types.
+- productService.getProducts(params): Promise<PaginatedResult<Product>> đã có, Product có { id, skuCode, name, ... }.
+
+Yêu cầu:
+1. Props: { onSubmit: (payload: InboundPayload) => void; submitting: boolean }.
+2. Khi mount, gọi productService.getProducts({ page: 1, limit: 100 }) để lấy danh sách sản phẩm cho dropdown <select>, hiển thị "{skuCode} — {name}".
+3. Các field: productId (select, bắt buộc), quantity (number input, min=1, bắt buộc), manufactureDate (date input, bắt buộc),
+   expiryDate (date input, bắt buộc, PHẢI lớn hơn manufactureDate — validate client-side, hiện lỗi inline nếu sai), note (textarea, optional).
+4. Nút submit gọi onSubmit(payload) nếu form hợp lệ; disable nếu submitting=true hoặc form invalid.
+5. KHÔNG tự gọi API inbound ở đây — chỉ emit onSubmit.
+6. Trả về toàn bộ nội dung file.

@@ -1,0 +1,18 @@
+Tôi cần hoàn thiện trang TransactionList (React + TypeScript), thêm bảng dữ liệu + filter + phân trang.
+
+Bối cảnh:
+- useTransactions(params) trả { items, meta, loading, error, refetch }.
+- Transaction = { id, type: 'IMPORT'|'EXPORT', quantity, batchId, slotToId, slotFromId, userId, note, createdAt }.
+- productService.getProducts(params) có sẵn để lấy dropdown sản phẩm (tham khảo InboundForm.tsx nếu cần).
+
+Yêu cầu:
+1. Tạo component apps/frontend/src/components/TransactionTable.tsx nhận props items: Transaction[], hiển thị cột:
+   Loại (badge "Nhập kho" xanh cho IMPORT / "Xuất kho" cam cho EXPORT), Số lượng, Batch ID (8 ký tự đầu),
+   Từ Slot (8 ký tự đầu hoặc "—" nếu null), Đến Slot (8 ký tự đầu hoặc "—" nếu null), Ghi chú (hoặc "—" nếu null), Thời gian (dd/MM/yyyy HH:mm).
+2. Sửa TransactionList.tsx: thêm filter dropdown Loại (Tất cả/Nhập kho/Xuất kho), 2 date input Từ ngày/Đến ngày,
+   dropdown chọn sản phẩm (load qua productService.getProducts), nút phân trang Trước/Sau.
+3. Wiring loading/error(Toast)/empty state.
+4. Trả về toàn bộ nội dung 2 file.
+
+Nội dung TransactionList.tsx hiện tại:
+[DÁN NỘI DUNG pages/transactions/TransactionList.tsx VÀO ĐÂY]

@@ -1,0 +1,15 @@
+Tôi cần tạo file mới apps/frontend/src/services/inventory.service.ts (React + TypeScript + axios).
+
+Bối cảnh:
+- apiClient (../lib/api-client) đã cấu hình sẵn, tự bóc {success, data}.
+- Types GetInventoryParams, InventoryItem, PaginatedResult<T> đã có trong ../types.
+- Backend endpoint GET /inventory là PUBLIC (không cần token), nhận query params (warehouseId, productId, batchId, slotId, page, limit),
+  trả về PaginatedResult<InventoryItem>.
+
+Yêu cầu:
+1. Import apiClient, type GetInventoryParams/InventoryItem/PaginatedResult từ '../types'.
+2. Tạo object inventoryService export, có đúng 1 hàm:
+   getInventory(params: GetInventoryParams): Promise<PaginatedResult<InventoryItem>>
+   gọi apiClient.get('/inventory', { params }).
+3. KHÔNG thêm hàm khác trong file này.
+4. Trả về toàn bộ nội dung file.

@@ -1,0 +1,20 @@
+Tôi cần tạo modal form Tạo/Sửa Level và nối vào RackingPage.tsx (React + TypeScript).
+
+Bối cảnh:
+- levelService.create(payload)/.update(id, payload) đã có.
+- Type CreateLevelPayload/UpdateLevelPayload đã có trong ../types.
+- Component Toast.tsx có sẵn để hiện lỗi.
+
+Yêu cầu:
+1. Tạo apps/frontend/src/components/LevelFormModal.tsx: props { mode: 'create' | 'edit'; initialData?: Level; onSubmit: (payload) => void; onClose: () => void }.
+   Modal overlay dạng position: fixed, click ra ngoài hoặc nút X để đóng (gọi onClose). Validate field bắt buộc trước khi cho submit.
+2. Sửa RackingPage.tsx: thêm nút "+ Thêm Level" và cho phép bấm vào 1 Level có sẵn để mở modal edit (prefill initialData).
+   Khi submit thành công: gọi levelService.create/update tương ứng, đóng modal, gọi lại levelService.getAll(...) để refresh danh sách, hiện Toast success.
+   Khi lỗi: hiện Toast error với message thật từ backend.
+3. Trả về toàn bộ nội dung 2 file.
+
+Nội dung RackingPage.tsx hiện tại:
+[DÁN NỘI DUNG pages/racking/RackingPage.tsx VÀO ĐÂY]
+
+Code Toast.tsx:
+[DÁN NỘI DUNG components/Toast.tsx VÀO ĐÂY]

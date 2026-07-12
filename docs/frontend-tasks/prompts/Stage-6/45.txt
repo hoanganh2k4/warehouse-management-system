@@ -1,0 +1,11 @@
+Tôi cần rà soát và hoàn thiện trang Dashboard đã tạo (React + TypeScript + CSS thuần).
+
+Yêu cầu:
+1. Xem lại layout các StatCard trong Dashboard.tsx, đảm bảo dùng CSS grid/flex có wrap để responsive tốt trên màn hình < 480px (xếp dọc thay vì tràn ngang).
+2. Nếu cần, tạo/sửa file CSS riêng cho Dashboard (không đụng vào CSS của trang Products).
+3. Liệt kê các lỗi TypeScript/ESLint (nếu có) trong đoạn code Dashboard.tsx tôi dán bên dưới và sửa lại cho sạch.
+4. Không dùng eslint-disable để né lỗi, phải sửa đúng nguyên nhân.
+5. Trả về code đã sửa.
+
+Code Dashboard.tsx hiện tại:
+[DÁN NỘI DUNG pages/dashboard/Dashboard.tsx VÀO ĐÂY]

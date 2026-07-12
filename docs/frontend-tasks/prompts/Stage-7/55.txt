@@ -1,0 +1,9 @@
+Tôi cần rà soát responsive + sửa lỗi lint/build cho module Inventory (3 trang: InventoryList, InventoryInbound, InventoryOutbound).
+
+Yêu cầu:
+1. Đảm bảo bảng tồn kho có overflow-x: auto trên màn hình nhỏ, không làm vỡ layout tổng thể.
+2. Đảm bảo 2 form Inbound/Outbound các input xếp dọc, full-width trên màn hình < 480px.
+3. Liệt kê & sửa các lỗi TypeScript/ESLint trong 3 file tôi dán bên dưới, KHÔNG dùng eslint-disable để né.
+4. Trả về code đã sửa.
+
+[DÁN NỘI DUNG 3 FILE: InventoryList.tsx, InventoryInbound.tsx, InventoryOutbound.tsx VÀO ĐÂY]

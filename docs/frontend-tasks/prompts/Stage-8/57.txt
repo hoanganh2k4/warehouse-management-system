@@ -1,0 +1,23 @@
+Tôi cần bổ sung type vào apps/frontend/src/types.ts (TypeScript) cho 4 entity: Zone, Rack, Level, Slot (cấu trúc phân cấp kho: Zone > Rack > Level > Slot).
+
+Tôi sẽ dán nội dung thật của 4 file DTO backend bên dưới — hãy đọc kỹ và tạo type CHÍNH XÁC theo field trong đó, KHÔNG tự thêm/bớt field.
+
+Yêu cầu:
+1. Với mỗi entity, tạo: Entity type (đầy đủ field trả về, gồm id/timestamps), CreateXPayload (theo CreateXDto), UpdateXPayload (theo UpdateXDto, field đều optional).
+2. Không gộp chung, giữ 4 entity tách biệt.
+3. Trả về toàn bộ nội dung types.ts sau khi thêm (giữ nguyên phần cũ).
+
+--- zones/dto/zone.dto.ts ---
+[DÁN NỘI DUNG apps/backend/src/zones/dto/zone.dto.ts VÀO ĐÂY]
+
+--- racks/dto/rack.dto.ts ---
+[DÁN NỘI DUNG apps/backend/src/racks/dto/rack.dto.ts VÀO ĐÂY]
+
+--- levels/dto/level.dto.ts ---
+[DÁN NỘI DUNG apps/backend/src/levels/dto/level.dto.ts VÀO ĐÂY]
+
+--- slots/dto/slot.dto.ts ---
+[DÁN NỘI DUNG apps/backend/src/slots/dto/slot.dto.ts VÀO ĐÂY]
+
+--- types.ts hiện tại ---
+[DÁN NỘI DUNG types.ts VÀO ĐÂY]

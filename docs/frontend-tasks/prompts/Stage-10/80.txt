@@ -1,0 +1,18 @@
+Tôi cần tạo route khung + hook cho trang Team (React + TypeScript + react-router-dom v6).
+
+Bối cảnh:
+- userService.getTeamMembers(params) đã có.
+- Route này PHẢI nằm trong <ProtectedRoute>.
+
+Yêu cầu:
+1. Tạo apps/frontend/src/hooks/useTeamMembers.ts: useTeamMembers(params: GetTeamMembersParams) trả { items, meta, loading, error, refetch }, không polling.
+2. Tạo apps/frontend/src/pages/team/TeamList.tsx: render <h1>Nhân sự</h1> + gọi useTeamMembers({ page: 1, limit: 20 }), xử lý error rõ ràng (không để màn hình trắng nếu API lỗi).
+3. Sửa App.tsx: thêm <Route path="team" element={<TeamList />} /> bên trong khối <ProtectedRoute>.
+4. Sửa Sidebar.tsx: item Team bỏ soon: true, chuyển thành <Link to="/team">.
+5. Trả về toàn bộ nội dung các file.
+
+Code App.tsx hiện tại:
+[DÁN NỘI DUNG App.tsx VÀO ĐÂY]
+
+Code Sidebar.tsx hiện tại:
+[DÁN NỘI DUNG components/Sidebar.tsx VÀO ĐÂY]
