@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { isAxiosError } from 'axios';
+import { productService } from '../../services/product.service';
+import { Toast } from '../../components/Toast';
 
 type ProductFormState = {
   skuCode: string;
@@ -9,6 +12,8 @@ type ProductFormState = {
   isHeavy: boolean;
 };
 
+type FormErrors = Partial<Record<keyof ProductFormState, string>>;
+
 export default function ProductCreate() {
   const [form, setForm] = useState<ProductFormState>({
     skuCode: '',
@@ -17,16 +22,66 @@ export default function ProductCreate() {
     unit: '',
     isHeavy: false,
   });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   function updateField<K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   }
 
-  // eslint-disable-next-line no-console
-  console.log('form', form); // TODO: xoá log này trước khi commit — chỉ để xác nhận state ở Task 28
+  function validate(): FormErrors {
+    const next: FormErrors = {};
+    if (!form.skuCode.trim()) next.skuCode = 'Vui lòng nhập mã SKU';
+    if (!form.name.trim()) next.name = 'Vui lòng nhập tên sản phẩm';
+    if (!form.unit.trim()) next.unit = 'Vui lòng nhập đơn vị tính';
+    return next;
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
+
+    setSubmitting(true);
+    try {
+      const created = await productService.createProduct({
+        skuCode: form.skuCode.trim(),
+        name: form.name.trim(),
+        category: form.category,
+        unit: form.unit.trim(),
+        isHeavy: form.isHeavy,
+      });
+      navigate(`/products/${created.id}`);
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.status === 409) {
+        setToastMessage(
+          err.response.data?.message === 'SKU already exists'
+            ? 'Mã SKU này đã tồn tại. Vui lòng chọn mã khác.'
+            : 'Dữ liệu bị trùng, vui lòng kiểm tra lại.',
+        );
+      } else {
+        setToastMessage('Không thể tạo sản phẩm. Vui lòng thử lại.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <main className="app-content">
+      {toastMessage && (
+        <Toast message={toastMessage} type="error" onClose={() => setToastMessage(null)} />
+      )}
+
       <div className="page-header">
         <div>
           <p className="eyebrow">Catalog</p>
@@ -40,7 +95,7 @@ export default function ProductCreate() {
           <h2>Thông tin sản phẩm</h2>
         </div>
 
-        <form className="product-form">
+        <form className="product-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label" htmlFor="skuCode">
               Mã SKU
@@ -53,6 +108,7 @@ export default function ProductCreate() {
               value={form.skuCode}
               onChange={(e) => updateField('skuCode', e.target.value)}
             />
+            {errors.skuCode && <p className="form-error">{errors.skuCode}</p>}
           </div>
 
           <div className="form-group">
@@ -67,6 +123,7 @@ export default function ProductCreate() {
               value={form.name}
               onChange={(e) => updateField('name', e.target.value)}
             />
+            {errors.name && <p className="form-error">{errors.name}</p>}
           </div>
 
           <div className="form-group">
@@ -98,6 +155,7 @@ export default function ProductCreate() {
               value={form.unit}
               onChange={(e) => updateField('unit', e.target.value)}
             />
+            {errors.unit && <p className="form-error">{errors.unit}</p>}
           </div>
 
           <div className="form-group form-group-checkbox">
@@ -114,8 +172,8 @@ export default function ProductCreate() {
           </div>
 
           <div className="form-actions">
-            <button type="submit" className="btn-primary">
-              Tạo sản phẩm
+            <button type="submit" className="btn-primary" disabled={submitting}>
+              {submitting ? 'Đang tạo...' : 'Tạo sản phẩm'}
             </button>
             <Link to="/" className="btn-secondary">
               Huỷ

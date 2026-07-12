@@ -54,36 +54,37 @@ export default function ProductList() {
       <div className="page-header">
         <div>
           <p className="eyebrow">Catalog</p>
-          <div className="page-title-row">
-            <h1>Products</h1>
-            <Link to="/products/new" className="btn-primary">
-              + Thêm sản phẩm
-            </Link>
-          </div>
+          <h1>Products</h1>
           <p className="page-desc">Every SKU seeded into the warehouse system, in one place.</p>
         </div>
 
-        <label className="topbar-search">
-          <SearchIcon />
-          <input
-            type="search"
-            placeholder="Search by name or SKU..."
-            value={inputValue}
-            onChange={(event) => setInputValue(event.target.value)}
-            aria-label="Search products"
-          />
-        </label>
+        <div className="page-header-controls">
+          <label className="topbar-search">
+            <SearchIcon />
+            <input
+              type="search"
+              placeholder="Search by name or SKU..."
+              value={inputValue}
+              onChange={(event) => setInputValue(event.target.value)}
+              aria-label="Search products"
+            />
+          </label>
 
-        <select
-          className="sort-select"
-          value={sort}
-          onChange={(event) => setSort(event.target.value as ProductSort)}
-          aria-label="Sort products"
-        >
-          <option value="name">Tên sản phẩm</option>
-          <option value="sku">Mã SKU</option>
-          <option value="category">Danh mục</option>
-        </select>
+          <select
+            className="sort-select"
+            value={sort}
+            onChange={(event) => setSort(event.target.value as ProductSort)}
+            aria-label="Sort products"
+          >
+            <option value="name">Tên sản phẩm</option>
+            <option value="sku">Mã SKU</option>
+            <option value="category">Danh mục</option>
+          </select>
+
+          <Link to="/products/new" className="btn-primary">
+            + Thêm sản phẩm
+          </Link>
+        </div>
       </div>
 
       <div className="stat-row">
