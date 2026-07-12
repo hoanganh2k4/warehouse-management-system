@@ -7,6 +7,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ProductsModule } from './products/products.module';
+import { CategoriesModule } from './categories/categories.module';
 import { WarehousesModule } from './warehouses/warehouses.module';
 import { ZonesModule } from './zones/zones.module';
 import { RacksModule } from './racks/racks.module';
@@ -24,6 +25,7 @@ import { UsersModule } from './users/users.module';
   imports: [
     PrismaModule,
     AuthModule,
+    CategoriesModule,
     ProductsModule,
     WarehousesModule,
     ZonesModule,

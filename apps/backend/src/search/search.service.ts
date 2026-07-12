@@ -15,6 +15,7 @@ export class SearchService {
         ],
       },
       include: {
+        category: true,
         batches: {
           orderBy: { expiryDate: 'asc' },
           include: {
@@ -63,7 +64,7 @@ export class SearchService {
           id: product.id,
           skuCode: product.skuCode,
           name: product.name,
-          category: product.category,
+          category: product.category.name,
           unit: product.unit,
         },
         totalStock,

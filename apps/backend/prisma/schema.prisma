@@ -40,26 +40,34 @@ model User {
 
 // ===================== Catalog =====================
 
-enum ProductCategory {
-  MILK
-  CRACKER
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@map("categories")
 }
 
 model Product {
-  id        String          @id @default(uuid())
-  skuCode   String          @unique
-  name      String
-  category  ProductCategory
-  unit      String
-  isHeavy   Boolean         @default(false)
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-  deletedAt DateTime?
+  id         String   @id @default(uuid())
+  skuCode    String   @unique
+  name       String
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  unit       String
+  isHeavy    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
 
   batches Batch[]
   slots   Slot[]  @relation("SlotCurrentProduct")
 
-  @@index([category])
+  @@index([categoryId])
   @@map("products")
 }
 
