@@ -1,0 +1,9 @@
+Tôi cần rà soát responsive + sửa lỗi lint/build cho trang TransactionList.tsx và TransactionTable.tsx (React + TS + CSS thuần).
+
+Yêu cầu:
+1. Bảng giao dịch có overflow-x: auto trên màn hình nhỏ.
+2. Thanh filter (dropdown loại, date from/to, dropdown sản phẩm) xếp dọc, full-width trên < 480px.
+3. Sửa hết lỗi TypeScript/ESLint phát sinh, KHÔNG dùng eslint-disable để né.
+4. Trả về code đã sửa.
+
+[DÁN NỘI DUNG TransactionList.tsx VÀ TransactionTable.tsx VÀO ĐÂY]

@@ -1,0 +1,9 @@
+Tôi cần sửa nhỏ file apps/frontend/src/pages/inventory/InventoryList.tsx (React + TS + react-router-dom).
+
+Yêu cầu:
+1. Thêm 2 <Link>: "Nhập kho" trỏ tới /inventory/inbound, "Xuất kho" trỏ tới /inventory/outbound, đặt gần tiêu đề trang.
+2. Dùng hook useAuth() (đã có sẵn trong ../../hooks/useAuth) để kiểm tra isAuthenticated(); nếu false thì ẩn 2 link, thay bằng dòng chữ "Đăng nhập để nhập/xuất kho".
+3. Trả về toàn bộ nội dung file sau khi sửa.
+
+Nội dung InventoryList.tsx hiện tại:
+[DÁN NỘI DUNG pages/inventory/InventoryList.tsx VÀO ĐÂY]

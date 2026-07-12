@@ -1,0 +1,10 @@
+Tôi cần làm responsive cho trang RackingPage.tsx (layout 4 cột: Zone | Rack | Level | Slot) trong dự án React + TypeScript + CSS thuần.
+
+Yêu cầu:
+1. Trên màn hình < 768px, đề xuất và áp dụng 1 trong 2 phương án: (a) chỉ hiện 1 cột tại 1 thời điểm kèm nút "Quay lại" để về cột trước,
+   hoặc (b) cho phép cuộn ngang toàn bộ 4 cột (overflow-x: auto, mỗi cột min-width cố định). Chọn phương án (a) nếu không có chỉ định khác.
+2. Đảm bảo trên desktop (>= 1024px) vẫn hiển thị đủ 4 cột song song như hiện tại.
+3. Trả về code CSS/JSX đã sửa.
+
+Nội dung RackingPage.tsx hiện tại:
+[DÁN NỘI DUNG pages/racking/RackingPage.tsx VÀO ĐÂY]

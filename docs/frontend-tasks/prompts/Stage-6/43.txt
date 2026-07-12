@@ -1,0 +1,18 @@
+Tôi cần tạo file mới: apps/frontend/src/hooks/useDashboard.ts (React + TypeScript hooks, dùng useState/useEffect).
+
+Bối cảnh:
+- Đã có apps/frontend/src/services/dashboard.service.ts export dashboardService.getSummary(): Promise<DashboardSummary>.
+- Convention tương tự hook useProducts.ts đã có sẵn trong dự án (tham khảo bên dưới) nhưng KHÔNG cần polling/setInterval.
+
+Yêu cầu:
+1. Tạo hook useDashboard() không nhận tham số.
+2. State: summary (DashboardSummary | null, mặc định null), loading (boolean, mặc định true), error (string | null, mặc định null).
+3. Trong useEffect (chạy khi mount và khi reloadToken đổi), gọi dashboardService.getSummary():
+   - Thành công: set summary, set error = null.
+   - Thất bại: set error = err.message hoặc 'Đã có lỗi xảy ra'.
+   - Luôn set loading = false ở finally.
+4. Trả về { summary, loading, error, refetch } với refetch = () => setReloadToken(t => t + 1).
+5. Nhớ cleanup (cancelled flag) để tránh set state sau khi unmount.
+
+Nội dung useProducts.ts hiện có (chỉ để tham khảo convention, KHÔNG copy phần polling):
+[DÁN NỘI DUNG hooks/useProducts.ts VÀO ĐÂY]

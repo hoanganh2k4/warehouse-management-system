@@ -1,0 +1,19 @@
+Tôi cần tạo trang Racking (React + TypeScript + react-router-dom), bắt đầu bằng cột đầu tiên: danh sách Zone.
+
+Bối cảnh:
+- zoneService.getAll(): Promise<Zone[]> đã có.
+- App.tsx có sẵn <ProtectedRoute> để bọc route cần đăng nhập.
+- Module Racking sẽ có layout 4 cột (Zone | Rack | Level | Slot) nhưng task này CHỈ làm cột Zone.
+
+Yêu cầu:
+1. Tạo apps/frontend/src/pages/racking/RackingPage.tsx: gọi zoneService.getAll() khi mount, render danh sách Zone dạng list các item bấm được,
+   dùng useState lưu selectedZoneId, thêm class active cho item đang chọn. Xử lý loading/error cơ bản.
+2. Sửa App.tsx: thêm <Route path="racking" element={<RackingPage />} /> bên trong khối <ProtectedRoute>.
+3. Sửa Sidebar.tsx: item Racking bỏ soon: true, chuyển thành <Link to="/racking">.
+4. Trả về toàn bộ nội dung 3 file.
+
+Code App.tsx hiện tại:
+[DÁN NỘI DUNG App.tsx VÀO ĐÂY]
+
+Code Sidebar.tsx hiện tại:
+[DÁN NỘI DUNG components/Sidebar.tsx VÀO ĐÂY]

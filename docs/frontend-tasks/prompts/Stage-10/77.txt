@@ -1,0 +1,37 @@
+Tôi cần tạo module NestJS mới apps/backend/src/users/ (users.module.ts, users.controller.ts, users.service.ts, dto/user-query.dto.ts)
+để expose GET /users trong dự án NestJS 11 + Prisma + PostgreSQL.
+
+Bối cảnh — model Prisma User đã có:
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  email        String?   @unique
+  passwordHash String
+  fullName     String?
+  roleId       String
+  role         Role      @relation(fields: [roleId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+}
+
+Yêu cầu:
+1. UserQueryDto: page?: number = 1, limit?: number = 20 (dùng class-validator + class-transformer, theo đúng convention InventoryQueryDto tôi dán bên dưới).
+2. UsersService.findAll(query): query User với deletedAt: null, include role, phân trang bằng skip/take, trả về { items, meta: { page, limit, total, totalPages } }.
+   Map mỗi user sang UserSummary { id, username, email, fullName, role: { id, name }, createdAt } — TUYỆT ĐỐI KHÔNG include passwordHash trong kết quả trả về.
+3. UsersController: @ApiBearerAuth() @ApiTags('Users') @Controller('users'), GET / (không @Public — yêu cầu đăng nhập), gọi service.findAll(query).
+   Dùng decorator @ApiSuccessExample và @ApiAuthReadErrors giống các controller khác trong dự án (tham khảo InventoryController bên dưới).
+4. Đăng ký UsersModule vào app.module.ts (imports).
+5. Trả về toàn bộ nội dung các file.
+
+Convention DTO tham khảo (inventory.dto.ts):
+[DÁN NỘI DUNG apps/backend/src/inventory/dto/inventory.dto.ts VÀO ĐÂY]
+
+Convention controller tham khảo (inventory.controller.ts):
+[DÁN NỘI DUNG apps/backend/src/inventory/inventory.controller.ts VÀO ĐÂY]
+
+Convention service tham khảo (dùng PrismaService, soft-delete deletedAt: null) — dán 1 service bất kỳ đã có, ví dụ products.service.ts:
+[DÁN NỘI DUNG apps/backend/src/products/products.service.ts VÀO ĐÂY]
+
+Nội dung app.module.ts hiện tại:
+[DÁN NỘI DUNG apps/backend/src/app.module.ts VÀO ĐÂY]

@@ -1,0 +1,18 @@
+Tôi cần mở rộng apps/frontend/src/pages/racking/RackingPage.tsx (React + TypeScript), thêm cột Level phụ thuộc vào Rack đang chọn.
+
+Bối cảnh:
+- levelService.getAll(rackId?: string): Promise<Level[]> đã có, filter theo rackId.
+- RackingPage hiện đã có cột Rack với state selectedRackId.
+
+
+Yêu cầu:
+1. Thêm state selectedLevelId (null mặc định) và danh sách levels (state hoặc qua hook riêng nếu bạn thấy hợp lý).
+2. Dùng useEffect phụ thuộc vào selectedRackId: nếu có giá trị, gọi levelService.getAll(selectedRackId) rồi setDanh sách,
+   reset selectedLevelId về null. Nếu selectedRackId là null, danh sách level rỗng, hiện "Chọn Rack để xem Level".
+3. Render cột Level kế bên cột Rack, list các item bấm chọn được, set selectedLevelId khi bấm.
+4. Nếu danh sách rỗng (đã chọn Rack nhưng không có Level con nào), hiện "Chưa có dữ liệu".
+
+6. Trả về toàn bộ nội dung file RackingPage.tsx sau khi sửa.
+
+Nội dung RackingPage.tsx hiện tại:
+[DÁN NỘI DUNG pages/racking/RackingPage.tsx VÀO ĐÂY]

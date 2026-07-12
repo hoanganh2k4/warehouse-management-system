@@ -1,0 +1,12 @@
+Tôi cần bổ sung type vào apps/frontend/src/types.ts (TypeScript) cho tính năng Team, dựa trên response thật của endpoint GET /users vừa được backend tạo.
+
+Response GET /users:
+{ items: [{ id: string, username: string, email: string | null, fullName: string | null, role: { id: string, name: string }, createdAt: string }], meta: { page, limit, total, totalPages } }
+
+Yêu cầu:
+1. Thêm type TeamMember đúng field trên (chú ý email/fullName nullable).
+2. Thêm type GetTeamMembersParams = { page?: number; limit?: number }.
+3. Trả về toàn bộ nội dung types.ts sau khi thêm (giữ nguyên phần cũ).
+
+Nội dung types.ts hiện tại:
+[DÁN NỘI DUNG types.ts VÀO ĐÂY]

@@ -1,0 +1,16 @@
+Tôi cần thêm chức năng Xoá cho cả 4 cấp (Zone/Rack/Level/Slot) trong RackingPage.tsx (React + TypeScript), dùng chung 1 ConfirmDialog.
+
+Bối cảnh:
+- {zone,rack,level,slot}Service.remove(id) đã có ở mỗi service tương ứng.
+- Backend chặn xoá nếu còn con (vd. xoá Rack còn Level → lỗi 409 "rackHasLevels"), message lỗi thật nằm trong err.message (apiClient đã set sẵn).
+- KIỂM TRA xem apps/frontend/src/components/ConfirmDialog.tsx đã tồn tại chưa trước khi tạo mới — nếu đã có, dùng lại, không tạo trùng.
+
+Yêu cầu:
+1. Nếu chưa có, tạo ConfirmDialog.tsx: props {{ message: string; onConfirm: () => void; onCancel: () => void }}, overlay dạng position: fixed.
+2. Thêm nút "Xoá" cho từng item ở cả 4 cột trong RackingPage, bấm vào mở ConfirmDialog với message rõ ràng (vd. "Xoá Rack 'A01'?").
+3. Confirm → gọi remove(id) tương ứng; thành công thì refetch danh sách cột đó, và nếu item vừa xoá đang là selected*Id thì reset về null (và reset luôn các cột con phụ thuộc).
+4. Lỗi → hiện Toast error với message thật từ backend.
+5. Trả về toàn bộ nội dung các file đã tạo/sửa.
+
+Nội dung RackingPage.tsx hiện tại:
+[DÁN NỘI DUNG pages/racking/RackingPage.tsx VÀO ĐÂY]
