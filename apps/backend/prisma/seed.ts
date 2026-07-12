@@ -1,4 +1,4 @@
-import { PrismaClient, ProductCategory } from '../generated/prisma/client';
+import { PrismaClient } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { hashPassword } from '../src/common/utils/password.util';
 
@@ -155,12 +155,24 @@ async function main() {
 
   console.log(`✅ Created ${slotInputs.length} slots`);
 
-  // ===================== Products & Batches (dữ liệu mẫu để test) =====================
+  // ===================== Categories & Products & Batches (dữ liệu mẫu để test) =====================
+  const milkCategory = await prisma.category.upsert({
+    where: { name: 'MILK' },
+    update: {},
+    create: { name: 'MILK', description: 'Sữa' },
+  });
+
+  const crackerCategory = await prisma.category.upsert({
+    where: { name: 'CRACKER' },
+    update: {},
+    create: { name: 'CRACKER', description: 'Bánh quy' },
+  });
+
   const products = [
-    { skuCode: 'VINA001', name: 'Vinamilk Có Đường 180ml', category: ProductCategory.MILK, unit: 'hộp', isHeavy: false },
-    { skuCode: 'VINA002', name: 'Vinamilk Không Đường 1L', category: ProductCategory.MILK, unit: 'hộp', isHeavy: true },
-    { skuCode: 'CRACK001', name: 'Bánh quy AFC', category: ProductCategory.CRACKER, unit: 'gói', isHeavy: false },
-    { skuCode: 'CRACK002', name: 'Bánh Cosy', category: ProductCategory.CRACKER, unit: 'gói', isHeavy: false },
+    { skuCode: 'VINA001', name: 'Vinamilk Có Đường 180ml', categoryId: milkCategory.id, unit: 'hộp', isHeavy: false },
+    { skuCode: 'VINA002', name: 'Vinamilk Không Đường 1L', categoryId: milkCategory.id, unit: 'hộp', isHeavy: true },
+    { skuCode: 'CRACK001', name: 'Bánh quy AFC', categoryId: crackerCategory.id, unit: 'gói', isHeavy: false },
+    { skuCode: 'CRACK002', name: 'Bánh Cosy', categoryId: crackerCategory.id, unit: 'gói', isHeavy: false },
   ];
 
   for (const p of products) {

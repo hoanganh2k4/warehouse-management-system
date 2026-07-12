@@ -29,7 +29,7 @@ export class ProductsService {
       query.sort === 'sku'
         ? { skuCode: 'asc' }
         : query.sort === 'category'
-          ? { category: 'asc' }
+          ? { category: { name: 'asc' } }
           : { name: 'asc' };
 
     const [items, total] = await Promise.all([
@@ -37,6 +37,7 @@ export class ProductsService {
         where,
         ...skipTake(page, limit),
         orderBy,
+        include: { category: true },
       }),
       this.prisma.product.count({ where }),
     ]);
@@ -47,10 +48,20 @@ export class ProductsService {
   async findOne(id: string) {
     const product = await this.prisma.product.findFirst({
       where: { id, deletedAt: null },
-      include: { batches: { orderBy: { expiryDate: 'asc' } } },
+      include: {
+        category: true,
+        batches: { orderBy: { expiryDate: 'asc' } },
+      },
     });
     if (!product) throw new NotFoundException('Product not found');
     return product;
+  }
+
+  private async ensureCategoryExists(categoryId: string) {
+    const category = await this.prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+    if (!category) throw new NotFoundException('Category not found');
   }
 
   async create(dto: CreateProductDto) {
@@ -58,12 +69,21 @@ export class ProductsService {
       where: { skuCode: dto.skuCode },
     });
     if (exists) throw new ConflictException('SKU already exists');
-    return this.prisma.product.create({ data: dto });
+    await this.ensureCategoryExists(dto.categoryId);
+    return this.prisma.product.create({
+      data: dto,
+      include: { category: true },
+    });
   }
 
   async update(id: string, dto: UpdateProductDto) {
     await this.findOne(id);
-    return this.prisma.product.update({ where: { id }, data: dto });
+    if (dto.categoryId) await this.ensureCategoryExists(dto.categoryId);
+    return this.prisma.product.update({
+      where: { id },
+      data: dto,
+      include: { category: true },
+    });
   }
 
   async remove(id: string) {

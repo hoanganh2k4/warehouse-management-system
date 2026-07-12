@@ -3,7 +3,7 @@
 export const ERROR_EXAMPLES = {
   validation: {
     success: false,
-    message: 'skuCode must not be empty, category must be a valid enum value',
+    message: 'skuCode must not be empty, categoryId must be a UUID',
   },
   validationUuid: {
     success: false,
@@ -28,6 +28,10 @@ export const ERROR_EXAMPLES = {
   productNotFound: {
     success: false,
     message: 'Product not found',
+  },
+  categoryNotFound: {
+    success: false,
+    message: 'Category not found',
   },
   warehouseNotFound: {
     success: false,
@@ -64,6 +68,14 @@ export const ERROR_EXAMPLES = {
   skuExists: {
     success: false,
     message: 'SKU already exists',
+  },
+  categoryNameExists: {
+    success: false,
+    message: 'Category name already exists',
+  },
+  categoryHasProducts: {
+    success: false,
+    message: 'Cannot delete category that is still assigned to products',
   },
   batchCodeExists: {
     success: false,
@@ -134,7 +146,8 @@ export const SUCCESS_EXAMPLES = {
       id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
       skuCode: 'VINA001',
       name: 'Vinamilk Có Đường 180ml',
-      category: 'MILK',
+      categoryId: 'cat-uuid-milk',
+      category: { id: 'cat-uuid-milk', name: 'MILK', description: 'Sữa' },
       unit: 'hộp',
       isHeavy: false,
       createdAt: ts,
@@ -150,7 +163,8 @@ export const SUCCESS_EXAMPLES = {
           id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
           skuCode: 'VINA001',
           name: 'Vinamilk Có Đường 180ml',
-          category: 'MILK',
+          categoryId: 'cat-uuid-milk',
+          category: { id: 'cat-uuid-milk', name: 'MILK', description: 'Sữa' },
           unit: 'hộp',
           isHeavy: false,
           createdAt: ts,
@@ -160,6 +174,38 @@ export const SUCCESS_EXAMPLES = {
       ],
       meta: { page: 1, limit: 20, total: 4, totalPages: 1 },
     },
+  },
+  category: {
+    success: true,
+    data: {
+      id: 'cat-uuid-milk',
+      name: 'MILK',
+      description: 'Sữa',
+      createdAt: ts,
+      updatedAt: ts,
+      _count: { products: 2 },
+    },
+  },
+  categoryList: {
+    success: true,
+    data: [
+      {
+        id: 'cat-uuid-milk',
+        name: 'MILK',
+        description: 'Sữa',
+        createdAt: ts,
+        updatedAt: ts,
+        _count: { products: 2 },
+      },
+      {
+        id: 'cat-uuid-cracker',
+        name: 'CRACKER',
+        description: 'Bánh quy',
+        createdAt: ts,
+        updatedAt: ts,
+        _count: { products: 2 },
+      },
+    ],
   },
   userList: {
     success: true,

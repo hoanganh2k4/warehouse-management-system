@@ -1,5 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { ProductCategory } from '../../../generated/prisma/client';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ProductDto {
   @ApiProperty()
@@ -11,8 +10,13 @@ export class ProductDto {
   @ApiProperty()
   name: string;
 
-  @ApiProperty({ enum: ProductCategory })
-  category: ProductCategory;
+  @ApiProperty()
+  categoryId: string;
+
+  @ApiPropertyOptional({
+    description: 'Danh mục đầy đủ, kèm theo khi include quan hệ category',
+  })
+  category?: { id: string; name: string; description?: string | null };
 
   @ApiProperty()
   unit: string;
