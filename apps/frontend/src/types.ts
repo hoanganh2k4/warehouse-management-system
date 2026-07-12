@@ -46,3 +46,11 @@ export type ProductDetail = Product & {
   batches: Batch[];
 };
 
+export type CreateProductPayload = {
+  skuCode: string;
+  name: string;
+  category: ProductCategory;
+  unit: string;
+  isHeavy?: boolean;
+};
+
