@@ -18,6 +18,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
 import { SearchModule } from './search/search.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { SearchModule } from './search/search.module';
     DashboardModule,
     ReportsModule,
     SearchModule,
+    UsersModule,
   ],
   controllers: [HealthController],
   providers: [
