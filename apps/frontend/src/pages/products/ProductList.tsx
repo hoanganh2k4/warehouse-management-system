@@ -15,15 +15,14 @@ export default function ProductList() {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<ProductSort>('name');
 
+  // Tìm kiếm mới -> quay lại trang 1, tránh đứng ở trang không tồn tại (Task 17/18/19).
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedKeyword(inputValue), 350);
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(inputValue);
+      setPage(1);
+    }, 350);
     return () => clearTimeout(timer);
   }, [inputValue]);
-
-  // Tìm kiếm/sắp xếp mới -> quay lại trang 1, tránh đứng ở trang không tồn tại (Task 18/19).
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedKeyword, sort]);
 
   const { items, meta, loading, error, refetch } = useProducts({
     page,
@@ -73,7 +72,10 @@ export default function ProductList() {
           <select
             className="sort-select"
             value={sort}
-            onChange={(event) => setSort(event.target.value as ProductSort)}
+            onChange={(event) => {
+              setSort(event.target.value as ProductSort);
+              setPage(1);
+            }}
             aria-label="Sort products"
           >
             <option value="name">Tên sản phẩm</option>
