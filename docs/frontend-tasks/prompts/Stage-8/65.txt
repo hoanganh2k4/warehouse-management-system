@@ -1,0 +1,19 @@
+Tôi cần mở rộng apps/frontend/src/pages/racking/RackingPage.tsx (React + TypeScript), thêm cột Slot phụ thuộc vào Level đang chọn.
+
+Bối cảnh — Slot khác Zone/Rack/Level:
+- slotService.getAll(params: { levelId?: string; page?: number; limit?: number }): Promise<PaginatedResult<Slot>> — trả { items, meta }, CÓ phân trang.
+- Slot = { id, levelId, code, maxCapacity, usedCapacity, availableCapacity, occupancyRate, currentProductId, distanceToGate, outboundFrequencyScore, createdAt, updatedAt }.
+- GET /slots là public — cột này gọi được kể cả khi chưa đăng nhập.
+- RackingPage hiện đã có cột Level với state selectedLevelId.
+
+Yêu cầu:
+1. Thêm state: selectedSlotId (null mặc định), slots (Slot[]), slotsMeta (PaginationMeta | null), slotsPage (number, mặc định 1).
+2. useEffect phụ thuộc selectedLevelId + slotsPage: nếu selectedLevelId có giá trị, gọi slotService.getAll({ levelId: selectedLevelId, page: slotsPage, limit: 50 }),
+   set slots = result.items, slotsMeta = result.meta. Nếu selectedLevelId là null, slots rỗng, hiện "Chọn Level để xem Slot". Reset selectedSlotId khi selectedLevelId đổi.
+3. Render cột Slot: mỗi item hiện code + badge "Còn chỗ" (xanh, khi usedCapacity < maxCapacity) hoặc "Đầy" (đỏ, khi usedCapacity >= maxCapacity), kèm occupancyRate%.
+4. Nếu slotsMeta.totalPages > 1, hiện nút Trước/Sau đổi slotsPage.
+5. Nếu slots rỗng (đã chọn Level nhưng không có Slot), hiện "Chưa có Slot nào".
+6. Trả về toàn bộ nội dung file RackingPage.tsx sau khi sửa.
+
+Nội dung RackingPage.tsx hiện tại:
+[DÁN NỘI DUNG pages/racking/RackingPage.tsx VÀO ĐÂY]

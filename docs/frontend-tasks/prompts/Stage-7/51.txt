@@ -1,0 +1,22 @@
+Tôi cần bổ sung hàm inbound() vào inventory.service.ts và tạo trang InventoryInbound.tsx (React + TS + react-router-dom).
+
+Bối cảnh:
+- InboundForm.tsx đã có, props { onSubmit, submitting }.
+- Backend POST /inventory/inbound yêu cầu Bearer token, có thể trả lỗi 409 với message khác nhau tuỳ trường hợp
+  (không đủ slot trống / slot không đủ sức chứa) — apiClient đã set error.message = message thật từ backend.
+- Route cần bọc trong <ProtectedRoute>.
+
+Yêu cầu:
+1. Trong inventory.service.ts, thêm: inbound(payload: InboundPayload): Promise<InboundResult> gọi apiClient.post('/inventory/inbound', payload).
+2. Tạo InventoryInbound.tsx: render <InboundForm onSubmit={...} submitting={...} />.
+   - onSubmit: gọi inventoryService.inbound(payload), set submitting=true khi bắt đầu, false khi xong (thành công hoặc lỗi).
+   - Thành công: hiện Toast type="success" rồi điều hướng về /inventory (dùng useNavigate).
+   - Lỗi: hiện <Toast type="error" message={err.message} /> — dùng ĐÚNG message backend trả, không tự viết lại.
+3. Sửa App.tsx thêm route: <Route path="inventory/inbound" element={<InventoryInbound />} /> bên trong khối <ProtectedRoute>.
+4. Trả về nội dung các file đã sửa/tạo.
+
+Code Toast.tsx:
+[DÁN NỘI DUNG components/Toast.tsx VÀO ĐÂY]
+
+Code App.tsx hiện tại:
+[DÁN NỘI DUNG App.tsx VÀO ĐÂY]

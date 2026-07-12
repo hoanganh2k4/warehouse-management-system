@@ -1,0 +1,18 @@
+Tôi cần tạo route khung + hook cho trang Transactions (React + TypeScript + react-router-dom v6).
+
+Bối cảnh:
+- transactionService.getTransactions(params) đã có.
+- Route này PHẢI nằm trong <ProtectedRoute> vì backend yêu cầu đăng nhập (khác /products, /inventory là public).
+
+Yêu cầu:
+1. Tạo apps/frontend/src/hooks/useTransactions.ts: useTransactions(params: GetTransactionsParams) trả { items, meta, loading, error, refetch }, không polling.
+2. Tạo apps/frontend/src/pages/transactions/TransactionList.tsx: render <h1>Lịch sử giao dịch</h1> + gọi useTransactions({ page: 1, limit: 20 }).
+3. Sửa App.tsx: thêm <Route path="transactions" element={<TransactionList />} /> bên trong khối <ProtectedRoute>.
+4. Sửa Sidebar.tsx: item Transactions bỏ soon: true, chuyển thành <Link to="/transactions">.
+5. Trả về toàn bộ nội dung các file.
+
+Code App.tsx hiện tại:
+[DÁN NỘI DUNG App.tsx VÀO ĐÂY]
+
+Code Sidebar.tsx hiện tại:
+[DÁN NỘI DUNG components/Sidebar.tsx VÀO ĐÂY]

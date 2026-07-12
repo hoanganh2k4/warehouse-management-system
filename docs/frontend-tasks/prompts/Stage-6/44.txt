@@ -1,0 +1,24 @@
+Tôi cần tạo trang Dashboard mới trong dự án React + TypeScript + react-router-dom.
+
+Bối cảnh:
+- Đã có hook useDashboard() trả về { summary, loading, error, refetch }, summary có 10 field số liệu.
+- Đã có component có sẵn StatCard nhận props { label, value, hint, icon } (xem code bên dưới) — CHƯA được dùng ở đâu, hãy tái sử dụng.
+- App.tsx hiện định tuyến qua react-router-dom v6, có sẵn <ProtectedRoute /> bọc các route cần đăng nhập.
+- Sidebar.tsx hiện render mục "Dashboard" dạng <button disabled> với nhãn "Soon".
+
+Yêu cầu:
+1. Tạo apps/frontend/src/pages/dashboard/Dashboard.tsx dùng useDashboard(), xử lý loading (skeleton/text đơn giản) và error (hiển thị message).
+2. Render 6 StatCard: Sản phẩm, Lô hàng, Tồn kho, Slot trống/tổng, Tỉ lệ lấp đầy (%), Sắp hết hạn.
+3. Sửa App.tsx: thêm <Route path="dashboard" element={<Dashboard />} /> bên trong khối <Route element={<ProtectedRoute />}>.
+4. Sửa Sidebar.tsx: item Dashboard bỏ soon: true, chuyển từ <button disabled> sang <Link to="/dashboard"> giữ nguyên className hiện tại.
+5. KHÔNG đổi các mục Inventory/Racking/Transactions/Team — vẫn giữ soon: true.
+6. Trả về toàn bộ nội dung 3 file đã sửa/tạo.
+
+Code StatCard.tsx hiện có:
+[DÁN NỘI DUNG components/StatCard.tsx VÀO ĐÂY]
+
+Code App.tsx hiện có:
+[DÁN NỘI DUNG App.tsx VÀO ĐÂY]
+
+Code Sidebar.tsx hiện có:
+[DÁN NỘI DUNG components/Sidebar.tsx VÀO ĐÂY]

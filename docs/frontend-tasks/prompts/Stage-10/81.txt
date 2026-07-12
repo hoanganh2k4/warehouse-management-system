@@ -1,0 +1,16 @@
+Tôi cần hoàn thiện trang Team (React + TypeScript), thêm bảng dữ liệu + phân trang + responsive.
+
+Bối cảnh:
+- useTeamMembers(params) trả { items, meta, loading, error, refetch }.
+- TeamMember = { id, username, email: string | null, fullName: string | null, role: { id, name }, createdAt }.
+
+Yêu cầu:
+1. Tạo component apps/frontend/src/components/TeamTable.tsx nhận props items: TeamMember[], hiển thị cột:
+   Họ tên (fullName, fallback username nếu null), Username, Email (fallback "—"), Vai trò (role.name), Ngày tham gia (dd/MM/yyyy).
+2. Sửa TeamList.tsx: thêm nút phân trang Trước/Sau dựa vào meta.page/meta.totalPages, wiring loading/error(Toast)/empty state.
+3. Đảm bảo bảng có overflow-x: auto trên màn hình nhỏ.
+4. Sửa hết lỗi TypeScript/ESLint phát sinh, không dùng eslint-disable để né.
+5. Trả về toàn bộ nội dung 2 file.
+
+Nội dung TeamList.tsx hiện tại:
+[DÁN NỘI DUNG pages/team/TeamList.tsx VÀO ĐÂY]

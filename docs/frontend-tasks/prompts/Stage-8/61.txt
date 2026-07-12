@@ -1,0 +1,19 @@
+Tôi cần tạo file mới apps/frontend/src/services/slot.service.ts (React + TypeScript + axios).
+
+Bối cảnh — Slot khác Zone/Rack/Level ở 2 điểm:
+- GET /slots và GET /slots/:id là PUBLIC (không cần token). POST/PUT/DELETE cần Bearer token.
+- GET /slots CÓ phân trang, query params: levelId?: string(uuid), warehouseId?: string(uuid), keyword?: string, page?: number, limit?: number.
+  Trả về: { items: Slot[], meta: { page, limit, total, totalPages } }.
+- Type Slot, CreateSlotPayload = { levelId, code, maxCapacity, distanceToGate }, UpdateSlotPayload = { code?, maxCapacity?, distanceToGate?, outboundFrequencyScore? } đã có trong ../types.
+- apiClient (../lib/api-client) đã cấu hình sẵn.
+
+Yêu cầu:
+1. Export slotService với 5 hàm:
+   getAll(params: { levelId?: string; warehouseId?: string; keyword?: string; page?: number; limit?: number }): Promise<PaginatedResult<Slot>>
+   getById(id: string): Promise<Slot>
+   create(payload: CreateSlotPayload): Promise<Slot>
+   update(id: string, payload: UpdateSlotPayload): Promise<Slot>
+   remove(id: string): Promise<Slot>
+2. getAll gọi apiClient.get('/slots', { params }) — chú ý trả PaginatedResult (có meta), KHÔNG phải mảng thuần.
+3. KHÔNG gửi usedCapacity/availableCapacity/occupancyRate/currentProductId khi create/update (backend tự tính các field này).
+4. Trả về toàn bộ nội dung file.

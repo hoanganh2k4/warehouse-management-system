@@ -1,0 +1,17 @@
+Tôi cần hoàn thiện trang Inventory List (React + TypeScript), thêm bảng dữ liệu + filter + phân trang.
+
+Bối cảnh:
+- useInventory(params) đã trả về { items, meta, loading, error, refetch }.
+- InventoryItem = { id, batchId, slotId, quantity, updatedAt } — CHƯA có tên sản phẩm/slot code đẹp, chỉ có ID thô.
+- Dự án đã có component ProductTable.tsx và cách wiring loading/error/pagination trong ProductList.tsx — dùng làm tham khảo convention (không copy y nguyên).
+- Component Toast.tsx có sẵn để hiện lỗi.
+
+Yêu cầu:
+1. Tạo component mới apps/frontend/src/components/InventoryTable.tsx nhận props items: InventoryItem[], hiển thị cột:
+   Batch ID (8 ký tự đầu + "..."), Slot ID (8 ký tự đầu + "..."), Số lượng, Cập nhật lúc (format dd/MM/yyyy HH:mm).
+2. Sửa InventoryList.tsx: thêm 2 ô input text lọc theo productId và warehouseId (UUID thô, gõ tay), nút "Tìm", nút phân trang Trước/Sau dựa vào meta.page/meta.totalPages.
+3. Wiring loading (hiện "Đang tải..."), error (hiện Toast), empty state (hiện "Không có dữ liệu tồn kho").
+4. Trả về toàn bộ nội dung 2 file.
+
+Tham khảo convention từ ProductList.tsx (KHÔNG copy nguyên, chỉ học cách xử lý loading/error/pagination):
+[DÁN NỘI DUNG pages/products/ProductList.tsx VÀO ĐÂY]

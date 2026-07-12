@@ -1,0 +1,17 @@
+Tôi cần tạo file mới apps/frontend/src/services/level.service.ts (React + TypeScript + axios).
+
+Bối cảnh:
+- apiClient (../lib/api-client) đã cấu hình sẵn, tự gắn Bearer token, tự bóc envelope {success, data}.
+- Type Level, CreateLevelPayload, UpdateLevelPayload đã có trong ../types.
+- Backend endpoints (đều yêu cầu đăng nhập):
+  GET /levels?rackId= -> trả mảng Level[] THUẦN (không có meta/pagination)
+  GET /levels/:id -> Level
+  POST /levels (body CreateLevelPayload) -> Level
+  PUT /levels/:id (body UpdateLevelPayload) -> Level
+  DELETE /levels/:id -> Level
+
+Yêu cầu:
+1. Export levelService với 5 hàm: getAll(rackId?: string), getById(id), create(payload), update(id, payload), remove(id).
+2. getAll trả về Promise<Level[]> (mảng thuần, KHÔNG bọc trong {items, meta}).
+3. Dùng đúng method HTTP như trên (get/post/put/delete) qua apiClient.
+4. Trả về toàn bộ nội dung file.

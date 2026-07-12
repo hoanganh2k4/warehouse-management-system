@@ -1,0 +1,17 @@
+Tôi cần bổ sung type vào apps/frontend/src/types.ts (TypeScript) cho Transactions.
+
+Bối cảnh — DTO và response mẫu thật từ backend:
+
+TransactionQueryDto: { from?: string(date-iso); to?: string(date-iso); type?: 'IMPORT' | 'EXPORT'; productId?: string(uuid); warehouseId?: string(uuid); page?: number = 1; limit?: number = 20 }
+
+Response GET /transactions:
+{ items: [{ id: string, type: 'IMPORT' | 'EXPORT', quantity: number, batchId: string, slotToId: string | null, slotFromId: string | null, userId: string, note: string | null, createdAt: string }], meta: { page, limit, total, totalPages } }
+
+Yêu cầu:
+1. Thêm type TransactionType = 'IMPORT' | 'EXPORT'.
+2. Thêm type Transaction với đúng field trên (chú ý nullable).
+3. Thêm type GetTransactionsParams theo TransactionQueryDto.
+4. Trả về toàn bộ nội dung types.ts sau khi thêm (giữ nguyên phần cũ).
+
+Nội dung types.ts hiện tại:
+[DÁN NỘI DUNG types.ts VÀO ĐÂY]

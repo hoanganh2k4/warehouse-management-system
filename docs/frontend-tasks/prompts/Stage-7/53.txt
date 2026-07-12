@@ -1,0 +1,15 @@
+Tôi cần bổ sung hàm outbound() vào inventory.service.ts và tạo trang InventoryOutbound.tsx, đúng pattern như InboundForm/InventoryInbound đã làm trước đó (React + TS).
+
+Bối cảnh:
+- OutboundForm.tsx đã có, props { onSubmit, submitting }.
+- Backend POST /inventory/outbound yêu cầu Bearer token, có thể trả lỗi 409 "insufficientStock" nếu tồn kho không đủ.
+
+Yêu cầu:
+1. Trong inventory.service.ts thêm: outbound(payload: OutboundPayload): Promise<OutboundResult> gọi apiClient.post('/inventory/outbound', payload).
+2. Tạo InventoryOutbound.tsx: render <OutboundForm onSubmit={...} submitting={...} />, thành công → Toast success + navigate('/inventory'),
+   lỗi → <Toast type="error" message={err.message} />.
+3. Sửa App.tsx thêm route inventory/outbound bên trong <ProtectedRoute>.
+4. Trả về nội dung các file đã sửa/tạo.
+
+Tham khảo InventoryInbound.tsx đã làm trước đó (để giữ đúng pattern):
+[DÁN NỘI DUNG pages/inventory/InventoryInbound.tsx VÀO ĐÂY]

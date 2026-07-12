@@ -1,0 +1,16 @@
+Tôi cần tạo component apps/frontend/src/components/OutboundForm.tsx (React + TypeScript).
+
+Bối cảnh:
+- Type OutboundPayload = { productId: string; quantity: number; note?: string } đã có trong ../types.
+- productService.getProducts(params) đã có để lấy danh sách sản phẩm cho dropdown, giống cách InboundForm.tsx đã làm (tham khảo bên dưới).
+- Xuất kho KHÔNG cần chọn ngày — backend tự áp dụng FEFO (hết hạn trước xuất trước).
+
+Yêu cầu:
+1. Props: { onSubmit: (payload: OutboundPayload) => void; submitting: boolean }.
+2. Dropdown chọn sản phẩm (load qua productService.getProducts({ page: 1, limit: 100 })), input quantity (min=1, bắt buộc), textarea note (optional).
+3. Disable nút submit nếu form invalid hoặc submitting=true.
+4. KHÔNG tự gọi API outbound.
+5. Trả về toàn bộ nội dung file.
+
+Tham khảo InboundForm.tsx đã có (để nhất quán cách load dropdown sản phẩm):
+[DÁN NỘI DUNG components/InboundForm.tsx VÀO ĐÂY]

@@ -1,0 +1,18 @@
+Tôi cần mở rộng apps/frontend/src/pages/racking/RackingPage.tsx (React + TypeScript), thêm cột Rack phụ thuộc vào Zone đang chọn.
+
+Bối cảnh:
+- rackService.getAll(zoneId?: string): Promise<Rack[]> đã có, filter theo zoneId.
+- RackingPage hiện đã có cột Zone với state selectedZoneId.
+
+
+Yêu cầu:
+1. Thêm state selectedRackId (null mặc định) và danh sách racks (state hoặc qua hook riêng nếu bạn thấy hợp lý).
+2. Dùng useEffect phụ thuộc vào selectedZoneId: nếu có giá trị, gọi rackService.getAll(selectedZoneId) rồi setDanh sách,
+   reset selectedRackId về null. Nếu selectedZoneId là null, danh sách rack rỗng, hiện "Chọn Zone để xem Rack".
+3. Render cột Rack kế bên cột Zone, list các item bấm chọn được, set selectedRackId khi bấm.
+4. Nếu danh sách rỗng (đã chọn Zone nhưng không có Rack con nào), hiện "Chưa có dữ liệu".
+
+6. Trả về toàn bộ nội dung file RackingPage.tsx sau khi sửa.
+
+Nội dung RackingPage.tsx hiện tại:
+[DÁN NỘI DUNG pages/racking/RackingPage.tsx VÀO ĐÂY]

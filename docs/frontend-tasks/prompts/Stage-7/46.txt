@@ -1,0 +1,26 @@
+Tôi cần bổ sung type vào apps/frontend/src/types.ts (TypeScript, dự án React).
+
+Bối cảnh — các type/DTO thật từ backend (NestJS):
+
+InventoryQueryDto: { warehouseId?: string(uuid); productId?: string(uuid); batchId?: string(uuid); slotId?: string(uuid); page?: number = 1; limit?: number = 20 }
+InboundDto: { productId: string(uuid); quantity: number; manufactureDate: string(date-iso); expiryDate: string(date-iso); note?: string }
+OutboundDto: { productId: string(uuid); quantity: number; note?: string }
+
+Response GET /inventory/:id (1 item):
+{ id: string, batchId: string, slotId: string, quantity: number, updatedAt: string }
+
+Response POST /inventory/inbound (201):
+{ batch: { id, batchCode, productId, manufactureDate, expiryDate }, allocations: [{ slotId, slotCode, quantity, score }] }
+
+Response POST /inventory/outbound (201) — CHƯA rõ hình dạng đầy đủ, tạm định nghĩa tối thiểu:
+{ pickingList: Array<{ slotId: string, slotCode: string, batchId: string, quantity: number }>, totalQuantity: number }
+(nếu không chắc, hỏi tôi xem response thật trước khi chốt).
+
+Yêu cầu:
+1. Thêm các type: InventoryItem, GetInventoryParams, InboundPayload, OutboundPayload, InboundResult, OutboundResult — đúng field trên.
+2. KHÔNG đổi tên field so với backend.
+3. KHÔNG xoá/sửa các type đã có (Product, Batch, ProductDetail, v.v.).
+4. Trả về toàn bộ nội dung types.ts sau khi thêm (giữ nguyên phần cũ).
+
+Nội dung types.ts hiện tại:
+[DÁN NỘI DUNG types.ts VÀO ĐÂY]

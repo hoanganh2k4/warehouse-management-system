@@ -1,0 +1,22 @@
+Tôi cần tạo route khung + hook cho trang Inventory (React + TypeScript + react-router-dom v6).
+
+Bối cảnh:
+- inventoryService.getInventory(params) đã có, trả Promise<PaginatedResult<InventoryItem>>.
+- Hook useProducts.ts hiện có (tham khảo convention state/loading/error) nhưng bản useInventory KHÔNG cần polling/setInterval.
+- App.tsx định tuyến "products" là route public (không bọc ProtectedRoute) — "inventory" cũng phải public tương tự.
+
+Yêu cầu:
+1. Tạo apps/frontend/src/hooks/useInventory.ts: useInventory(params: GetInventoryParams) trả về { items, meta, loading, error, refetch }, KHÔNG polling.
+2. Tạo apps/frontend/src/pages/inventory/InventoryList.tsx: chỉ render <h1>Tồn kho</h1> + gọi useInventory({ page: 1, limit: 20 }) để xác nhận hook chạy được (chưa cần bảng dữ liệu).
+3. Sửa App.tsx: thêm <Route path="inventory" element={<InventoryList />} /> ngang hàng với route "products" (KHÔNG bọc ProtectedRoute).
+4. Sửa Sidebar.tsx: item Inventory bỏ soon: true, chuyển thành <Link to="/inventory">.
+5. Trả về toàn bộ nội dung các file đã tạo/sửa.
+
+Code useProducts.ts hiện có (tham khảo convention, không copy polling):
+[DÁN NỘI DUNG hooks/useProducts.ts VÀO ĐÂY]
+
+Code App.tsx hiện tại:
+[DÁN NỘI DUNG App.tsx VÀO ĐÂY]
+
+Code Sidebar.tsx hiện tại:
+[DÁN NỘI DUNG components/Sidebar.tsx VÀO ĐÂY]

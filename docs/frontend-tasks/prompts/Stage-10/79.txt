@@ -1,0 +1,11 @@
+Tôi cần tạo file mới apps/frontend/src/services/user.service.ts (React + TypeScript + axios).
+
+Bối cảnh:
+- apiClient (../lib/api-client) đã cấu hình sẵn.
+- Type GetTeamMembersParams, TeamMember, PaginatedResult<T> đã có trong ../types.
+- Backend GET /users yêu cầu đăng nhập, nhận query params (page, limit), trả PaginatedResult<TeamMember>.
+
+Yêu cầu:
+1. Export userService với đúng 1 hàm: getTeamMembers(params: GetTeamMembersParams): Promise<PaginatedResult<TeamMember>>, gọi apiClient.get('/users', { params }).
+2. KHÔNG thêm hàm khác.
+3. Trả về toàn bộ nội dung file.
