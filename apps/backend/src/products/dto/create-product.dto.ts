@@ -1,11 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ProductCategory } from '../../../generated/prisma/client';
 import {
   IsBoolean,
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -19,9 +18,9 @@ export class CreateProductDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ enum: ProductCategory })
-  @IsEnum(ProductCategory)
-  category: ProductCategory;
+  @ApiProperty({ description: 'ID của danh mục (xem GET /categories)' })
+  @IsUUID()
+  categoryId: string;
 
   @ApiProperty({ example: 'hộp' })
   @IsString()
@@ -40,10 +39,10 @@ export class UpdateProductDto {
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ enum: ProductCategory })
+  @ApiPropertyOptional({ description: 'ID của danh mục (xem GET /categories)' })
   @IsOptional()
-  @IsEnum(ProductCategory)
-  category?: ProductCategory;
+  @IsUUID()
+  categoryId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

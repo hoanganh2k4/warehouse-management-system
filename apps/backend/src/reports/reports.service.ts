@@ -15,6 +15,7 @@ export class ReportsService {
     const products = await this.prisma.product.findMany({
       where: { deletedAt: null },
       include: {
+        category: true,
         batches: {
           include: {
             inventories: {
@@ -65,7 +66,7 @@ export class ReportsService {
         productId: product.id,
         skuCode: product.skuCode,
         name: product.name,
-        category: product.category,
+        category: product.category.name,
         unit: product.unit,
         totalQuantity: totalQty,
         locations,

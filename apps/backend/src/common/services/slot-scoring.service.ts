@@ -78,7 +78,7 @@ export class SlotScoringService {
 
     if (
       slot.currentProduct &&
-      slot.currentProduct.category !== product.category
+      slot.currentProduct.categoryId !== product.categoryId
     ) {
       return false;
     }
