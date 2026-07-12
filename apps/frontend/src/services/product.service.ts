@@ -5,6 +5,7 @@ import type {
   GetProductsParams,
   ProductDetail,
   CreateProductPayload,
+  UpdateProductPayload,
 } from '../types';
 
 export const productService = {
@@ -18,5 +19,9 @@ export const productService = {
 
   createProduct(payload: CreateProductPayload): Promise<Product> {
     return apiClient.post('/products', payload);
+  },
+
+  updateProduct(id: string, payload: UpdateProductPayload): Promise<Product> {
+    return apiClient.put(`/products/${id}`, payload);
   },
 };

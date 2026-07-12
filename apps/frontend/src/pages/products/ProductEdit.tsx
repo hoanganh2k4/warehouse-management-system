@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useProductDetail } from '../../hooks/useProductDetail';
+import { productService } from '../../services/product.service';
 
 type EditFormState = {
   name: string;
@@ -14,6 +15,8 @@ export function ProductEdit() {
   const { product, loading, error, refetch } = useProductDetail(id);
 
   const [form, setForm] = useState<EditFormState | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   // Chỉ khởi tạo form 1 lần khi product load xong — không ghi đè lại sau đó
   // để không mất dữ liệu người dùng đang gõ dở nếu refetch() được gọi lại.
@@ -30,6 +33,26 @@ export function ProductEdit() {
 
   function updateField<K extends keyof EditFormState>(key: K, value: EditFormState[K]) {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form || !id) return;
+
+    setSubmitting(true);
+    try {
+      await productService.updateProduct(id, {
+        name: form.name.trim(),
+        category: form.category,
+        unit: form.unit.trim(),
+        isHeavy: form.isHeavy,
+      });
+      navigate(`/products/${id}`);
+    } catch (err) {
+      console.error(err); // Task 36 sẽ thay bằng Toast thật
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (loading) {
@@ -74,7 +97,7 @@ export function ProductEdit() {
           <h2>Thông tin sản phẩm</h2>
         </div>
 
-        <form className="product-form">
+        <form className="product-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Mã SKU</label>
             <p className="muted-cell">{product.skuCode} (không thể chỉnh sửa)</p>
@@ -138,7 +161,14 @@ export function ProductEdit() {
             </label>
           </div>
 
-          {/* Nút submit thật + validate sẽ nối ở Task 35/36 */}
+          <div className="form-actions">
+            <button type="submit" className="btn-primary" disabled={submitting}>
+              {submitting ? 'Đang lưu...' : 'Lưu thay đổi'}
+            </button>
+            <Link to={`/products/${id}`} className="btn-secondary">
+              Huỷ
+            </Link>
+          </div>
         </form>
       </section>
     </main>

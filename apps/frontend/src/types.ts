@@ -54,3 +54,10 @@ export type CreateProductPayload = {
   isHeavy?: boolean;
 };
 
+export type UpdateProductPayload = {
+  name?: string;
+  category?: ProductCategory;
+  unit?: string;
+  isHeavy?: boolean;
+};
+
