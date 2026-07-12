@@ -7,6 +7,7 @@ import {
   LayersIcon,
   SettingsIcon,
   SwapIcon,
+  TagIcon,
   UsersIcon,
   WarehouseIcon,
 } from './icons';
@@ -22,6 +23,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: <GridIcon />, soon: true },
   { label: 'Products', icon: <BoxIcon />, to: '/products' },
+  { label: 'Categories', icon: <TagIcon />, to: '/categories' },
   { label: 'Inventory', icon: <LayersIcon />, soon: true },
   { label: 'Racking', icon: <WarehouseIcon />, soon: true },
   { label: 'Transactions', icon: <SwapIcon />, soon: true },
