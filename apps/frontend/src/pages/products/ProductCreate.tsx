@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { productService } from '../../services/product.service';
 
 type ProductFormState = {
   skuCode: string;
@@ -20,6 +21,8 @@ export default function ProductCreate() {
     isHeavy: false,
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   function updateField<K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -39,12 +42,28 @@ export default function ProductCreate() {
     return next;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const validationErrors = validate();
     setErrors(validationErrors);
-    // eslint-disable-next-line no-console
-    console.log('validationErrors', validationErrors); // TODO: submit thật sẽ nối ở Task 31
+    if (Object.keys(validationErrors).length > 0) return;
+
+    setSubmitting(true);
+    try {
+      const created = await productService.createProduct({
+        skuCode: form.skuCode.trim(),
+        name: form.name.trim(),
+        category: form.category,
+        unit: form.unit.trim(),
+        isHeavy: form.isHeavy,
+      });
+      navigate(`/products/${created.id}`);
+    } catch (err) {
+      // Task 32 sẽ thay đoạn này bằng Toast thật
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -139,8 +158,8 @@ export default function ProductCreate() {
           </div>
 
           <div className="form-actions">
-            <button type="submit" className="btn-primary">
-              Tạo sản phẩm
+            <button type="submit" className="btn-primary" disabled={submitting}>
+              {submitting ? 'Đang tạo...' : 'Tạo sản phẩm'}
             </button>
             <Link to="/" className="btn-secondary">
               Huỷ
