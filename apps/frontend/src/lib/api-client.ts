@@ -48,7 +48,11 @@ apiClient.interceptors.response.use(
     // Lỗi HTTP (401, 404, 409, 500...) hoặc lỗi mạng (không có response) đều rơi vào đây
     const message =
       error.response?.data?.message ?? error.message ?? 'Network error';
-    return Promise.reject(new Error(message));
+    // Gắn message thân thiện lên chính AxiosError gốc (thay vì bọc trong `new Error`)
+    // để giữ nguyên `isAxiosError(err) === true` và `err.response.status`,
+    // phục vụ các chỗ cần phân biệt lỗi theo status code (vd. 409 ở Task 32).
+    error.message = message;
+    return Promise.reject(error);
   },
 );
 

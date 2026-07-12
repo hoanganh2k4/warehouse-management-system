@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { isAxiosError } from 'axios';
 import { productService } from '../../services/product.service';
+import { Toast } from '../../components/Toast';
 
 type ProductFormState = {
   skuCode: string;
@@ -22,6 +24,7 @@ export default function ProductCreate() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
   function updateField<K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) {
@@ -59,8 +62,15 @@ export default function ProductCreate() {
       });
       navigate(`/products/${created.id}`);
     } catch (err) {
-      // Task 32 sẽ thay đoạn này bằng Toast thật
-      console.error(err);
+      if (isAxiosError(err) && err.response?.status === 409) {
+        setToastMessage(
+          err.response.data?.message === 'SKU already exists'
+            ? 'Mã SKU này đã tồn tại. Vui lòng chọn mã khác.'
+            : 'Dữ liệu bị trùng, vui lòng kiểm tra lại.',
+        );
+      } else {
+        setToastMessage('Không thể tạo sản phẩm. Vui lòng thử lại.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -68,6 +78,10 @@ export default function ProductCreate() {
 
   return (
     <main className="app-content">
+      {toastMessage && (
+        <Toast message={toastMessage} type="error" onClose={() => setToastMessage(null)} />
+      )}
+
       <div className="page-header">
         <div>
           <p className="eyebrow">Catalog</p>
