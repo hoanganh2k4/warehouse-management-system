@@ -9,6 +9,8 @@ type ProductFormState = {
   isHeavy: boolean;
 };
 
+type FormErrors = Partial<Record<keyof ProductFormState, string>>;
+
 export default function ProductCreate() {
   const [form, setForm] = useState<ProductFormState>({
     skuCode: '',
@@ -17,13 +19,33 @@ export default function ProductCreate() {
     unit: '',
     isHeavy: false,
   });
+  const [errors, setErrors] = useState<FormErrors>({});
 
   function updateField<K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   }
 
-  // eslint-disable-next-line no-console
-  console.log('form', form); // TODO: xoá log này trước khi commit — chỉ để xác nhận state ở Task 28
+  function validate(): FormErrors {
+    const next: FormErrors = {};
+    if (!form.skuCode.trim()) next.skuCode = 'Vui lòng nhập mã SKU';
+    if (!form.name.trim()) next.name = 'Vui lòng nhập tên sản phẩm';
+    if (!form.unit.trim()) next.unit = 'Vui lòng nhập đơn vị tính';
+    return next;
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    // eslint-disable-next-line no-console
+    console.log('validationErrors', validationErrors); // TODO: submit thật sẽ nối ở Task 31
+  }
 
   return (
     <main className="app-content">
@@ -40,7 +62,7 @@ export default function ProductCreate() {
           <h2>Thông tin sản phẩm</h2>
         </div>
 
-        <form className="product-form">
+        <form className="product-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label" htmlFor="skuCode">
               Mã SKU
@@ -53,6 +75,7 @@ export default function ProductCreate() {
               value={form.skuCode}
               onChange={(e) => updateField('skuCode', e.target.value)}
             />
+            {errors.skuCode && <p className="form-error">{errors.skuCode}</p>}
           </div>
 
           <div className="form-group">
@@ -67,6 +90,7 @@ export default function ProductCreate() {
               value={form.name}
               onChange={(e) => updateField('name', e.target.value)}
             />
+            {errors.name && <p className="form-error">{errors.name}</p>}
           </div>
 
           <div className="form-group">
@@ -98,6 +122,7 @@ export default function ProductCreate() {
               value={form.unit}
               onChange={(e) => updateField('unit', e.target.value)}
             />
+            {errors.unit && <p className="form-error">{errors.unit}</p>}
           </div>
 
           <div className="form-group form-group-checkbox">

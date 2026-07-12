@@ -145,14 +145,16 @@
 }
 
 .topbar-search {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 8px;
+  height: 40px;
   color: var(--text-faint);
   background: var(--canvas);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  padding: 8px 12px;
+  padding: 0 12px;
   width: min(360px, 42vw);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -333,14 +335,23 @@
 /* ---------- Sort select ---------- */
 
 .sort-select {
+  box-sizing: border-box;
   height: 40px;
-  padding: 0 12px;
+  padding: 0 32px 0 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='1.6'><path d='M5.5 8L10 12.5L14.5 8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
   color: var(--text);
   font-size: 0.85rem;
+  line-height: 40px;
   cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .sort-select:focus-visible {
@@ -600,17 +611,13 @@
     padding: 10px 14px;
   }
 }
-/* ---------- Page title row (title + action button) ---------- */
+/* ---------- Page header controls (search + sort + action button) ---------- */
 
-.page-title-row {
+.page-header-controls {
   display: flex;
   align-items: center;
   gap: 14px;
   flex-wrap: wrap;
-}
-
-.page-title-row h1 {
-  margin-bottom: 0;
 }
 
 /* ---------- Product form (Task 27) ---------- */
@@ -651,6 +658,12 @@
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
+.form-error {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--danger);
+}
+
 .form-group-checkbox {
   flex-direction: row;
 }
@@ -672,6 +685,7 @@
 }
 
 .btn-primary {
+  box-sizing: border-box;
   height: 40px;
   padding: 0 18px;
   border: none;
