@@ -62,6 +62,10 @@ export default function ProductDetail() {
             <span className="sku-code">{product.skuCode}</span>
           </p>
         </div>
+
+        <Link to={`/products/${product.id}/edit`} className="btn-primary">
+          Sửa
+        </Link>
       </div>
 
       <section className="panel">
