@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Product } from '../types';
 import { AlertIcon, ScaleIcon, TagIcon } from './icons';
 
@@ -7,6 +8,7 @@ type ProductTableProps = {
   loading: boolean;
   error: string | null;
   query: string;
+  onDeleteRequest: (product: Product) => void;
 };
 
 function formatDate(value: string) {
@@ -21,7 +23,14 @@ function formatDate(value: string) {
   }
 }
 
-export function ProductTable({ products, totalCount, loading, error, query }: ProductTableProps) {
+export function ProductTable({
+  products,
+  totalCount,
+  loading,
+  error,
+  query,
+  onDeleteRequest,
+}: ProductTableProps) {
   if (loading) {
     return (
       <div className="table-wrap">
@@ -34,6 +43,7 @@ export function ProductTable({ products, totalCount, loading, error, query }: Pr
               <th>Unit</th>
               <th>Handling</th>
               <th>Updated</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -44,6 +54,7 @@ export function ProductTable({ products, totalCount, loading, error, query }: Pr
                 <td><span className="skeleton" style={{ width: '90px' }} /></td>
                 <td><span className="skeleton" style={{ width: '50px' }} /></td>
                 <td><span className="skeleton" style={{ width: '80px' }} /></td>
+                <td><span className="skeleton" style={{ width: '90px' }} /></td>
                 <td><span className="skeleton" style={{ width: '90px' }} /></td>
               </tr>
             ))}
@@ -94,6 +105,7 @@ export function ProductTable({ products, totalCount, loading, error, query }: Pr
             <th>Unit</th>
             <th>Handling</th>
             <th>Updated</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -118,6 +130,14 @@ export function ProductTable({ products, totalCount, loading, error, query }: Pr
                 )}
               </td>
               <td className="muted-cell">{formatDate(product.updatedAt)}</td>
+              <td className="table-actions">
+                <Link to={`/products/${product.id}`} className="btn-secondary btn-sm">
+                  Xem
+                </Link>
+                <button className="btn-danger btn-sm" onClick={() => onDeleteRequest(product)}>
+                  Xoá
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

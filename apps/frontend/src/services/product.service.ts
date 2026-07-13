@@ -24,4 +24,8 @@ export const productService = {
   updateProduct(id: string, payload: UpdateProductPayload): Promise<Product> {
     return apiClient.put(`/products/${id}`, payload);
   },
+
+  deleteProduct(id: string): Promise<{ id: string; deletedAt: string }> {
+    return apiClient.delete(`/products/${id}`);
+  },
 };
