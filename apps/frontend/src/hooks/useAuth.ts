@@ -1,21 +1,17 @@
-const TOKEN_KEY = 'wms_access_token';
+import { authStorage } from '../lib/auth-storage';
 
 export function useAuth() {
-  const saveToken = (token: string) => {
-    localStorage.setItem(TOKEN_KEY, token);
-  };
-
-  const getToken = (): string | null => {
-    return localStorage.getItem(TOKEN_KEY);
+  const saveTokens = (accessToken: string, refreshToken: string) => {
+    authStorage.saveTokens(accessToken, refreshToken);
   };
 
   const isAuthenticated = (): boolean => {
-    return !!getToken();
+    return authStorage.hasValidAccessToken() || authStorage.hasValidRefreshToken();
   };
 
   const logout = () => {
-    localStorage.removeItem(TOKEN_KEY);
+    authStorage.clear();
   };
 
-  return { saveToken, getToken, isAuthenticated, logout };
+  return { saveTokens, isAuthenticated, logout };
 }

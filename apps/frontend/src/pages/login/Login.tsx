@@ -9,7 +9,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { saveToken } = useAuth();
+  const { saveTokens } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -18,7 +18,7 @@ export default function Login() {
     setError(null);
     try {
       const result = await login(username, password);
-      saveToken(result.accessToken);
+      saveTokens(result.accessToken, result.refreshToken);
       navigate('/products');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đăng nhập thất bại');
