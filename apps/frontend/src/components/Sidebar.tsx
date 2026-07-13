@@ -21,7 +21,7 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', icon: <GridIcon />, soon: true },
+  { label: 'Dashboard', icon: <GridIcon />, to: '/dashboard' },
   { label: 'Products', icon: <BoxIcon />, to: '/products' },
   { label: 'Categories', icon: <TagIcon />, to: '/categories' },
   { label: 'Inventory', icon: <LayersIcon />, soon: true },
