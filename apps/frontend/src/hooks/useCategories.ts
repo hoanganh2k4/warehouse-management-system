@@ -10,27 +10,37 @@ export function useCategories() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
 
-    categoryService
-      .getCategories()
-      .then((result) => {
-        if (cancelled) return;
-        setItems(result);
-        setError(null);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    function fetchCategories() {
+      setLoading(true);
+
+      categoryService
+        .getCategories()
+        .then((result) => {
+          if (cancelled) return;
+          setItems(result);
+          setError(null);
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    }
+
+    fetchCategories();
 
     return () => {
       cancelled = true;
     };
   }, [reloadToken]);
 
-  return { items, loading, error, refetch: () => setReloadToken((t) => t + 1) };
+  function refetch() {
+    setLoading(true);
+    setReloadToken((t) => t + 1);
+  }
+
+  return { items, loading, error, refetch };
 }

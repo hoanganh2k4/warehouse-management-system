@@ -53,3 +53,16 @@ docs/frontend-tasks/
 2. Người làm mở file `tasks/Stage-X/NN-*.md`, đọc Bối cảnh + Yêu cầu + Không được làm.
 3. Mở file `prompts/Stage-X/NN.txt`, dán các đoạn `[DÁN NỘI DUNG ... VÀO ĐÂY]` bằng code thật lấy từ repo, gửi cho AI.
 4. Trước khi merge, tick đủ checklist "Kết quả kỳ vọng (Definition of Done)" trong file task.
+
+
+## Bắt buộc trước khi coi task hoàn thành
+Sau khi sửa bất kỳ file nào trong `apps/frontend`, LUÔN chạy các lệnh sau
+và sửa hết lỗi trước khi báo cáo xong việc:
+
+npm run lint --workspace=frontend
+npm run build --workspace=frontend
+
+Nếu sửa file trong `apps/backend`, chạy thêm:
+
+npm run lint --workspace=backend
+npm run build --workspace=backend
