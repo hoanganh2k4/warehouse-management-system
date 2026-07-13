@@ -37,5 +37,10 @@ export function useCategories() {
     };
   }, [reloadToken]);
 
-  return { items, loading, error, refetch: () => setReloadToken((t) => t + 1) };
+  function refetch() {
+    setLoading(true);
+    setReloadToken((t) => t + 1);
+  }
+
+  return { items, loading, error, refetch };
 }
