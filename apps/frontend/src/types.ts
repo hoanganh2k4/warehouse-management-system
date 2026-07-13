@@ -92,3 +92,16 @@ export type GetTeamMembersParams = {
   page?: number;
   limit?: number;
 };
+
+export type DashboardSummary = {
+  products: number;
+  batches: number;
+  totalSlots: number;
+  availableSlots: number;
+  occupiedSlots: number;
+  occupancyPercent: number;
+  inventory: number;
+  expiringSoon: number;
+  inboundToday: number;
+  outboundToday: number;
+};
