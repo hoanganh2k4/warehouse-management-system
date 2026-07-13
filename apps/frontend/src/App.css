@@ -612,6 +612,7 @@
     padding: 10px 14px;
   }
 }
+
 /* ---------- Page header controls (search + sort + action button) ---------- */
 
 .page-header-controls {
@@ -871,5 +872,56 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ---------- Responsive fine-tuning cho mobile nhỏ (Task 39) ---------- */
+/* Đặt cuối file để thắng cascade so với các rule gốc phía trên có cùng độ ưu tiên. */
+
+@media (max-width: 480px) {
+  .page-header-controls {
+    width: 100%;
+  }
+
+  .page-header-controls > * {
+    width: 100%;
+  }
+
+  .product-form {
+    max-width: none;
+    padding: 16px;
+  }
+
+  .form-actions {
+    flex-wrap: wrap;
+  }
+
+  .form-actions > * {
+    flex: 1 1 auto;
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .toast {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
+
+  .dialog-box {
+    padding: 18px;
+  }
+
+  .dialog-actions {
+    flex-wrap: wrap;
+  }
+
+  .dialog-actions > * {
+    flex: 1 1 auto;
   }
 }
