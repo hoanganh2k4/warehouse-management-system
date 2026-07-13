@@ -1,6 +1,17 @@
+import { useNavigate } from 'react-router-dom';
 import { ExternalLinkIcon } from './icons';
+import { useAuth } from '../hooks/useAuth';
 
 export function Topbar() {
+  const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+  const loggedIn = isAuthenticated();
+
+  function handleLogout() {
+    logout();
+    navigate('/login');
+  }
+
   return (
     <header className="topbar">
       <div className="topbar-actions">
@@ -13,9 +24,21 @@ export function Topbar() {
           <span>API docs</span>
           <ExternalLinkIcon />
         </a>
-        <div className="user-chip" title="Signed in">
-          <span className="user-avatar">WM</span>
-        </div>
+
+        {loggedIn ? (
+          <>
+            <div className="user-chip" title="Signed in">
+              <span className="user-avatar">WM</span>
+            </div>
+            <button type="button" className="docs-link" onClick={handleLogout}>
+              Đăng xuất
+            </button>
+          </>
+        ) : (
+          <button type="button" className="docs-link" onClick={() => navigate('/login')}>
+            Đăng nhập
+          </button>
+        )}
       </div>
     </header>
   );

@@ -4,12 +4,29 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service';
 import { verifyPassword } from '../common/utils/password.util';
 
+type AccessTokenPayload = { sub: string; username: string; role: string };
+type RefreshTokenPayload = AccessTokenPayload & { type: 'refresh' };
+
+const ACCESS_TOKEN_EXPIRES_IN_SECONDS = 86400; // 1d — phải khớp JWT_EXPIRES_IN mặc định trong auth.module.ts
+
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
+
+  private issueTokenPair(payload: AccessTokenPayload) {
+    const accessToken = this.jwtService.sign(payload);
+    const refreshPayload: RefreshTokenPayload = { ...payload, type: 'refresh' };
+    const refreshToken = this.jwtService.sign(refreshPayload, { expiresIn: '7d' });
+
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn: ACCESS_TOKEN_EXPIRES_IN_SECONDS,
+    };
+  }
 
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findFirst({
@@ -21,15 +38,36 @@ export class AuthService {
       throw new UnauthorizedException('Invalid username or password');
     }
 
-    const payload = { sub: user.id, username: user.username, role: user.role.name };
-    const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    return this.issueTokenPair({
+      sub: user.id,
+      username: user.username,
+      role: user.role.name,
+    });
+  }
 
-    return {
-      accessToken,
-      refreshToken,
-      expiresIn: 86400,
-    };
+  async refresh(refreshToken: string) {
+    let payload: RefreshTokenPayload;
+    try {
+      payload = this.jwtService.verify<RefreshTokenPayload>(refreshToken);
+    } catch {
+      throw new UnauthorizedException('Refresh token không hợp lệ hoặc đã hết hạn');
+    }
+
+    if (payload.type !== 'refresh') {
+      throw new UnauthorizedException('Refresh token không hợp lệ');
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where: { id: payload.sub, deletedAt: null },
+      include: { role: true },
+    });
+    if (!user) throw new UnauthorizedException('Người dùng không còn tồn tại');
+
+    return this.issueTokenPair({
+      sub: user.id,
+      username: user.username,
+      role: user.role.name,
+    });
   }
 
   async getProfile(userId: string) {

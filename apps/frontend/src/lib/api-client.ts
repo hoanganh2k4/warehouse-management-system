@@ -1,30 +1,14 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { authStorage } from './auth-storage';
 
-/**
- * apiClient — axios instance dùng chung cho toàn bộ app.
- *
- * Backend luôn trả về theo 1 khuôn:
- *  - Thành công: { success: true, data: <dữ liệu thật> }
- *  - Thất bại:   { success: false, message: "<mô tả lỗi>" }
- *
- * Interceptor bên dưới "bóc vỏ" response thành công (trả thẳng `data`),
- * và ném lỗi (throw) với message rõ ràng khi backend báo thất bại,
- * hoặc khi có lỗi HTTP (4xx/5xx) / lỗi mạng.
- *
- * => Mọi service chỉ cần viết:
- *    const products = await apiClient.get('/products');
- *    // products chính là phần `data` đã bóc vỏ, KHÔNG phải { success, data }
- */
 export const apiClient = axios.create({
   baseURL: '/api',
 });
 
-// Key phải khớp với key dùng ở hooks/useAuth.ts (Task 10).
-// Không import useAuth (hook React) vào đây vì file này không phải component/hook.
-const TOKEN_KEY = 'wms_access_token';
+const rawClient = axios.create({ baseURL: '/api' });
 
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEY);
+  const token = authStorage.getAccessToken();
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
@@ -32,25 +16,72 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+type RetriableRequestConfig = InternalAxiosRequestConfig & { _retried?: boolean };
+
+let refreshPromise: Promise<string> | null = null;
+
+async function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const refreshToken = authStorage.getRefreshToken();
+      if (!refreshToken) throw new Error('Không có refresh token');
+
+      const response = await rawClient.post<{
+        success: boolean;
+        data?: { accessToken: string; refreshToken: string };
+      }>('/auth/refresh', { refreshToken });
+
+      const body = response.data;
+      if (!body.success || !body.data) throw new Error('Refresh token thất bại');
+
+      authStorage.saveTokens(body.data.accessToken, body.data.refreshToken);
+      return body.data.accessToken;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
+function redirectToLogin() {
+  authStorage.clear();
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.href = '/login';
+  }
+}
+
 apiClient.interceptors.response.use(
   (response) => {
     const body = response.data;
-
-    // Backend báo thất bại nhưng vẫn trả HTTP 2xx -> ném lỗi để service/hook xử lý qua catch
     if (body && body.success === false) {
       return Promise.reject(new Error(body.message ?? 'Request failed'));
     }
-
-    // Bóc vỏ: trả thẳng phần `data`, không trả nguyên object { success, data }
     return body?.data;
   },
-  (error: AxiosError<{ message?: string }>) => {
-    // Lỗi HTTP (401, 404, 409, 500...) hoặc lỗi mạng (không có response) đều rơi vào đây
+  async (error: AxiosError<{ message?: string }>) => {
+    const originalRequest = error.config as RetriableRequestConfig | undefined;
+    const url = originalRequest?.url ?? '';
+    const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/refresh');
+
+    if (
+      error.response?.status === 401 &&
+      !isAuthEndpoint &&
+      originalRequest &&
+      !originalRequest._retried
+    ) {
+      originalRequest._retried = true;
+      try {
+        const newAccessToken = await refreshAccessToken();
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return apiClient(originalRequest);
+      } catch {
+        redirectToLogin();
+        return Promise.reject(error);
+      }
+    }
+
     const message =
       error.response?.data?.message ?? error.message ?? 'Network error';
-    // Gắn message thân thiện lên chính AxiosError gốc (thay vì bọc trong `new Error`)
-    // để giữ nguyên `isAxiosError(err) === true` và `err.response.status`,
-    // phục vụ các chỗ cần phân biệt lỗi theo status code (vd. 409 ở Task 32).
     error.message = message;
     return Promise.reject(error);
   },
