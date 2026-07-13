@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import './App.css';
 import Layout from './components/Layout';
+import Dashboard from './pages/dashboard/Dashboard';
 import ProductList from './pages/products/ProductList';
 import ProductDetail from './pages/products/ProductDetail';
 import ProductCreate from './pages/products/ProductCreate';
@@ -25,6 +26,7 @@ function App() {
 
         {/* Chỉ những route ghi dữ liệu (create/edit) mới cần đăng nhập */}
         <Route element={<ProtectedRoute />}>
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="products/new" element={<ProductCreate />} />
           <Route path="products/:id/edit" element={<ProductEdit />} />
           <Route path="categories/new" element={<CategoryCreate />} />
