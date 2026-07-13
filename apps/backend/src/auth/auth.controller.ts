@@ -2,6 +2,7 @@ import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from '../common/decorators/public.decorator';
 import {
   CurrentUser,
@@ -28,6 +29,18 @@ export class AuthController {
   @ApiUnauthorizedError()
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Public()
+  @Post('refresh')
+  @ApiSuccessExample(
+    SUCCESS_EXAMPLES.login,
+    '200 OK — Làm mới access token bằng refresh token',
+  )
+  @ApiValidationError()
+  @ApiUnauthorizedError()
+  refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refresh(dto.refreshToken);
   }
 
   @ApiBearerAuth()
