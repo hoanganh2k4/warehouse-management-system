@@ -612,6 +612,7 @@
     padding: 10px 14px;
   }
 }
+
 /* ---------- Page header controls (search + sort + action button) ---------- */
 
 .page-header-controls {
@@ -820,6 +821,49 @@
   opacity: 1;
 }
 
+/* ---------- ConfirmDialog (Task 37) ---------- */
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 16px;
+}
+
+.dialog-box {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border-radius: var(--radius-md, var(--radius-sm));
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+}
+
+.dialog-title {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dialog-message {
+  margin: 0 0 20px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted, var(--text));
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;
@@ -828,5 +872,56 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ---------- Responsive fine-tuning cho mobile nhỏ (Task 39) ---------- */
+/* Đặt cuối file để thắng cascade so với các rule gốc phía trên có cùng độ ưu tiên. */
+
+@media (max-width: 480px) {
+  .page-header-controls {
+    width: 100%;
+  }
+
+  .page-header-controls > * {
+    width: 100%;
+  }
+
+  .product-form {
+    max-width: none;
+    padding: 16px;
+  }
+
+  .form-actions {
+    flex-wrap: wrap;
+  }
+
+  .form-actions > * {
+    flex: 1 1 auto;
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .toast {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
+
+  .dialog-box {
+    padding: 18px;
+  }
+
+  .dialog-actions {
+    flex-wrap: wrap;
+  }
+
+  .dialog-actions > * {
+    flex: 1 1 auto;
   }
 }

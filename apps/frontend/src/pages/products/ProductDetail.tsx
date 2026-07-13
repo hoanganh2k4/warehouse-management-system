@@ -1,6 +1,9 @@
-import { useParams, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useProductDetail } from '../../hooks/useProductDetail';
 import { ScaleIcon } from '../../components/icons';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { productService } from '../../services/product.service';
 
 function formatDate(value: string) {
   try {
@@ -16,7 +19,24 @@ function formatDate(value: string) {
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { product, loading, error, refetch } = useProductDetail(id);
+
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleConfirmDelete() {
+    if (!product) return;
+    setDeleting(true);
+    try {
+      await productService.deleteProduct(product.id);
+      navigate('/');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -63,10 +83,25 @@ export default function ProductDetail() {
           </p>
         </div>
 
-        <Link to={`/products/${product.id}/edit`} className="btn-primary">
-          Sửa
-        </Link>
+        <div className="table-actions">
+          <Link to={`/products/${product.id}/edit`} className="btn-primary">
+            Sửa
+          </Link>
+          <button className="btn-danger" onClick={() => setShowConfirm(true)}>
+            Xoá
+          </button>
+        </div>
       </div>
+
+      <ConfirmDialog
+        open={showConfirm}
+        title="Xoá sản phẩm"
+        message={`Bạn có chắc muốn xoá "${product.name}"? Hành động này không thể hoàn tác.`}
+        confirmLabel="Xoá"
+        loading={deleting}
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={handleConfirmDelete}
+      />
 
       <section className="panel">
         <div className="panel-header">

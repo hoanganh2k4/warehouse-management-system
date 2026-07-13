@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import '../../App.css';
 import { ProductTable } from '../../components/ProductTable';
 import { StatCard } from '../../components/StatCard';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { BoxIcon, LayersIcon, ScaleIcon, SearchIcon, TagIcon } from '../../components/icons';
 import { useProducts } from '../../hooks/useProducts';
-import type { ProductSort } from '../../types';
+import { productService } from '../../services/product.service';
+import type { Product, ProductSort } from '../../types';
 
 export default function ProductList() {
   // inputValue: cập nhật ngay theo từng keystroke, bind vào ô input.
@@ -30,9 +32,23 @@ export default function ProductList() {
     keyword: debouncedKeyword || undefined,
     sort,
   });
-  // refetch chưa được dùng ở task này — sẽ dùng ở Task 38 (xoá sản phẩm xong thì gọi lại).
-  // Giữ tham chiếu để tsconfig (noUnusedLocals) không báo lỗi trong lúc chờ Task 38.
-  void refetch;
+
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleConfirmDelete() {
+    if (!productToDelete) return;
+    setDeleting(true);
+    try {
+      await productService.deleteProduct(productToDelete.id);
+      setProductToDelete(null);
+      refetch();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   const stats = useMemo(() => {
     const categories = new Set(items.map((p) => p.category.id));
@@ -131,6 +147,17 @@ export default function ProductList() {
           loading={loading}
           error={error}
           query={inputValue}
+          onDeleteRequest={setProductToDelete}
+        />
+
+        <ConfirmDialog
+          open={productToDelete !== null}
+          title="Xoá sản phẩm"
+          message={`Bạn có chắc muốn xoá "${productToDelete?.name}"? Hành động này không thể hoàn tác.`}
+          confirmLabel="Xoá"
+          loading={deleting}
+          onCancel={() => setProductToDelete(null)}
+          onConfirm={handleConfirmDelete}
         />
 
         <div className="pagination-controls">
