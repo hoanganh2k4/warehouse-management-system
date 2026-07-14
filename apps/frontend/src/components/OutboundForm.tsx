@@ -29,7 +29,6 @@ export function OutboundForm({ onSubmit, submitting }: OutboundFormProps) {
 
   useEffect(() => {
     let cancelled = false;
-    setProductsLoading(true);
     productService
       .getProducts({ page: 1, limit: 100 })
       .then((result) => {
