@@ -1,37 +1,77 @@
 import { useEffect, useState } from 'react';
 import { zoneService } from '../../services/zone.service';
-import { WarehouseIcon } from '../../components/icons';
-import type { Zone } from '../../types';
+import { rackService } from '../../services/rack.service';
+import { WarehouseIcon, LayersIcon } from '../../components/icons';
+import type { Zone, Rack } from '../../types';
 
 export default function RackingPage() {
   const [zones, setZones] = useState<Zone[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [zonesLoading, setZonesLoading] = useState(true);
+  const [zonesError, setZonesError] = useState<string | null>(null);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
 
+  const [racks, setRacks] = useState<Rack[]>([]);
+  const [racksLoading, setRacksLoading] = useState(false);
+  const [racksError, setRacksError] = useState<string | null>(null);
+  const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
+
+  // Cột Zone
   useEffect(() => {
     let cancelled = false;
 
-    setLoading(true);
+    setZonesLoading(true);
     zoneService
       .getAll()
       .then((result) => {
         if (cancelled) return;
         setZones(result);
-        setError(null);
+        setZonesError(null);
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Zone');
+        setZonesError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Zone');
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setZonesLoading(false);
       });
 
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // Cột Rack — phụ thuộc Zone đang chọn
+  useEffect(() => {
+    setSelectedRackId(null);
+
+    if (!selectedZoneId) {
+      setRacks([]);
+      setRacksError(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    setRacksLoading(true);
+    rackService
+      .getAll(selectedZoneId)
+      .then((result) => {
+        if (cancelled) return;
+        setRacks(result);
+        setRacksError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setRacksError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Rack');
+      })
+      .finally(() => {
+        if (!cancelled) setRacksLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedZoneId]);
 
   return (
     <main className="app-content">
@@ -47,10 +87,12 @@ export default function RackingPage() {
         <section className="panel racking-column">
           <div className="panel-header">
             <h2>Zones</h2>
-            {!loading && !error && <span className="result-count">{zones.length} zone</span>}
+            {!zonesLoading && !zonesError && (
+              <span className="result-count">{zones.length} zone</span>
+            )}
           </div>
 
-          {loading && (
+          {zonesLoading && (
             <ul className="racking-list">
               {Array.from({ length: 4 }).map((_, i) => (
                 <li key={i} className="racking-list-item skeleton-row">
@@ -60,19 +102,19 @@ export default function RackingPage() {
             </ul>
           )}
 
-          {!loading && error && (
+          {!zonesLoading && zonesError && (
             <div className="racking-empty-state">
-              <p>{error}</p>
+              <p>{zonesError}</p>
             </div>
           )}
 
-          {!loading && !error && zones.length === 0 && (
+          {!zonesLoading && !zonesError && zones.length === 0 && (
             <div className="racking-empty-state">
               <p>Chưa có Zone nào.</p>
             </div>
           )}
 
-          {!loading && !error && zones.length > 0 && (
+          {!zonesLoading && !zonesError && zones.length > 0 && (
             <ul className="racking-list">
               {zones.map((zone) => (
                 <li key={zone.id}>
@@ -94,7 +136,65 @@ export default function RackingPage() {
           )}
         </section>
 
-        {/* Cột Rack/Level/Slot sẽ được thêm ở Task 63/64/65 */}
+        <section className="panel racking-column">
+          <div className="panel-header">
+            <h2>Racks</h2>
+            {!racksLoading && !racksError && selectedZoneId && (
+              <span className="result-count">{racks.length} rack</span>
+            )}
+          </div>
+
+          {!selectedZoneId && (
+            <div className="racking-empty-state">
+              <p>Chọn Zone để xem Rack.</p>
+            </div>
+          )}
+
+          {selectedZoneId && racksLoading && (
+            <ul className="racking-list">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <li key={i} className="racking-list-item skeleton-row">
+                  <span className="skeleton" style={{ width: '120px' }} />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {selectedZoneId && !racksLoading && racksError && (
+            <div className="racking-empty-state">
+              <p>{racksError}</p>
+            </div>
+          )}
+
+          {selectedZoneId && !racksLoading && !racksError && racks.length === 0 && (
+            <div className="racking-empty-state">
+              <p>Chưa có dữ liệu.</p>
+            </div>
+          )}
+
+          {selectedZoneId && !racksLoading && !racksError && racks.length > 0 && (
+            <ul className="racking-list">
+              {racks.map((rack) => (
+                <li key={rack.id}>
+                  <button
+                    type="button"
+                    className={`racking-list-item${
+                      selectedRackId === rack.id ? ' is-active' : ''
+                    }`}
+                    onClick={() => setSelectedRackId(rack.id)}
+                  >
+                    <span className="racking-list-item-icon">
+                      <LayersIcon size={16} />
+                    </span>
+                    <span className="racking-list-item-label">{rack.code}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* Cột Level/Slot sẽ được thêm ở Task 64/65 */}
       </div>
     </main>
   );
