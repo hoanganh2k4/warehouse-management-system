@@ -1,36 +1,82 @@
+import { useState } from 'react';
 import '../../App.css';
+import { InventoryTable } from '../../components/InventoryTable';
 import { useInventory } from '../../hooks/useInventory';
-import { AlertIcon } from '../../components/icons';
 
 export default function InventoryList() {
-  const { items, loading, error, refetch } = useInventory({ page: 1, limit: 20 });
+  const [productIdInput, setProductIdInput] = useState('');
+  const [warehouseIdInput, setWarehouseIdInput] = useState('');
+  const [page, setPage] = useState(1);
+
+  const { items, meta, loading, error } = useInventory({
+    page,
+    limit: 20,
+    productId: productIdInput.trim() || undefined,
+    warehouseId: warehouseIdInput.trim() || undefined,
+  });
+
+  const totalCount = meta?.total ?? 0;
 
   return (
     <main className="app-content">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Warehouse</p>
+          <p className="eyebrow">Kho hàng</p>
           <h1>Tồn kho</h1>
-          <p className="page-desc">Theo dõi số lượng hàng tồn theo lô và vị trí lưu trữ.</p>
+          <p className="page-desc">Số lượng tồn theo lô hàng và vị trí trong kho.</p>
+        </div>
+
+        <div className="page-header-controls">
+          <input
+            type="text"
+            placeholder="Lọc theo Product ID (UUID)"
+            value={productIdInput}
+            onChange={(event) => {
+              setProductIdInput(event.target.value);
+              setPage(1);
+            }}
+            aria-label="Lọc theo mã sản phẩm"
+          />
+          <input
+            type="text"
+            placeholder="Lọc theo Warehouse ID (UUID)"
+            value={warehouseIdInput}
+            onChange={(event) => {
+              setWarehouseIdInput(event.target.value);
+              setPage(1);
+            }}
+            aria-label="Lọc theo mã kho"
+          />
         </div>
       </div>
 
-      {error ? (
-        <div className="state-panel state-error">
-          <AlertIcon size={22} />
-          <p className="state-title">Không tải được dữ liệu tồn kho</p>
-          <p className="state-body">{error}. Kiểm tra API và thử lại.</p>
-          <button type="button" className="btn-primary" onClick={refetch}>
-            Thử lại
+      <section className="panel">
+        <div className="panel-header">
+          <h2>Toàn bộ tồn kho</h2>
+          {!loading && !error && (
+            <span className="result-count">
+              {items.length} of {totalCount}
+            </span>
+          )}
+        </div>
+
+        <InventoryTable items={items} totalCount={totalCount} loading={loading} error={error} />
+
+        <div className="pagination-controls">
+          <button disabled={loading || page <= 1} onClick={() => setPage((p) => p - 1)}>
+            Trang trước
+          </button>
+          <span>
+            Trang {page} / {meta?.totalPages ?? 1}
+          </span>
+          <button
+            disabled={loading || !meta || page >= meta.totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Trang sau
           </button>
         </div>
-      ) : loading ? (
-        <div className="state-panel">
-          <p className="state-title">Đang tải…</p>
-        </div>
-      ) : (
-        <p className="page-desc">Tìm thấy {items.length} dòng tồn kho.</p>
-      )}
+      </section>
     </main>
   );
 }
