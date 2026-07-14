@@ -181,3 +181,83 @@ export type OutboundResult = {
   pickingList: OutboundPickLine[];
   transactions: OutboundTransaction[];
 };
+
+export type Zone = {
+  id: string;
+  warehouseId: string;
+  code: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateZonePayload = {
+  warehouseId: string;
+  code: string;
+};
+
+export type UpdateZonePayload = {
+  code?: string;
+};
+
+export type Rack = {
+  id: string;
+  zoneId: string;
+  code: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateRackPayload = {
+  zoneId: string;
+  code: string;
+};
+
+export type UpdateRackPayload = {
+  code?: string;
+};
+
+export type Level = {
+  id: string;
+  rackId: string;
+  levelNumber: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateLevelPayload = {
+  rackId: string;
+  levelNumber: number;
+};
+
+export type UpdateLevelPayload = {
+  levelNumber?: number;
+};
+
+export type Slot = {
+  id: string;
+  levelId: string;
+  code: string;
+  maxCapacity: number;
+  usedCapacity: number;
+  availableCapacity: number;
+  occupancyRate: number;
+  currentProductId: string | null;
+  distanceToGate: number;
+  outboundFrequencyScore: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateSlotPayload = {
+  levelId: string;
+  code: string;
+  maxCapacity: number;
+  distanceToGate: number;
+};
+
+export type UpdateSlotPayload = {
+  code?: string;
+  maxCapacity?: number;
+  distanceToGate?: number;
+  outboundFrequencyScore?: number;
+};
