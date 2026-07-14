@@ -1,4 +1,5 @@
 import '../../App.css';
+import './Dashboard.css';
 import { StatCard } from '../../components/StatCard';
 import { AlertIcon, BoxIcon, GridIcon, LayersIcon, ScaleIcon, WarehouseIcon } from '../../components/icons';
 import { useDashboard } from '../../hooks/useDashboard';
@@ -7,7 +8,7 @@ export default function Dashboard() {
   const { summary, loading, error, refetch } = useDashboard();
 
   return (
-    <main className="app-content">
+    <main className="app-content dashboard-page">
       <div className="page-header">
         <div>
           <p className="eyebrow">Overview</p>
