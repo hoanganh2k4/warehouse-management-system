@@ -9,6 +9,7 @@ import { ProductEdit } from './pages/products/ProductEdit';
 import CategoryList from './pages/categories/CategoryList';
 import CategoryCreate from './pages/categories/CategoryCreate';
 import CategoryEdit from './pages/categories/CategoryEdit';
+import InventoryList from './pages/inventory/InventoryList';
 import TeamList from './pages/team/TeamList';
 import Login from './pages/login/Login';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -23,6 +24,7 @@ function App() {
         <Route path="products" element={<ProductList />} />
         <Route path="products/:id" element={<ProductDetail />} />
         <Route path="categories" element={<CategoryList />} />
+        <Route path="inventory" element={<InventoryList />} />
 
         {/* Chỉ những route ghi dữ liệu (create/edit) mới cần đăng nhập */}
         <Route element={<ProtectedRoute />}>
