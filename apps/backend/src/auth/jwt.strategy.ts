@@ -21,7 +21,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     type?: string;
   }): Promise<AuthUser> {
     if (payload.type === 'refresh') {
-      throw new UnauthorizedException('Refresh token không thể dùng để xác thực API');
+      throw new UnauthorizedException(
+        'Refresh token không thể dùng để xác thực API',
+      );
     }
 
     const user = await this.prisma.user.findFirst({

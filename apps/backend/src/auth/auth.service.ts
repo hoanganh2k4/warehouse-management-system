@@ -19,7 +19,9 @@ export class AuthService {
   private issueTokenPair(payload: AccessTokenPayload) {
     const accessToken = this.jwtService.sign(payload);
     const refreshPayload: RefreshTokenPayload = { ...payload, type: 'refresh' };
-    const refreshToken = this.jwtService.sign(refreshPayload, { expiresIn: '7d' });
+    const refreshToken = this.jwtService.sign(refreshPayload, {
+      expiresIn: '7d',
+    });
 
     return {
       accessToken,
@@ -50,7 +52,9 @@ export class AuthService {
     try {
       payload = this.jwtService.verify<RefreshTokenPayload>(refreshToken);
     } catch {
-      throw new UnauthorizedException('Refresh token không hợp lệ hoặc đã hết hạn');
+      throw new UnauthorizedException(
+        'Refresh token không hợp lệ hoặc đã hết hạn',
+      );
     }
 
     if (payload.type !== 'refresh') {
