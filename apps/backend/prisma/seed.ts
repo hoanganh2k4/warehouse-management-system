@@ -79,6 +79,16 @@ async function main() {
   }
 
   // Xoá cấu trúc kho cũ (nếu seed lại) để tránh trùng lặp — chỉ áp dụng cho warehouse này.
+  // Transaction & Inventory tham chiếu tới slot nên phải xoá trước, nếu không sẽ vi phạm khoá ngoại khi xoá slot.
+  await prisma.transaction.deleteMany({
+    where: {
+      OR: [
+        { slotFrom: { level: { rack: { zone: { warehouseId: warehouse.id } } } } },
+        { slotTo: { level: { rack: { zone: { warehouseId: warehouse.id } } } } },
+      ],
+    },
+  });
+  await prisma.inventory.deleteMany({ where: { slot: { level: { rack: { zone: { warehouseId: warehouse.id } } } } } });
   await prisma.slot.deleteMany({ where: { level: { rack: { zone: { warehouseId: warehouse.id } } } } });
   await prisma.level.deleteMany({ where: { rack: { zone: { warehouseId: warehouse.id } } } });
   await prisma.rack.deleteMany({ where: { zone: { warehouseId: warehouse.id } } });
@@ -209,6 +219,53 @@ async function main() {
   }
 
   console.log(`✅ Seeded ${products.length} products with batches`);
+
+  // ===================== Inventory (dữ liệu tồn kho mẫu) =====================
+  // Lấy toàn bộ batch vừa seed ở trên, sắp theo batchCode cho ổn định.
+  const allBatches = await prisma.batch.findMany({
+    where: { product: { skuCode: { in: products.map((p) => p.skuCode) } } },
+    orderBy: { batchCode: 'asc' },
+  });
+
+  // Mỗi batch được đặt vào 1 slot trống riêng, lấy slot theo thứ tự code cho dễ tái lập.
+  const seedSlots = await prisma.slot.findMany({
+    where: { level: { rack: { zone: { warehouseId: warehouse.id } } } },
+    orderBy: { code: 'asc' },
+    take: allBatches.length,
+  });
+
+  if (seedSlots.length < allBatches.length) {
+    throw new Error('Không đủ slot trống để seed dữ liệu tồn kho.');
+  }
+
+  for (let i = 0; i < allBatches.length; i++) {
+    const batch = allBatches[i];
+    const slot = seedSlots[i];
+    // Số lượng demo, dao động 50-149 để dữ liệu trông tự nhiên hơn.
+    const quantity = 50 + ((i * 17) % 100);
+
+    await prisma.inventory.upsert({
+      where: { batchId_slotId: { batchId: batch.id, slotId: slot.id } },
+      update: { quantity },
+      create: { batchId: batch.id, slotId: slot.id, quantity },
+    });
+
+    const usedCapacity = quantity;
+    const availableCapacity = slot.maxCapacity - usedCapacity;
+    const occupancyRate = usedCapacity / slot.maxCapacity;
+
+    await prisma.slot.update({
+      where: { id: slot.id },
+      data: {
+        usedCapacity,
+        availableCapacity,
+        occupancyRate,
+        currentProductId: batch.productId,
+      },
+    });
+  }
+
+  console.log(`✅ Seeded ${allBatches.length} inventory records across ${seedSlots.length} slots`);
   console.log('🌱 Seed completed successfully.');
 }
 

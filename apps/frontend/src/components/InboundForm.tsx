@@ -33,7 +33,6 @@ export function InboundForm({ onSubmit, submitting }: InboundFormProps) {
 
   useEffect(() => {
     let cancelled = false;
-    setProductsLoading(true);
     productService
       .getProducts({ page: 1, limit: 100 })
       .then((result) => {
