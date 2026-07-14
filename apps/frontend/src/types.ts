@@ -105,3 +105,48 @@ export type DashboardSummary = {
   inboundToday: number;
   outboundToday: number;
 };
+
+export type InventoryItem = {
+  id: string;
+  batchId: string;
+  slotId: string;
+  quantity: number;
+  updatedAt: string;
+};
+
+export type GetInventoryParams = {
+  warehouseId?: string;
+  productId?: string;
+  batchId?: string;
+  slotId?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type InboundPayload = {
+  productId: string;
+  quantity: number;
+  manufactureDate: string;
+  expiryDate: string;
+  note?: string;
+};
+
+export type OutboundPayload = {
+  productId: string;
+  quantity: number;
+  note?: string;
+};
+
+export type InboundAllocation = {
+  slotId: string;
+  slotCode: string;
+  quantity: number;
+  score: number;
+  inventoryId: string;
+};
+
+export type InboundResult = {
+  batch: Pick<Batch, 'id' | 'batchCode' | 'productId' | 'manufactureDate' | 'expiryDate'>;
+  allocations: InboundAllocation[];
+  totalQuantity: number;
+};
