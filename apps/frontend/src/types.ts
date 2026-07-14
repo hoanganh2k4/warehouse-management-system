@@ -150,3 +150,34 @@ export type InboundResult = {
   allocations: InboundAllocation[];
   totalQuantity: number;
 };
+
+export type OutboundPickLine = {
+  skuCode: string;
+  productName: string;
+  batchId: string;
+  batchCode: string;
+  expiryDate: string;
+  slotId: string;
+  slotCode: string;
+  slotPath: string;
+  quantity: number;
+  route: number;
+  distanceToGate: number;
+};
+
+export type OutboundTransaction = {
+  id: string;
+  type: string;
+  batchId: string;
+  slotFromId: string | null;
+  quantity: number;
+  userId: string;
+  note?: string | null;
+};
+
+export type OutboundResult = {
+  product: Pick<Product, 'id' | 'skuCode' | 'name'>;
+  totalQuantity: number;
+  pickingList: OutboundPickLine[];
+  transactions: OutboundTransaction[];
+};

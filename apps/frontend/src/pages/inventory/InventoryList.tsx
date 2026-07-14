@@ -1,12 +1,15 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import '../../App.css';
 import { InventoryTable } from '../../components/InventoryTable';
 import { useInventory } from '../../hooks/useInventory';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function InventoryList() {
   const [productIdInput, setProductIdInput] = useState('');
   const [warehouseIdInput, setWarehouseIdInput] = useState('');
   const [page, setPage] = useState(1);
+  const { isAuthenticated } = useAuth();
 
   const { items, meta, loading, error } = useInventory({
     page,
@@ -47,6 +50,19 @@ export default function InventoryList() {
             }}
             aria-label="Lọc theo mã kho"
           />
+
+          {isAuthenticated() ? (
+            <>
+              <Link to="/inventory/inbound" className="btn-primary">
+                Nhập kho
+              </Link>
+              <Link to="/inventory/outbound" className="btn-secondary">
+                Xuất kho
+              </Link>
+            </>
+          ) : (
+            <span className="page-desc">Đăng nhập để nhập/xuất kho</span>
+          )}
         </div>
       </div>
 
