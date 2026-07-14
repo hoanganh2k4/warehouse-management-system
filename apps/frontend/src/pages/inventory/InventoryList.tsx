@@ -32,6 +32,7 @@ export default function InventoryList() {
         <div className="page-header-controls">
           <input
             type="text"
+            className="filter-input"
             placeholder="Lọc theo Product ID (UUID)"
             value={productIdInput}
             onChange={(event) => {
@@ -42,6 +43,7 @@ export default function InventoryList() {
           />
           <input
             type="text"
+            className="filter-input"
             placeholder="Lọc theo Warehouse ID (UUID)"
             value={warehouseIdInput}
             onChange={(event) => {
