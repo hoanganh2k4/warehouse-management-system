@@ -1,0 +1,33 @@
+/* Dashboard-only responsive rules (Task 45).
+   Scoped under .dashboard-page so nothing here leaks into / depends on
+   the shared .stat-row / .stat-card styles used by Products, Categories, ... */
+
+.dashboard-page .stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 960px) {
+  .dashboard-page .stat-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-page .stat-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Đảm bảo chắc chắn StatCard xếp dọc, không tràn ngang ở mobile nhỏ (< 480px) */
+@media (max-width: 480px) {
+  .dashboard-page .stat-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .dashboard-page .stat-card {
+    padding: 14px 16px;
+  }
+}
