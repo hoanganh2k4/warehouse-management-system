@@ -4,6 +4,8 @@ import type {
   InboundPayload,
   InboundResult,
   InventoryItem,
+  OutboundPayload,
+  OutboundResult,
   PaginatedResult,
 } from '../types';
 
@@ -14,5 +16,9 @@ export const inventoryService = {
 
   inbound(payload: InboundPayload): Promise<InboundResult> {
     return apiClient.post('/inventory/inbound', payload);
+  },
+
+  outbound(payload: OutboundPayload): Promise<OutboundResult> {
+    return apiClient.post('/inventory/outbound', payload);
   },
 };

@@ -8,6 +8,7 @@ import ProductCreate from './pages/products/ProductCreate';
 import { ProductEdit } from './pages/products/ProductEdit';
 import InventoryList from './pages/inventory/InventoryList';
 import InventoryInbound from './pages/inventory/InventoryInbound';
+import InventoryOutbound from './pages/inventory/InventoryOutbound';
 import CategoryList from './pages/categories/CategoryList';
 import CategoryCreate from './pages/categories/CategoryCreate';
 import CategoryEdit from './pages/categories/CategoryEdit';
@@ -35,6 +36,7 @@ function App() {
           <Route path="categories/new" element={<CategoryCreate />} />
           <Route path="categories/:id/edit" element={<CategoryEdit />} />
           <Route path="inventory/inbound" element={<InventoryInbound />} />
+          <Route path="inventory/outbound" element={<InventoryOutbound />} />
           <Route path="team" element={<TeamList />} />
         </Route>
       </Route>
