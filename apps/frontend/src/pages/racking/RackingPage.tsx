@@ -8,6 +8,7 @@ import { WarehouseIcon, LayersIcon, GridIcon, BoxIcon } from '../../components/i
 import { ZoneFormModal } from '../../components/ZoneFormModal';
 import { RackFormModal } from '../../components/RackFormModal';
 import { LevelFormModal } from '../../components/LevelFormModal';
+import { SlotFormModal } from '../../components/SlotFormModal';
 import { Toast } from '../../components/Toast';
 import type {
   Zone,
@@ -21,6 +22,8 @@ import type {
   UpdateRackPayload,
   CreateLevelPayload,
   UpdateLevelPayload,
+  CreateSlotPayload,
+  UpdateSlotPayload,
 } from '../../types';
 
 export default function RackingPage() {
@@ -53,6 +56,9 @@ export default function RackingPage() {
     null,
   );
   const [levelModal, setLevelModal] = useState<{ mode: 'create' | 'edit'; level?: Level } | null>(
+    null,
+  );
+  const [slotModal, setSlotModal] = useState<{ mode: 'create' | 'edit'; slot?: Slot } | null>(
     null,
   );
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -262,6 +268,23 @@ export default function RackingPage() {
     setSlotsPage(1);
   }, [selectedLevelId]);
 
+  function loadSlots(levelId: string, page: number) {
+    setSlotsLoading(true);
+    return slotService
+      .getAll({ levelId, page, limit: 50 })
+      .then((result) => {
+        setSlots(result.items);
+        setSlotsMeta(result.meta);
+        setSlotsError(null);
+      })
+      .catch((err) => {
+        setSlotsError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Slot');
+      })
+      .finally(() => {
+        setSlotsLoading(false);
+      });
+  }
+
   // Cột Slot — phụ thuộc Level đang chọn (và trang hiện tại)
   useEffect(() => {
     if (!selectedLevelId) {
@@ -295,6 +318,26 @@ export default function RackingPage() {
     };
   }, [selectedLevelId, slotsPage]);
 
+  async function handleSlotSubmit(payload: CreateSlotPayload | UpdateSlotPayload) {
+    try {
+      if (slotModal?.mode === 'create') {
+        await slotService.create(payload as CreateSlotPayload);
+      } else if (slotModal?.mode === 'edit' && slotModal.slot) {
+        await slotService.update(slotModal.slot.id, payload as UpdateSlotPayload);
+      }
+      setSlotModal(null);
+      if (selectedLevelId) await loadSlots(selectedLevelId, slotsPage);
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.status === 409) {
+        setToastMessage('Mã Slot này đã tồn tại. Vui lòng chọn mã khác.');
+      } else {
+        setToastMessage(
+          slotModal?.mode === 'create' ? 'Không thể tạo Slot. Vui lòng thử lại.' : 'Không thể cập nhật Slot. Vui lòng thử lại.',
+        );
+      }
+    }
+  }
+
   return (
     <main className="app-content">
       {toastMessage && (
@@ -327,6 +370,16 @@ export default function RackingPage() {
           rackId={selectedRackId ?? undefined}
           onSubmit={handleLevelSubmit}
           onClose={() => setLevelModal(null)}
+        />
+      )}
+
+      {slotModal && (
+        <SlotFormModal
+          mode={slotModal.mode}
+          initialData={slotModal.slot}
+          levelId={selectedLevelId ?? undefined}
+          onSubmit={handleSlotSubmit}
+          onClose={() => setSlotModal(null)}
         />
       )}
 
@@ -567,6 +620,16 @@ export default function RackingPage() {
             )}
           </div>
 
+          <button
+            type="button"
+            className="btn-secondary racking-add-btn"
+            onClick={() => setSlotModal({ mode: 'create' })}
+            disabled={!selectedLevelId}
+            title={!selectedLevelId ? 'Chọn Level trước khi thêm Slot' : undefined}
+          >
+            + Thêm Slot
+          </button>
+
           {!selectedLevelId && (
             <div className="racking-empty-state">
               <p>Chọn Level để xem Slot.</p>
@@ -601,7 +664,7 @@ export default function RackingPage() {
                 {slots.map((slot) => {
                   const hasSpace = slot.usedCapacity < slot.maxCapacity;
                   return (
-                    <li key={slot.id}>
+                    <li key={slot.id} className="racking-list-row">
                       <button
                         type="button"
                         className={`racking-list-item${
@@ -621,6 +684,14 @@ export default function RackingPage() {
                         <span className="racking-list-item-sub">
                           {Math.round(slot.occupancyRate)}%
                         </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="racking-list-item-edit"
+                        onClick={() => setSlotModal({ mode: 'edit', slot })}
+                        aria-label={`Sửa Slot ${slot.code}`}
+                      >
+                        Sửa
                       </button>
                     </li>
                   );
