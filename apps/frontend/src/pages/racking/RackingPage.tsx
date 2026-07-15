@@ -4,7 +4,8 @@ import { zoneService } from '../../services/zone.service';
 import { rackService } from '../../services/rack.service';
 import { levelService } from '../../services/level.service';
 import { slotService } from '../../services/slot.service';
-import { WarehouseIcon, LayersIcon, GridIcon, BoxIcon } from '../../components/icons';
+import { productService } from '../../services/product.service';
+import { WarehouseIcon, LayersIcon } from '../../components/icons';
 import { ZoneFormModal } from '../../components/ZoneFormModal';
 import { RackFormModal } from '../../components/RackFormModal';
 import { LevelFormModal } from '../../components/LevelFormModal';
@@ -16,7 +17,7 @@ import type {
   Rack,
   Level,
   Slot,
-  PaginationMeta,
+  Product,
   CreateZonePayload,
   UpdateZonePayload,
   CreateRackPayload,
@@ -29,9 +30,15 @@ import type {
 
 type DeleteTarget =
   | { type: 'zone'; id: string; label: string }
-  | { type: 'rack'; id: string; label: string }
+  | { type: 'rack'; id: string; label: string; zoneId: string }
   | { type: 'level'; id: string; label: string }
   | { type: 'slot'; id: string; label: string };
+
+type RackBucket = { items: Rack[]; loading: boolean; error: string | null; loaded: boolean };
+
+type GridRow = { level: Level; slots: Slot[] };
+
+type SlotStatus = 'empty' | 'partial' | 'full';
 
 function extractErrorMessage(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
@@ -43,93 +50,70 @@ function extractErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
+function slotStatus(slot: Slot): SlotStatus {
+  if (slot.occupancyRate <= 0) return 'empty';
+  if (slot.occupancyRate >= 100) return 'full';
+  return 'partial';
+}
+
+function naturalCompare(a: string, b: string): number {
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
 export default function RackingPage() {
+  // ---- Cây Zone / Rack (bên trái) ----
   const [zones, setZones] = useState<Zone[]>([]);
   const [zonesLoading, setZonesLoading] = useState(true);
   const [zonesError, setZonesError] = useState<string | null>(null);
-  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
+  const [expandedZoneId, setExpandedZoneId] = useState<string | null>(null);
+  const [racksByZone, setRacksByZone] = useState<Record<string, RackBucket>>({});
 
-  const [racks, setRacks] = useState<Rack[]>([]);
-  const [racksLoading, setRacksLoading] = useState(false);
-  const [racksError, setRacksError] = useState<string | null>(null);
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
 
-  const [levels, setLevels] = useState<Level[]>([]);
-  const [levelsLoading, setLevelsLoading] = useState(false);
-  const [levelsError, setLevelsError] = useState<string | null>(null);
-  const [selectedLevelId, setSelectedLevelId] = useState<string | null>(null);
+  // ---- Grid map (bên phải) ----
+  const [gridRows, setGridRows] = useState<GridRow[]>([]);
+  const [gridLoading, setGridLoading] = useState(false);
+  const [gridError, setGridError] = useState<string | null>(null);
 
-  const [slots, setSlots] = useState<Slot[]>([]);
-  const [slotsMeta, setSlotsMeta] = useState<PaginationMeta | null>(null);
-  const [slotsPage, setSlotsPage] = useState(1);
-  const [slotsLoading, setSlotsLoading] = useState(false);
-  const [slotsError, setSlotsError] = useState<string | null>(null);
-  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
-
+  // ---- Modal CRUD ----
   const [zoneModal, setZoneModal] = useState<{ mode: 'create' | 'edit'; zone?: Zone } | null>(
     null,
   );
-  const [rackModal, setRackModal] = useState<{ mode: 'create' | 'edit'; rack?: Rack } | null>(
-    null,
-  );
+  const [rackModal, setRackModal] = useState<{
+    mode: 'create' | 'edit';
+    rack?: Rack;
+    zoneId: string;
+  } | null>(null);
   const [levelModal, setLevelModal] = useState<{ mode: 'create' | 'edit'; level?: Level } | null>(
     null,
   );
-  const [slotModal, setSlotModal] = useState<{ mode: 'create' | 'edit'; slot?: Slot } | null>(
-    null,
-  );
+  const [slotModal, setSlotModal] = useState<{
+    mode: 'create' | 'edit';
+    slot?: Slot;
+    levelId: string;
+  } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Theo dõi giá trị đã chọn ở lần render trước để phát hiện thay đổi ngay
-  // trong lúc render (theo khuyến nghị của React thay vì setState trong effect).
-  const [prevZoneId, setPrevZoneId] = useState<string | null>(selectedZoneId);
+  // ---- Popup chi tiết Slot ----
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [selectedSlotProduct, setSelectedSlotProduct] = useState<Product | null>(null);
+  const [selectedSlotProductLoading, setSelectedSlotProductLoading] = useState(false);
+
+  // Menu "..." hành động cho từng Level trong grid
+  const [openLevelMenuId, setOpenLevelMenuId] = useState<string | null>(null);
+
+  // Theo dõi Rack đang chọn ở lần render trước để đánh dấu loading ngay trong
+  // lúc render (theo khuyến nghị của React thay vì setState trong effect).
   const [prevRackId, setPrevRackId] = useState<string | null>(selectedRackId);
-  const [prevLevelId, setPrevLevelId] = useState<string | null>(selectedLevelId);
-  const [prevSlotsKey, setPrevSlotsKey] = useState<string>(
-    selectedLevelId ? `${selectedLevelId}:${slotsPage}` : 'none',
-  );
-
-  // Zone đổi -> reset Rack đang chọn (và dây chuyền Level/Slot bên dưới sẽ tự
-  // reset ở các khối kế tiếp trong cùng một lượt render).
-  if (selectedZoneId !== prevZoneId) {
-    setPrevZoneId(selectedZoneId);
-    setSelectedRackId(null);
-    setRacksLoading(selectedZoneId !== null);
-    if (!selectedZoneId) {
-      setRacks([]);
-      setRacksError(null);
-    }
-  }
-
-  // Rack đổi -> reset Level đang chọn.
   if (selectedRackId !== prevRackId) {
     setPrevRackId(selectedRackId);
-    setSelectedLevelId(null);
-    setLevelsLoading(selectedRackId !== null);
+    setGridLoading(selectedRackId !== null);
     if (!selectedRackId) {
-      setLevels([]);
-      setLevelsError(null);
-    }
-  }
-
-  // Level đổi -> reset Slot đang chọn và về trang 1.
-  if (selectedLevelId !== prevLevelId) {
-    setPrevLevelId(selectedLevelId);
-    setSelectedSlotId(null);
-    setSlotsPage(1);
-  }
-
-  // Level hoặc trang đổi -> đánh dấu đang tải Slot trước khi effect fetch chạy.
-  const slotsKey = selectedLevelId ? `${selectedLevelId}:${slotsPage}` : 'none';
-  if (slotsKey !== prevSlotsKey) {
-    setPrevSlotsKey(slotsKey);
-    setSlotsLoading(selectedLevelId !== null);
-    if (!selectedLevelId) {
-      setSlots([]);
-      setSlotsMeta(null);
-      setSlotsError(null);
+      setGridRows([]);
+      setGridError(null);
     }
   }
 
@@ -142,14 +126,14 @@ export default function RackingPage() {
         setZonesError(null);
       })
       .catch((err) => {
-        setZonesError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Zone');
+        setZonesError(extractErrorMessage(err, 'Đã có lỗi xảy ra khi tải danh sách Zone'));
       })
       .finally(() => {
         setZonesLoading(false);
       });
   }
 
-  // Cột Zone
+  // Zones — chỉ tải một lần khi mount
   useEffect(() => {
     let cancelled = false;
 
@@ -162,7 +146,7 @@ export default function RackingPage() {
       })
       .catch((err) => {
         if (cancelled) return;
-        setZonesError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Zone');
+        setZonesError(extractErrorMessage(err, 'Đã có lỗi xảy ra khi tải danh sách Zone'));
       })
       .finally(() => {
         if (!cancelled) setZonesLoading(false);
@@ -172,6 +156,102 @@ export default function RackingPage() {
       cancelled = true;
     };
   }, []);
+
+  function loadRacksForZone(zoneId: string) {
+    setRacksByZone((prev) => ({
+      ...prev,
+      [zoneId]: { items: prev[zoneId]?.items ?? [], loading: true, error: null, loaded: false },
+    }));
+    return rackService
+      .getAll(zoneId)
+      .then((items) => {
+        setRacksByZone((prev) => ({
+          ...prev,
+          [zoneId]: { items, loading: false, error: null, loaded: true },
+        }));
+      })
+      .catch((err) => {
+        setRacksByZone((prev) => ({
+          ...prev,
+          [zoneId]: {
+            items: prev[zoneId]?.items ?? [],
+            loading: false,
+            error: extractErrorMessage(err, 'Đã có lỗi xảy ra khi tải danh sách Rack'),
+            loaded: false,
+          },
+        }));
+      });
+  }
+
+  function toggleZone(zoneId: string) {
+    setExpandedZoneId((prev) => (prev === zoneId ? null : zoneId));
+
+    const bucket = racksByZone[zoneId];
+    if (!bucket?.loaded && !bucket?.loading) {
+      void loadRacksForZone(zoneId);
+    }
+  }
+
+  function selectRack(zoneId: string, rackId: string) {
+    setSelectedZoneId(zoneId);
+    setSelectedRackId(rackId);
+  }
+
+  function loadGrid(rackId: string) {
+    setGridLoading(true);
+    return levelService
+      .getAll(rackId)
+      .then(async (levels) => {
+        const sortedLevels = [...levels].sort((a, b) => b.levelNumber - a.levelNumber);
+        const slotsByLevel = await Promise.all(
+          sortedLevels.map((level) => slotService.getAll({ levelId: level.id, limit: 200 })),
+        );
+        setGridRows(
+          sortedLevels.map((level, index) => ({ level, slots: slotsByLevel[index].items })),
+        );
+        setGridError(null);
+      })
+      .catch((err) => {
+        setGridError(extractErrorMessage(err, 'Đã có lỗi xảy ra khi tải sơ đồ kho'));
+      })
+      .finally(() => {
+        setGridLoading(false);
+      });
+  }
+
+  // Grid — tải toàn bộ Level + Slot của Rack đang chọn
+  useEffect(() => {
+    if (!selectedRackId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    levelService
+      .getAll(selectedRackId)
+      .then(async (levels) => {
+        const sortedLevels = [...levels].sort((a, b) => b.levelNumber - a.levelNumber);
+        const slotsByLevel = await Promise.all(
+          sortedLevels.map((level) => slotService.getAll({ levelId: level.id, limit: 200 })),
+        );
+        if (cancelled) return;
+        setGridRows(
+          sortedLevels.map((level, index) => ({ level, slots: slotsByLevel[index].items })),
+        );
+        setGridError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setGridError(extractErrorMessage(err, 'Đã có lỗi xảy ra khi tải sơ đồ kho'));
+      })
+      .finally(() => {
+        if (!cancelled) setGridLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedRackId]);
 
   async function handleZoneSubmit(payload: CreateZonePayload | UpdateZonePayload) {
     try {
@@ -187,57 +267,16 @@ export default function RackingPage() {
         setToastMessage('Mã Zone này đã tồn tại. Vui lòng chọn mã khác.');
       } else {
         setToastMessage(
-          zoneModal?.mode === 'create' ? 'Không thể tạo Zone. Vui lòng thử lại.' : 'Không thể cập nhật Zone. Vui lòng thử lại.',
+          zoneModal?.mode === 'create'
+            ? 'Không thể tạo Zone. Vui lòng thử lại.'
+            : 'Không thể cập nhật Zone. Vui lòng thử lại.',
         );
       }
     }
   }
 
-  function loadRacks(zoneId: string) {
-    setRacksLoading(true);
-    return rackService
-      .getAll(zoneId)
-      .then((result) => {
-        setRacks(result);
-        setRacksError(null);
-      })
-      .catch((err) => {
-        setRacksError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Rack');
-      })
-      .finally(() => {
-        setRacksLoading(false);
-      });
-  }
-
-  // Cột Rack — phụ thuộc Zone đang chọn
-  useEffect(() => {
-    if (!selectedZoneId) {
-      return;
-    }
-
-    let cancelled = false;
-
-    rackService
-      .getAll(selectedZoneId)
-      .then((result) => {
-        if (cancelled) return;
-        setRacks(result);
-        setRacksError(null);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setRacksError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Rack');
-      })
-      .finally(() => {
-        if (!cancelled) setRacksLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedZoneId]);
-
   async function handleRackSubmit(payload: CreateRackPayload | UpdateRackPayload) {
+    const zoneId = rackModal?.zoneId;
     try {
       if (rackModal?.mode === 'create') {
         await rackService.create(payload as CreateRackPayload);
@@ -245,61 +284,19 @@ export default function RackingPage() {
         await rackService.update(rackModal.rack.id, payload as UpdateRackPayload);
       }
       setRackModal(null);
-      if (selectedZoneId) await loadRacks(selectedZoneId);
+      if (zoneId) await loadRacksForZone(zoneId);
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 409) {
         setToastMessage('Mã Rack này đã tồn tại. Vui lòng chọn mã khác.');
       } else {
         setToastMessage(
-          rackModal?.mode === 'create' ? 'Không thể tạo Rack. Vui lòng thử lại.' : 'Không thể cập nhật Rack. Vui lòng thử lại.',
+          rackModal?.mode === 'create'
+            ? 'Không thể tạo Rack. Vui lòng thử lại.'
+            : 'Không thể cập nhật Rack. Vui lòng thử lại.',
         );
       }
     }
   }
-
-  function loadLevels(rackId: string) {
-    setLevelsLoading(true);
-    return levelService
-      .getAll(rackId)
-      .then((result) => {
-        setLevels(result);
-        setLevelsError(null);
-      })
-      .catch((err) => {
-        setLevelsError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Level');
-      })
-      .finally(() => {
-        setLevelsLoading(false);
-      });
-  }
-
-  // Cột Level — phụ thuộc Rack đang chọn
-  useEffect(() => {
-    if (!selectedRackId) {
-      return;
-    }
-
-    let cancelled = false;
-
-    levelService
-      .getAll(selectedRackId)
-      .then((result) => {
-        if (cancelled) return;
-        setLevels(result);
-        setLevelsError(null);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setLevelsError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Level');
-      })
-      .finally(() => {
-        if (!cancelled) setLevelsLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedRackId]);
 
   async function handleLevelSubmit(payload: CreateLevelPayload | UpdateLevelPayload) {
     try {
@@ -309,63 +306,19 @@ export default function RackingPage() {
         await levelService.update(levelModal.level.id, payload as UpdateLevelPayload);
       }
       setLevelModal(null);
-      if (selectedRackId) await loadLevels(selectedRackId);
+      if (selectedRackId) await loadGrid(selectedRackId);
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 409) {
         setToastMessage('Tầng này đã tồn tại trong Rack. Vui lòng chọn số tầng khác.');
       } else {
         setToastMessage(
-          levelModal?.mode === 'create' ? 'Không thể tạo Level. Vui lòng thử lại.' : 'Không thể cập nhật Level. Vui lòng thử lại.',
+          levelModal?.mode === 'create'
+            ? 'Không thể tạo Level. Vui lòng thử lại.'
+            : 'Không thể cập nhật Level. Vui lòng thử lại.',
         );
       }
     }
   }
-
-  function loadSlots(levelId: string, page: number) {
-    setSlotsLoading(true);
-    return slotService
-      .getAll({ levelId, page, limit: 50 })
-      .then((result) => {
-        setSlots(result.items);
-        setSlotsMeta(result.meta);
-        setSlotsError(null);
-      })
-      .catch((err) => {
-        setSlotsError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Slot');
-      })
-      .finally(() => {
-        setSlotsLoading(false);
-      });
-  }
-
-  // Cột Slot — phụ thuộc Level đang chọn (và trang hiện tại)
-  useEffect(() => {
-    if (!selectedLevelId) {
-      return;
-    }
-
-    let cancelled = false;
-
-    slotService
-      .getAll({ levelId: selectedLevelId, page: slotsPage, limit: 50 })
-      .then((result) => {
-        if (cancelled) return;
-        setSlots(result.items);
-        setSlotsMeta(result.meta);
-        setSlotsError(null);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setSlotsError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Slot');
-      })
-      .finally(() => {
-        if (!cancelled) setSlotsLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedLevelId, slotsPage]);
 
   async function handleSlotSubmit(payload: CreateSlotPayload | UpdateSlotPayload) {
     try {
@@ -375,13 +328,16 @@ export default function RackingPage() {
         await slotService.update(slotModal.slot.id, payload as UpdateSlotPayload);
       }
       setSlotModal(null);
-      if (selectedLevelId) await loadSlots(selectedLevelId, slotsPage);
+      setSelectedSlot(null);
+      if (selectedRackId) await loadGrid(selectedRackId);
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 409) {
         setToastMessage('Mã Slot này đã tồn tại. Vui lòng chọn mã khác.');
       } else {
         setToastMessage(
-          slotModal?.mode === 'create' ? 'Không thể tạo Slot. Vui lòng thử lại.' : 'Không thể cập nhật Slot. Vui lòng thử lại.',
+          slotModal?.mode === 'create'
+            ? 'Không thể tạo Slot. Vui lòng thử lại.'
+            : 'Không thể cập nhật Slot. Vui lòng thử lại.',
         );
       }
     }
@@ -395,23 +351,31 @@ export default function RackingPage() {
       switch (deleteTarget.type) {
         case 'zone':
           await zoneService.remove(deleteTarget.id);
-          if (selectedZoneId === deleteTarget.id) setSelectedZoneId(null);
+          setExpandedZoneId((prev) => (prev === deleteTarget.id ? null : prev));
+          setRacksByZone((prev) => {
+            const next = { ...prev };
+            delete next[deleteTarget.id];
+            return next;
+          });
+          if (selectedZoneId === deleteTarget.id) {
+            setSelectedZoneId(null);
+            setSelectedRackId(null);
+          }
           await loadZones();
           break;
         case 'rack':
           await rackService.remove(deleteTarget.id);
           if (selectedRackId === deleteTarget.id) setSelectedRackId(null);
-          if (selectedZoneId) await loadRacks(selectedZoneId);
+          await loadRacksForZone(deleteTarget.zoneId);
           break;
         case 'level':
           await levelService.remove(deleteTarget.id);
-          if (selectedLevelId === deleteTarget.id) setSelectedLevelId(null);
-          if (selectedRackId) await loadLevels(selectedRackId);
+          if (selectedRackId) await loadGrid(selectedRackId);
           break;
         case 'slot':
           await slotService.remove(deleteTarget.id);
-          if (selectedSlotId === deleteTarget.id) setSelectedSlotId(null);
-          if (selectedLevelId) await loadSlots(selectedLevelId, slotsPage);
+          setSelectedSlot(null);
+          if (selectedRackId) await loadGrid(selectedRackId);
           break;
       }
       setDeleteTarget(null);
@@ -421,6 +385,28 @@ export default function RackingPage() {
       setDeleting(false);
     }
   }
+
+  function openSlotDetail(slot: Slot) {
+    setSelectedSlot(slot);
+    setSelectedSlotProduct(null);
+    if (!slot.currentProductId) return;
+
+    setSelectedSlotProductLoading(true);
+    productService
+      .getProductById(slot.currentProductId)
+      .then((product) => setSelectedSlotProduct(product))
+      .catch(() => setSelectedSlotProduct(null))
+      .finally(() => setSelectedSlotProductLoading(false));
+  }
+
+  const selectedRack =
+    selectedZoneId && selectedRackId
+      ? racksByZone[selectedZoneId]?.items.find((rack) => rack.id === selectedRackId) ?? null
+      : null;
+  const selectedZone = zones.find((zone) => zone.id === selectedZoneId) ?? null;
+  const columns = Array.from(
+    new Set(gridRows.flatMap((row) => row.slots.map((slot) => slot.code))),
+  ).sort(naturalCompare);
 
   return (
     <main className="app-content">
@@ -441,7 +427,7 @@ export default function RackingPage() {
         <RackFormModal
           mode={rackModal.mode}
           initialData={rackModal.rack}
-          zoneId={selectedZoneId ?? undefined}
+          zoneId={rackModal.zoneId}
           onSubmit={handleRackSubmit}
           onClose={() => setRackModal(null)}
         />
@@ -461,7 +447,7 @@ export default function RackingPage() {
         <SlotFormModal
           mode={slotModal.mode}
           initialData={slotModal.slot}
-          levelId={selectedLevelId ?? undefined}
+          levelId={slotModal.levelId}
           onSubmit={handleSlotSubmit}
           onClose={() => setSlotModal(null)}
         />
@@ -477,16 +463,94 @@ export default function RackingPage() {
         onConfirm={handleConfirmDelete}
       />
 
+      {selectedSlot && (
+        <div className="dialog-overlay" onClick={() => setSelectedSlot(null)}>
+          <div
+            className="dialog-box warehouse-map-popup"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 className="dialog-title">
+              Slot {selectedSlot.code}
+              {selectedZone && selectedRack ? ` — ${selectedZone.code} / ${selectedRack.code}` : ''}
+            </h3>
+            <dl className="warehouse-map-popup-list">
+              <div>
+                <dt>Sức chứa</dt>
+                <dd>
+                  {selectedSlot.usedCapacity} / {selectedSlot.maxCapacity}
+                </dd>
+              </div>
+              <div>
+                <dt>Độ lấp đầy</dt>
+                <dd>{Math.round(selectedSlot.occupancyRate)}%</dd>
+              </div>
+              <div>
+                <dt>Còn trống</dt>
+                <dd>{selectedSlot.availableCapacity}</dd>
+              </div>
+              <div>
+                <dt>Khoảng cách tới cổng</dt>
+                <dd>{selectedSlot.distanceToGate} m</dd>
+              </div>
+              <div>
+                <dt>Hàng hoá</dt>
+                <dd>
+                  {!selectedSlot.currentProductId && 'Trống'}
+                  {selectedSlot.currentProductId && selectedSlotProductLoading && 'Đang tải...'}
+                  {selectedSlot.currentProductId &&
+                    !selectedSlotProductLoading &&
+                    selectedSlotProduct &&
+                    `${selectedSlotProduct.skuCode} — ${selectedSlotProduct.name}`}
+                  {selectedSlot.currentProductId &&
+                    !selectedSlotProductLoading &&
+                    !selectedSlotProduct &&
+                    'Không tải được thông tin sản phẩm'}
+                </dd>
+              </div>
+            </dl>
+            <div className="dialog-actions">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() =>
+                  setDeleteTarget({
+                    type: 'slot',
+                    id: selectedSlot.id,
+                    label: `Slot ${selectedSlot.code}`,
+                  })
+                }
+              >
+                Xoá
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() =>
+                  setSlotModal({ mode: 'edit', slot: selectedSlot, levelId: selectedSlot.levelId })
+                }
+              >
+                Sửa
+              </button>
+              <button type="button" className="btn-secondary" onClick={() => setSelectedSlot(null)}>
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="page-header">
         <div>
           <p className="eyebrow">Kho hàng</p>
           <h1>Racking</h1>
-          <p className="page-desc">Sơ đồ vị trí lưu trữ: Zone → Rack → Level → Slot.</p>
+          <p className="page-desc">
+            Chọn Zone → Rack ở bên trái để xem và chỉnh sửa sơ đồ Level/Slot dạng lưới.
+          </p>
         </div>
       </div>
 
-      <div className="racking-columns">
-        <section className="panel racking-column">
+      <div className="racking-layout">
+        <aside className="panel racking-tree">
           <div className="panel-header">
             <h2>Zones</h2>
             {!zonesLoading && !zonesError && (
@@ -525,291 +589,36 @@ export default function RackingPage() {
           )}
 
           {!zonesLoading && !zonesError && zones.length > 0 && (
-            <ul className="racking-list">
-              {zones.map((zone) => (
-                <li key={zone.id} className="racking-list-row">
-                  <button
-                    type="button"
-                    className={`racking-list-item${
-                      selectedZoneId === zone.id ? ' is-active' : ''
-                    }`}
-                    onClick={() => setSelectedZoneId(zone.id)}
-                  >
-                    <span className="racking-list-item-icon">
-                      <WarehouseIcon size={16} />
-                    </span>
-                    <span className="racking-list-item-label">{zone.code}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="racking-list-item-edit"
-                    onClick={() => setZoneModal({ mode: 'edit', zone })}
-                    aria-label={`Sửa Zone ${zone.code}`}
-                  >
-                    Sửa
-                  </button>
-                  <button
-                    type="button"
-                    className="racking-list-item-delete"
-                    onClick={() => setDeleteTarget({ type: 'zone', id: zone.id, label: `Zone ${zone.code}` })}
-                    aria-label={`Xoá Zone ${zone.code}`}
-                  >
-                    Xoá
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="panel racking-column">
-          <div className="panel-header">
-            <h2>Racks</h2>
-            {!racksLoading && !racksError && selectedZoneId && (
-              <span className="result-count">{racks.length} rack</span>
-            )}
-          </div>
-
-          <button
-            type="button"
-            className="btn-secondary racking-add-btn"
-            onClick={() => setRackModal({ mode: 'create' })}
-            disabled={!selectedZoneId}
-            title={!selectedZoneId ? 'Chọn Zone trước khi thêm Rack' : undefined}
-          >
-            + Thêm Rack
-          </button>
-
-          {!selectedZoneId && (
-            <div className="racking-empty-state">
-              <p>Chọn Zone để xem Rack.</p>
-            </div>
-          )}
-
-          {selectedZoneId && racksLoading && (
-            <ul className="racking-list">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <li key={i} className="racking-list-item skeleton-row">
-                  <span className="skeleton" style={{ width: '120px' }} />
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {selectedZoneId && !racksLoading && racksError && (
-            <div className="racking-empty-state">
-              <p>{racksError}</p>
-            </div>
-          )}
-
-          {selectedZoneId && !racksLoading && !racksError && racks.length === 0 && (
-            <div className="racking-empty-state">
-              <p>Chưa có dữ liệu.</p>
-            </div>
-          )}
-
-          {selectedZoneId && !racksLoading && !racksError && racks.length > 0 && (
-            <ul className="racking-list">
-              {racks.map((rack) => (
-                <li key={rack.id} className="racking-list-row">
-                  <button
-                    type="button"
-                    className={`racking-list-item${
-                      selectedRackId === rack.id ? ' is-active' : ''
-                    }`}
-                    onClick={() => setSelectedRackId(rack.id)}
-                  >
-                    <span className="racking-list-item-icon">
-                      <LayersIcon size={16} />
-                    </span>
-                    <span className="racking-list-item-label">{rack.code}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="racking-list-item-edit"
-                    onClick={() => setRackModal({ mode: 'edit', rack })}
-                    aria-label={`Sửa Rack ${rack.code}`}
-                  >
-                    Sửa
-                  </button>
-                  <button
-                    type="button"
-                    className="racking-list-item-delete"
-                    onClick={() => setDeleteTarget({ type: 'rack', id: rack.id, label: `Rack ${rack.code}` })}
-                    aria-label={`Xoá Rack ${rack.code}`}
-                  >
-                    Xoá
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="panel racking-column">
-          <div className="panel-header">
-            <h2>Levels</h2>
-            {!levelsLoading && !levelsError && selectedRackId && (
-              <span className="result-count">{levels.length} level</span>
-            )}
-          </div>
-
-          <button
-            type="button"
-            className="btn-secondary racking-add-btn"
-            onClick={() => setLevelModal({ mode: 'create' })}
-            disabled={!selectedRackId}
-            title={!selectedRackId ? 'Chọn Rack trước khi thêm Level' : undefined}
-          >
-            + Thêm Level
-          </button>
-
-          {!selectedRackId && (
-            <div className="racking-empty-state">
-              <p>Chọn Rack để xem Level.</p>
-            </div>
-          )}
-
-          {selectedRackId && levelsLoading && (
-            <ul className="racking-list">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <li key={i} className="racking-list-item skeleton-row">
-                  <span className="skeleton" style={{ width: '120px' }} />
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {selectedRackId && !levelsLoading && levelsError && (
-            <div className="racking-empty-state">
-              <p>{levelsError}</p>
-            </div>
-          )}
-
-          {selectedRackId && !levelsLoading && !levelsError && levels.length === 0 && (
-            <div className="racking-empty-state">
-              <p>Chưa có dữ liệu.</p>
-            </div>
-          )}
-
-          {selectedRackId && !levelsLoading && !levelsError && levels.length > 0 && (
-            <ul className="racking-list">
-              {levels.map((level) => (
-                <li key={level.id} className="racking-list-row">
-                  <button
-                    type="button"
-                    className={`racking-list-item${
-                      selectedLevelId === level.id ? ' is-active' : ''
-                    }`}
-                    onClick={() => setSelectedLevelId(level.id)}
-                  >
-                    <span className="racking-list-item-icon">
-                      <GridIcon size={16} />
-                    </span>
-                    <span className="racking-list-item-label">Tầng {level.levelNumber}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="racking-list-item-edit"
-                    onClick={() => setLevelModal({ mode: 'edit', level })}
-                    aria-label={`Sửa Tầng ${level.levelNumber}`}
-                  >
-                    Sửa
-                  </button>
-                  <button
-                    type="button"
-                    className="racking-list-item-delete"
-                    onClick={() =>
-                      setDeleteTarget({ type: 'level', id: level.id, label: `Tầng ${level.levelNumber}` })
-                    }
-                    aria-label={`Xoá Tầng ${level.levelNumber}`}
-                  >
-                    Xoá
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="panel racking-column">
-          <div className="panel-header">
-            <h2>Slots</h2>
-            {!slotsLoading && !slotsError && selectedLevelId && slotsMeta && (
-              <span className="result-count">{slotsMeta.total} slot</span>
-            )}
-          </div>
-
-          <button
-            type="button"
-            className="btn-secondary racking-add-btn"
-            onClick={() => setSlotModal({ mode: 'create' })}
-            disabled={!selectedLevelId}
-            title={!selectedLevelId ? 'Chọn Level trước khi thêm Slot' : undefined}
-          >
-            + Thêm Slot
-          </button>
-
-          {!selectedLevelId && (
-            <div className="racking-empty-state">
-              <p>Chọn Level để xem Slot.</p>
-            </div>
-          )}
-
-          {selectedLevelId && slotsLoading && (
-            <ul className="racking-list">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <li key={i} className="racking-list-item skeleton-row">
-                  <span className="skeleton" style={{ width: '120px' }} />
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {selectedLevelId && !slotsLoading && slotsError && (
-            <div className="racking-empty-state">
-              <p>{slotsError}</p>
-            </div>
-          )}
-
-          {selectedLevelId && !slotsLoading && !slotsError && slots.length === 0 && (
-            <div className="racking-empty-state">
-              <p>Chưa có Slot nào.</p>
-            </div>
-          )}
-
-          {selectedLevelId && !slotsLoading && !slotsError && slots.length > 0 && (
-            <>
-              <ul className="racking-list">
-                {slots.map((slot) => {
-                  const hasSpace = slot.usedCapacity < slot.maxCapacity;
-                  return (
-                    <li key={slot.id} className="racking-list-row">
+            <ul className="racking-tree-list">
+              {zones.map((zone) => {
+                const isExpanded = expandedZoneId === zone.id;
+                const bucket = racksByZone[zone.id];
+                return (
+                  <li key={zone.id}>
+                    <div className="racking-tree-row">
                       <button
                         type="button"
-                        className={`racking-list-item${
-                          selectedSlotId === slot.id ? ' is-active' : ''
-                        }`}
-                        onClick={() => setSelectedSlotId(slot.id)}
+                        className="racking-tree-expand"
+                        onClick={() => toggleZone(zone.id)}
+                        aria-label={
+                          isExpanded ? `Thu gọn Zone ${zone.code}` : `Mở rộng Zone ${zone.code}`
+                        }
                       >
-                        <span className="racking-list-item-icon">
-                          <BoxIcon size={16} />
-                        </span>
-                        <span className="racking-list-item-label">{slot.code}</span>
-                        <span
-                          className={`badge ${hasSpace ? 'badge-success' : 'badge-danger'}`}
-                        >
-                          {hasSpace ? 'Còn chỗ' : 'Đầy'}
-                        </span>
-                        <span className="racking-list-item-sub">
-                          {Math.round(slot.occupancyRate)}%
-                        </span>
+                        {isExpanded ? '▾' : '▸'}
+                      </button>
+                      <button
+                        type="button"
+                        className="racking-tree-label"
+                        onClick={() => toggleZone(zone.id)}
+                      >
+                        <WarehouseIcon size={15} />
+                        <span>{zone.code}</span>
                       </button>
                       <button
                         type="button"
                         className="racking-list-item-edit"
-                        onClick={() => setSlotModal({ mode: 'edit', slot })}
-                        aria-label={`Sửa Slot ${slot.code}`}
+                        onClick={() => setZoneModal({ mode: 'edit', zone })}
+                        aria-label={`Sửa Zone ${zone.code}`}
                       >
                         Sửa
                       </button>
@@ -817,38 +626,258 @@ export default function RackingPage() {
                         type="button"
                         className="racking-list-item-delete"
                         onClick={() =>
-                          setDeleteTarget({ type: 'slot', id: slot.id, label: `Slot ${slot.code}` })
+                          setDeleteTarget({ type: 'zone', id: zone.id, label: `Zone ${zone.code}` })
                         }
-                        aria-label={`Xoá Slot ${slot.code}`}
+                        aria-label={`Xoá Zone ${zone.code}`}
                       >
                         Xoá
                       </button>
-                    </li>
-                  );
-                })}
+                    </div>
+
+                    {isExpanded && (
+                      <ul className="racking-tree-sublist">
+                        {bucket?.loading &&
+                          Array.from({ length: 2 }).map((_, i) => (
+                            <li key={i} className="racking-tree-row skeleton-row">
+                              <span className="skeleton" style={{ width: '90px' }} />
+                            </li>
+                          ))}
+
+                        {!bucket?.loading && bucket?.error && (
+                          <li className="racking-tree-empty">{bucket.error}</li>
+                        )}
+
+                        {!bucket?.loading &&
+                          !bucket?.error &&
+                          bucket?.loaded &&
+                          bucket.items.length === 0 && (
+                            <li className="racking-tree-empty">Chưa có Rack nào.</li>
+                          )}
+
+                        {!bucket?.loading &&
+                          !bucket?.error &&
+                          bucket?.items.map((rack) => (
+                            <li key={rack.id} className="racking-tree-row">
+                              <button
+                                type="button"
+                                className={`racking-tree-label is-rack${
+                                  selectedRackId === rack.id ? ' is-active' : ''
+                                }`}
+                                onClick={() => selectRack(zone.id, rack.id)}
+                              >
+                                <LayersIcon size={14} />
+                                <span>{rack.code}</span>
+                              </button>
+                            </li>
+                          ))}
+
+                        <li>
+                          <button
+                            type="button"
+                            className="racking-tree-add"
+                            onClick={() => setRackModal({ mode: 'create', zoneId: zone.id })}
+                          >
+                            + Thêm Rack
+                          </button>
+                        </li>
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </aside>
+
+        <section className="panel racking-grid-panel">
+          {!selectedRackId && (
+            <div className="racking-empty-state">
+              <p>Chọn Zone rồi chọn Rack ở bên trái để xem sơ đồ kho.</p>
+            </div>
+          )}
+
+          {selectedRackId && (
+            <>
+              <div className="warehouse-map-panel-header">
+                <p className="warehouse-map-caption">
+                  {selectedZone?.code} – {selectedRack?.code}
+                </p>
+                {selectedRack && (
+                  <div className="warehouse-map-panel-header-actions">
+                    <button
+                      type="button"
+                      className="btn-secondary racking-add-btn"
+                      onClick={() => setLevelModal({ mode: 'create' })}
+                    >
+                      + Thêm Level
+                    </button>
+                    <button
+                      type="button"
+                      className="racking-list-item-edit"
+                      onClick={() =>
+                        selectedZoneId &&
+                        setRackModal({ mode: 'edit', rack: selectedRack, zoneId: selectedZoneId })
+                      }
+                    >
+                      Sửa Rack
+                    </button>
+                    <button
+                      type="button"
+                      className="racking-list-item-delete"
+                      onClick={() =>
+                        selectedZoneId &&
+                        setDeleteTarget({
+                          type: 'rack',
+                          id: selectedRack.id,
+                          label: `Rack ${selectedRack.code}`,
+                          zoneId: selectedZoneId,
+                        })
+                      }
+                    >
+                      Xoá Rack
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <ul className="warehouse-map-legend">
+                <li>
+                  <span className="warehouse-map-legend-dot is-empty" /> Trống
+                </li>
+                <li>
+                  <span className="warehouse-map-legend-dot is-partial" /> Đang sử dụng
+                </li>
+                <li>
+                  <span className="warehouse-map-legend-dot is-full" /> Đầy
+                </li>
               </ul>
 
-              {slotsMeta && slotsMeta.totalPages > 1 && (
-                <div className="racking-pagination">
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    disabled={slotsPage <= 1}
-                    onClick={() => setSlotsPage((p) => Math.max(1, p - 1))}
-                  >
-                    Trước
-                  </button>
-                  <span>
-                    Trang {slotsMeta.page}/{slotsMeta.totalPages}
-                  </span>
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    disabled={slotsPage >= slotsMeta.totalPages}
-                    onClick={() => setSlotsPage((p) => Math.min(slotsMeta.totalPages, p + 1))}
-                  >
-                    Sau
-                  </button>
+              {gridLoading && (
+                <div className="warehouse-map-skeleton">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span key={i} className="skeleton" style={{ height: '40px' }} />
+                  ))}
+                </div>
+              )}
+
+              {!gridLoading && gridError && (
+                <div className="racking-empty-state">
+                  <p>{gridError}</p>
+                </div>
+              )}
+
+              {!gridLoading && !gridError && gridRows.length === 0 && (
+                <div className="racking-empty-state">
+                  <p>Rack này chưa có Level nào.</p>
+                </div>
+              )}
+
+              {!gridLoading && !gridError && gridRows.length > 0 && (
+                <div className="warehouse-map-scroll">
+                  <div className="warehouse-map-grid">
+                    {gridRows.map(({ level, slots }) => {
+                      const codeToSlot = new Map(slots.map((slot) => [slot.code, slot]));
+                      const menuOpen = openLevelMenuId === level.id;
+                      return (
+                        <div className="warehouse-map-row" key={level.id}>
+                          <div className="warehouse-map-row-lead">
+                            <span className="warehouse-map-row-label">L{level.levelNumber}</span>
+                            <div className="row-menu">
+                              <button
+                                type="button"
+                                className="row-menu-trigger"
+                                onClick={() => setOpenLevelMenuId(menuOpen ? null : level.id)}
+                                aria-label={`Hành động cho Tầng ${level.levelNumber}`}
+                                aria-expanded={menuOpen}
+                              >
+                                ⋮
+                              </button>
+                              {menuOpen && (
+                                <>
+                                  <div
+                                    className="row-menu-backdrop"
+                                    onClick={() => setOpenLevelMenuId(null)}
+                                  />
+                                  <div className="row-menu-popover">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenLevelMenuId(null);
+                                        setLevelModal({ mode: 'edit', level });
+                                      }}
+                                    >
+                                      Sửa
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="is-danger"
+                                      onClick={() => {
+                                        setOpenLevelMenuId(null);
+                                        setDeleteTarget({
+                                          type: 'level',
+                                          id: level.id,
+                                          label: `Tầng ${level.levelNumber}`,
+                                        });
+                                      }}
+                                    >
+                                      Xoá
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div className="warehouse-map-cells">
+                            {columns.map((code) => {
+                              const slot = codeToSlot.get(code);
+                              if (!slot) {
+                                return (
+                                  <span
+                                    key={code}
+                                    className="warehouse-map-cell is-placeholder"
+                                    aria-hidden="true"
+                                  />
+                                );
+                              }
+                              const status = slotStatus(slot);
+                              return (
+                                <button
+                                  key={slot.id}
+                                  type="button"
+                                  className={`warehouse-map-cell is-${status}`}
+                                  onClick={() => openSlotDetail(slot)}
+                                  title={`${slot.code} — ${Math.round(slot.occupancyRate)}%`}
+                                  aria-label={`Slot ${slot.code}, ${Math.round(slot.occupancyRate)}% lấp đầy`}
+                                />
+                              );
+                            })}
+                            <button
+                              type="button"
+                              className="warehouse-map-cell is-add"
+                              onClick={() => setSlotModal({ mode: 'create', levelId: level.id })}
+                              aria-label={`Thêm Slot vào Tầng ${level.levelNumber}`}
+                              title="Thêm Slot"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {columns.length > 0 && (
+                      <div className="warehouse-map-row warehouse-map-col-labels">
+                        <span className="warehouse-map-row-lead" aria-hidden="true" />
+                        <div className="warehouse-map-cells">
+                          {columns.map((code) => (
+                            <span key={code} className="warehouse-map-cell-label">
+                              {code}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </>

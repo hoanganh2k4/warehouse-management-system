@@ -5,7 +5,6 @@ import {
   BoxIcon,
   GridIcon,
   LayersIcon,
-  MapIcon,
   SettingsIcon,
   SwapIcon,
   TagIcon,
@@ -27,7 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Categories', icon: <TagIcon />, to: '/categories' },
   { label: 'Inventory', icon: <LayersIcon />, to: '/inventory' },
   { label: 'Racking', icon: <WarehouseIcon />, to: '/racking' },
-  { label: 'Sơ đồ kho', icon: <MapIcon />, to: '/warehouse-map' },
+  { label: 'Transactions', icon: <SwapIcon />, to: '/transactions' },
   { label: 'Transactions', icon: <SwapIcon />, soon: true },
   { label: 'Team', icon: <UsersIcon />, to: '/team' },
 ];

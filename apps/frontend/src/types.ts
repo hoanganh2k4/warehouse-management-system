@@ -261,3 +261,27 @@ export type UpdateSlotPayload = {
   distanceToGate?: number;
   outboundFrequencyScore?: number;
 };
+
+export type TransactionType = 'IMPORT' | 'EXPORT' | 'MOVE';
+
+export type Transaction = {
+  id: string;
+  type: TransactionType;
+  quantity: number;
+  batchId: string;
+  slotToId: string | null;
+  slotFromId: string | null;
+  userId: string;
+  note: string | null;
+  createdAt: string;
+};
+
+export type GetTransactionsParams = {
+  from?: string;
+  to?: string;
+  type?: TransactionType;
+  productId?: string;
+  warehouseId?: string;
+  page?: number;
+  limit?: number;
+};
