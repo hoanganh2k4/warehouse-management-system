@@ -967,3 +967,176 @@
     flex: 1 1 auto;
   }
 }
+
+/* ---------- Racking (Task 71) ---------- */
+/*
+  Phương án responsive đã chọn: CUỘN NGANG (overflow-x: auto), không dùng drill-down.
+  Lý do: layout 4 cột (Zone/Rack/Level/Slot) là 1 khối liền mạch thể hiện quan hệ cha-con;
+  cuộn ngang giữ nguyên toàn bộ state/logic đã có trong RackingPage.tsx (Task 62-70) mà
+  không cần thêm state "cột nào đang active" hay nút "Quay lại" ở tầng component.
+*/
+
+.racking-columns {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.racking-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.racking-add-btn {
+  margin: 14px 16px 4px;
+  align-self: flex-start;
+}
+
+.racking-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.racking-list-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.racking-list-item {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.86rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.racking-list-item:hover {
+  background: var(--canvas);
+}
+
+.racking-list-item.is-active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.racking-list-item-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.racking-list-item.is-active .racking-list-item-icon {
+  color: var(--accent-strong);
+}
+
+.racking-list-item-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.racking-list-item-sub {
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.racking-list-item-edit,
+.racking-list-item-delete {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.racking-list-item-edit:hover {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.racking-list-item-delete:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.racking-empty-state {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 0.84rem;
+}
+
+.badge-success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.badge-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.racking-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 16px 16px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.racking-pagination .btn-secondary {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}
+
+/* < 768px: 4 cột không đủ chỗ đứng cạnh nhau — chuyển sang cuộn ngang,
+   mỗi cột giữ 1 chiều rộng cố định dễ đọc thay vì co bóp méo nội dung. */
+@media (max-width: 768px) {
+  .racking-columns {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .racking-column {
+    flex: 0 0 82vw;
+    max-width: 340px;
+    scroll-snap-align: start;
+  }
+
+  .racking-list {
+    max-height: 50vh;
+  }
+}
