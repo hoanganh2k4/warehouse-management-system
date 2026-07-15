@@ -39,6 +39,22 @@ export function GridIcon({ size = 18 }: IconProps) {
   );
 }
 
+export function MapIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base}>
+      <rect x="3" y="4" width="4.5" height="4.5" rx="1" />
+      <rect x="9.75" y="4" width="4.5" height="4.5" rx="1" />
+      <rect x="16.5" y="4" width="4.5" height="4.5" rx="1" />
+      <rect x="3" y="10.75" width="4.5" height="4.5" rx="1" />
+      <rect x="9.75" y="10.75" width="4.5" height="4.5" rx="1" />
+      <rect x="16.5" y="10.75" width="4.5" height="4.5" rx="1" />
+      <rect x="3" y="17.5" width="4.5" height="4.5" rx="1" />
+      <rect x="9.75" y="17.5" width="4.5" height="4.5" rx="1" />
+      <rect x="16.5" y="17.5" width="4.5" height="4.5" rx="1" />
+    </svg>
+  );
+}
+
 export function BoxIcon({ size = 18 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" {...base}>
