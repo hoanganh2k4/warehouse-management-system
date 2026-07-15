@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { zoneService } from '../../services/zone.service';
 import { rackService } from '../../services/rack.service';
 import { levelService } from '../../services/level.service';
-import { WarehouseIcon, LayersIcon, GridIcon } from '../../components/icons';
-import type { Zone, Rack, Level } from '../../types';
+import { slotService } from '../../services/slot.service';
+import { WarehouseIcon, LayersIcon, GridIcon, BoxIcon } from '../../components/icons';
+import type { Zone, Rack, Level, Slot, PaginationMeta } from '../../types';
 
 export default function RackingPage() {
   const [zones, setZones] = useState<Zone[]>([]);
@@ -20,6 +21,13 @@ export default function RackingPage() {
   const [levelsLoading, setLevelsLoading] = useState(false);
   const [levelsError, setLevelsError] = useState<string | null>(null);
   const [selectedLevelId, setSelectedLevelId] = useState<string | null>(null);
+
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [slotsMeta, setSlotsMeta] = useState<PaginationMeta | null>(null);
+  const [slotsPage, setSlotsPage] = useState(1);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
 
   // Cột Zone
   useEffect(() => {
@@ -111,6 +119,45 @@ export default function RackingPage() {
       cancelled = true;
     };
   }, [selectedRackId]);
+
+  // Reset trang + slot đang chọn mỗi khi đổi Level
+  useEffect(() => {
+    setSelectedSlotId(null);
+    setSlotsPage(1);
+  }, [selectedLevelId]);
+
+  // Cột Slot — phụ thuộc Level đang chọn (và trang hiện tại)
+  useEffect(() => {
+    if (!selectedLevelId) {
+      setSlots([]);
+      setSlotsMeta(null);
+      setSlotsError(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    setSlotsLoading(true);
+    slotService
+      .getAll({ levelId: selectedLevelId, page: slotsPage, limit: 50 })
+      .then((result) => {
+        if (cancelled) return;
+        setSlots(result.items);
+        setSlotsMeta(result.meta);
+        setSlotsError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setSlotsError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Slot');
+      })
+      .finally(() => {
+        if (!cancelled) setSlotsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedLevelId, slotsPage]);
 
   return (
     <main className="app-content">
@@ -291,7 +338,100 @@ export default function RackingPage() {
           )}
         </section>
 
-        {/* Cột Slot sẽ được thêm ở Task 65 */}
+        <section className="panel racking-column">
+          <div className="panel-header">
+            <h2>Slots</h2>
+            {!slotsLoading && !slotsError && selectedLevelId && slotsMeta && (
+              <span className="result-count">{slotsMeta.total} slot</span>
+            )}
+          </div>
+
+          {!selectedLevelId && (
+            <div className="racking-empty-state">
+              <p>Chọn Level để xem Slot.</p>
+            </div>
+          )}
+
+          {selectedLevelId && slotsLoading && (
+            <ul className="racking-list">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <li key={i} className="racking-list-item skeleton-row">
+                  <span className="skeleton" style={{ width: '120px' }} />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {selectedLevelId && !slotsLoading && slotsError && (
+            <div className="racking-empty-state">
+              <p>{slotsError}</p>
+            </div>
+          )}
+
+          {selectedLevelId && !slotsLoading && !slotsError && slots.length === 0 && (
+            <div className="racking-empty-state">
+              <p>Chưa có Slot nào.</p>
+            </div>
+          )}
+
+          {selectedLevelId && !slotsLoading && !slotsError && slots.length > 0 && (
+            <>
+              <ul className="racking-list">
+                {slots.map((slot) => {
+                  const hasSpace = slot.usedCapacity < slot.maxCapacity;
+                  return (
+                    <li key={slot.id}>
+                      <button
+                        type="button"
+                        className={`racking-list-item${
+                          selectedSlotId === slot.id ? ' is-active' : ''
+                        }`}
+                        onClick={() => setSelectedSlotId(slot.id)}
+                      >
+                        <span className="racking-list-item-icon">
+                          <BoxIcon size={16} />
+                        </span>
+                        <span className="racking-list-item-label">{slot.code}</span>
+                        <span
+                          className={`badge ${hasSpace ? 'badge-success' : 'badge-danger'}`}
+                        >
+                          {hasSpace ? 'Còn chỗ' : 'Đầy'}
+                        </span>
+                        <span className="racking-list-item-sub">
+                          {Math.round(slot.occupancyRate)}%
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {slotsMeta && slotsMeta.totalPages > 1 && (
+                <div className="racking-pagination">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    disabled={slotsPage <= 1}
+                    onClick={() => setSlotsPage((p) => Math.max(1, p - 1))}
+                  >
+                    Trước
+                  </button>
+                  <span>
+                    Trang {slotsMeta.page}/{slotsMeta.totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    disabled={slotsPage >= slotsMeta.totalPages}
+                    onClick={() => setSlotsPage((p) => Math.min(slotsMeta.totalPages, p + 1))}
+                  >
+                    Sau
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </section>
       </div>
     </main>
   );
