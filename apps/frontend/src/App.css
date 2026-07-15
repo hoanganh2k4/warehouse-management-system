@@ -1329,7 +1329,7 @@
 }
 
 .warehouse-map-row-label {
-  flex: 0 0 34px;
+  flex: 0 0 auto;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -1425,5 +1425,239 @@
 
   .warehouse-map-legend {
     margin-left: 0;
+  }
+}
+
+/* ---------- Racking (Zone/Rack tree + Grid map hợp nhất) ---------- */
+
+.racking-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.racking-tree {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.racking-tree-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.racking-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.racking-tree-expand {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 0.7rem;
+  border-radius: var(--radius-sm);
+}
+
+.racking-tree-expand:hover {
+  background: var(--canvas);
+}
+
+.racking-tree-label {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.racking-tree-label:hover {
+  background: var(--canvas);
+}
+
+.racking-tree-label.is-rack {
+  font-weight: 400;
+}
+
+.racking-tree-label.is-active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.racking-tree-sublist {
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 0 0 0 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.racking-tree-add {
+  width: 100%;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.racking-tree-add:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.racking-tree-empty {
+  padding: 6px 8px;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+
+.racking-grid-panel {
+  padding: 16px 20px 24px;
+  min-width: 0;
+}
+
+.warehouse-map-panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.warehouse-map-panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.warehouse-map-row-lead {
+  flex: 0 0 58px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.row-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.row-menu-trigger {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.row-menu-trigger:hover {
+  background: var(--canvas);
+  color: var(--text);
+}
+
+.row-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+.row-menu-popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 21;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  min-width: 84px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.row-menu-popover button {
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.row-menu-popover button:hover {
+  background: var(--canvas);
+}
+
+.row-menu-popover button.is-danger {
+  color: var(--danger);
+}
+
+.row-menu-popover button.is-danger:hover {
+  background: var(--danger-soft);
+}
+
+.warehouse-map-cell.is-add {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text-faint);
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warehouse-map-cell.is-add:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+@media (max-width: 900px) {
+  .racking-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .racking-tree-list {
+    max-height: 40vh;
   }
 }
