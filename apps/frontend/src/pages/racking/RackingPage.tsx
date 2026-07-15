@@ -82,6 +82,57 @@ export default function RackingPage() {
   const [deleting, setDeleting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Theo dõi giá trị đã chọn ở lần render trước để phát hiện thay đổi ngay
+  // trong lúc render (theo khuyến nghị của React thay vì setState trong effect).
+  const [prevZoneId, setPrevZoneId] = useState<string | null>(selectedZoneId);
+  const [prevRackId, setPrevRackId] = useState<string | null>(selectedRackId);
+  const [prevLevelId, setPrevLevelId] = useState<string | null>(selectedLevelId);
+  const [prevSlotsKey, setPrevSlotsKey] = useState<string>(
+    selectedLevelId ? `${selectedLevelId}:${slotsPage}` : 'none',
+  );
+
+  // Zone đổi -> reset Rack đang chọn (và dây chuyền Level/Slot bên dưới sẽ tự
+  // reset ở các khối kế tiếp trong cùng một lượt render).
+  if (selectedZoneId !== prevZoneId) {
+    setPrevZoneId(selectedZoneId);
+    setSelectedRackId(null);
+    setRacksLoading(selectedZoneId !== null);
+    if (!selectedZoneId) {
+      setRacks([]);
+      setRacksError(null);
+    }
+  }
+
+  // Rack đổi -> reset Level đang chọn.
+  if (selectedRackId !== prevRackId) {
+    setPrevRackId(selectedRackId);
+    setSelectedLevelId(null);
+    setLevelsLoading(selectedRackId !== null);
+    if (!selectedRackId) {
+      setLevels([]);
+      setLevelsError(null);
+    }
+  }
+
+  // Level đổi -> reset Slot đang chọn và về trang 1.
+  if (selectedLevelId !== prevLevelId) {
+    setPrevLevelId(selectedLevelId);
+    setSelectedSlotId(null);
+    setSlotsPage(1);
+  }
+
+  // Level hoặc trang đổi -> đánh dấu đang tải Slot trước khi effect fetch chạy.
+  const slotsKey = selectedLevelId ? `${selectedLevelId}:${slotsPage}` : 'none';
+  if (slotsKey !== prevSlotsKey) {
+    setPrevSlotsKey(slotsKey);
+    setSlotsLoading(selectedLevelId !== null);
+    if (!selectedLevelId) {
+      setSlots([]);
+      setSlotsMeta(null);
+      setSlotsError(null);
+    }
+  }
+
   function loadZones() {
     setZonesLoading(true);
     return zoneService
@@ -102,7 +153,6 @@ export default function RackingPage() {
   useEffect(() => {
     let cancelled = false;
 
-    setZonesLoading(true);
     zoneService
       .getAll()
       .then((result) => {
@@ -161,17 +211,12 @@ export default function RackingPage() {
 
   // Cột Rack — phụ thuộc Zone đang chọn
   useEffect(() => {
-    setSelectedRackId(null);
-
     if (!selectedZoneId) {
-      setRacks([]);
-      setRacksError(null);
       return;
     }
 
     let cancelled = false;
 
-    setRacksLoading(true);
     rackService
       .getAll(selectedZoneId)
       .then((result) => {
@@ -230,17 +275,12 @@ export default function RackingPage() {
 
   // Cột Level — phụ thuộc Rack đang chọn
   useEffect(() => {
-    setSelectedLevelId(null);
-
     if (!selectedRackId) {
-      setLevels([]);
-      setLevelsError(null);
       return;
     }
 
     let cancelled = false;
 
-    setLevelsLoading(true);
     levelService
       .getAll(selectedRackId)
       .then((result) => {
@@ -281,12 +321,6 @@ export default function RackingPage() {
     }
   }
 
-  // Reset trang + slot đang chọn mỗi khi đổi Level
-  useEffect(() => {
-    setSelectedSlotId(null);
-    setSlotsPage(1);
-  }, [selectedLevelId]);
-
   function loadSlots(levelId: string, page: number) {
     setSlotsLoading(true);
     return slotService
@@ -307,15 +341,11 @@ export default function RackingPage() {
   // Cột Slot — phụ thuộc Level đang chọn (và trang hiện tại)
   useEffect(() => {
     if (!selectedLevelId) {
-      setSlots([]);
-      setSlotsMeta(null);
-      setSlotsError(null);
       return;
     }
 
     let cancelled = false;
 
-    setSlotsLoading(true);
     slotService
       .getAll({ levelId: selectedLevelId, page: slotsPage, limit: 50 })
       .then((result) => {
