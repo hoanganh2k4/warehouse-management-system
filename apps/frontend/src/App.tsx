@@ -13,6 +13,7 @@ import CategoryList from './pages/categories/CategoryList';
 import CategoryCreate from './pages/categories/CategoryCreate';
 import CategoryEdit from './pages/categories/CategoryEdit';
 import TeamList from './pages/team/TeamList';
+import RackingPage from './pages/racking/RackingPage';
 import Login from './pages/login/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -37,6 +38,7 @@ function App() {
           <Route path="categories/:id/edit" element={<CategoryEdit />} />
           <Route path="inventory/inbound" element={<InventoryInbound />} />
           <Route path="inventory/outbound" element={<InventoryOutbound />} />
+          <Route path="racking" element={<RackingPage />} />
           <Route path="team" element={<TeamList />} />
         </Route>
       </Route>
