@@ -9,6 +9,7 @@ import { ZoneFormModal } from '../../components/ZoneFormModal';
 import { RackFormModal } from '../../components/RackFormModal';
 import { LevelFormModal } from '../../components/LevelFormModal';
 import { SlotFormModal } from '../../components/SlotFormModal';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Toast } from '../../components/Toast';
 import type {
   Zone,
@@ -25,6 +26,22 @@ import type {
   CreateSlotPayload,
   UpdateSlotPayload,
 } from '../../types';
+
+type DeleteTarget =
+  | { type: 'zone'; id: string; label: string }
+  | { type: 'rack'; id: string; label: string }
+  | { type: 'level'; id: string; label: string }
+  | { type: 'slot'; id: string; label: string };
+
+function extractErrorMessage(err: unknown, fallback: string): string {
+  if (isAxiosError(err)) {
+    const data = err.response?.data as { message?: string | string[] } | undefined;
+    if (data?.message) {
+      return Array.isArray(data.message) ? data.message.join(', ') : data.message;
+    }
+  }
+  return fallback;
+}
 
 export default function RackingPage() {
   const [zones, setZones] = useState<Zone[]>([]);
@@ -61,6 +78,8 @@ export default function RackingPage() {
   const [slotModal, setSlotModal] = useState<{ mode: 'create' | 'edit'; slot?: Slot } | null>(
     null,
   );
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   function loadZones() {
@@ -338,6 +357,41 @@ export default function RackingPage() {
     }
   }
 
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    try {
+      switch (deleteTarget.type) {
+        case 'zone':
+          await zoneService.remove(deleteTarget.id);
+          if (selectedZoneId === deleteTarget.id) setSelectedZoneId(null);
+          await loadZones();
+          break;
+        case 'rack':
+          await rackService.remove(deleteTarget.id);
+          if (selectedRackId === deleteTarget.id) setSelectedRackId(null);
+          if (selectedZoneId) await loadRacks(selectedZoneId);
+          break;
+        case 'level':
+          await levelService.remove(deleteTarget.id);
+          if (selectedLevelId === deleteTarget.id) setSelectedLevelId(null);
+          if (selectedRackId) await loadLevels(selectedRackId);
+          break;
+        case 'slot':
+          await slotService.remove(deleteTarget.id);
+          if (selectedSlotId === deleteTarget.id) setSelectedSlotId(null);
+          if (selectedLevelId) await loadSlots(selectedLevelId, slotsPage);
+          break;
+      }
+      setDeleteTarget(null);
+    } catch (err) {
+      setToastMessage(extractErrorMessage(err, 'Không thể xoá. Vui lòng thử lại.'));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <main className="app-content">
       {toastMessage && (
@@ -382,6 +436,16 @@ export default function RackingPage() {
           onClose={() => setSlotModal(null)}
         />
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Xoá"
+        message={`Bạn có chắc muốn xoá "${deleteTarget?.label}"? Hành động này không thể hoàn tác.`}
+        confirmLabel="Xoá"
+        loading={deleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+      />
 
       <div className="page-header">
         <div>
@@ -453,6 +517,14 @@ export default function RackingPage() {
                     aria-label={`Sửa Zone ${zone.code}`}
                   >
                     Sửa
+                  </button>
+                  <button
+                    type="button"
+                    className="racking-list-item-delete"
+                    onClick={() => setDeleteTarget({ type: 'zone', id: zone.id, label: `Zone ${zone.code}` })}
+                    aria-label={`Xoá Zone ${zone.code}`}
+                  >
+                    Xoá
                   </button>
                 </li>
               ))}
@@ -530,6 +602,14 @@ export default function RackingPage() {
                   >
                     Sửa
                   </button>
+                  <button
+                    type="button"
+                    className="racking-list-item-delete"
+                    onClick={() => setDeleteTarget({ type: 'rack', id: rack.id, label: `Rack ${rack.code}` })}
+                    aria-label={`Xoá Rack ${rack.code}`}
+                  >
+                    Xoá
+                  </button>
                 </li>
               ))}
             </ul>
@@ -605,6 +685,16 @@ export default function RackingPage() {
                     aria-label={`Sửa Tầng ${level.levelNumber}`}
                   >
                     Sửa
+                  </button>
+                  <button
+                    type="button"
+                    className="racking-list-item-delete"
+                    onClick={() =>
+                      setDeleteTarget({ type: 'level', id: level.id, label: `Tầng ${level.levelNumber}` })
+                    }
+                    aria-label={`Xoá Tầng ${level.levelNumber}`}
+                  >
+                    Xoá
                   </button>
                 </li>
               ))}
@@ -692,6 +782,16 @@ export default function RackingPage() {
                         aria-label={`Sửa Slot ${slot.code}`}
                       >
                         Sửa
+                      </button>
+                      <button
+                        type="button"
+                        className="racking-list-item-delete"
+                        onClick={() =>
+                          setDeleteTarget({ type: 'slot', id: slot.id, label: `Slot ${slot.code}` })
+                        }
+                        aria-label={`Xoá Slot ${slot.code}`}
+                      >
+                        Xoá
                       </button>
                     </li>
                   );
