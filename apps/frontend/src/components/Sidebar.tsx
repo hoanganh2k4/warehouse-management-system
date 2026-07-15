@@ -26,7 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Categories', icon: <TagIcon />, to: '/categories' },
   { label: 'Inventory', icon: <LayersIcon />, to: '/inventory' },
   { label: 'Racking', icon: <WarehouseIcon />, to: '/racking' },
-  { label: 'Transactions', icon: <SwapIcon />, soon: true },
+  { label: 'Transactions', icon: <SwapIcon />, to: '/transactions' },
   { label: 'Team', icon: <UsersIcon />, to: '/team' },
 ];
 

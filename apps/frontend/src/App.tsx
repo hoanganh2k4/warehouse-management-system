@@ -14,6 +14,7 @@ import CategoryCreate from './pages/categories/CategoryCreate';
 import CategoryEdit from './pages/categories/CategoryEdit';
 import TeamList from './pages/team/TeamList';
 import RackingPage from './pages/racking/RackingPage';
+import TransactionList from './pages/transactions/TransactionList';
 import Login from './pages/login/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -39,6 +40,7 @@ function App() {
           <Route path="inventory/inbound" element={<InventoryInbound />} />
           <Route path="inventory/outbound" element={<InventoryOutbound />} />
           <Route path="racking" element={<RackingPage />} />
+          <Route path="transactions" element={<TransactionList />} />
           <Route path="team" element={<TeamList />} />
         </Route>
       </Route>
