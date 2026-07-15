@@ -342,6 +342,12 @@
   font-size: 1.05rem;
 }
 
+.panel-header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .result-count {
   font-size: 0.8rem;
   color: var(--text-faint);
@@ -994,6 +1000,12 @@
   align-self: flex-start;
 }
 
+.racking-add-btn-inline {
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
 .racking-list {
   list-style: none;
   margin: 0;
@@ -1317,7 +1329,7 @@
 .warehouse-map-grid {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 16px;
   width: max-content;
   min-width: 100%;
 }
@@ -1338,6 +1350,7 @@
 
 .warehouse-map-cells {
   display: flex;
+  align-items: center;
   gap: 6px;
 }
 
@@ -1464,16 +1477,23 @@
   flex-shrink: 0;
   width: 22px;
   height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: transparent;
-  color: var(--text-faint);
+  color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.7rem;
+  font-size: 0.95rem;
   border-radius: var(--radius-sm);
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
 }
 
 .racking-tree-expand:hover {
   background: var(--canvas);
+  color: var(--text);
 }
 
 .racking-tree-label {
@@ -1560,16 +1580,16 @@
 }
 
 .warehouse-map-row-lead {
-  flex: 0 0 58px;
+  flex: 0 0 34px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
 }
 
 .row-menu {
   position: relative;
   display: inline-flex;
+  margin-left: 10px;
 }
 
 .row-menu-trigger {

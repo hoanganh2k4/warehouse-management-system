@@ -552,19 +552,20 @@ export default function RackingPage() {
       <div className="racking-layout">
         <aside className="panel racking-tree">
           <div className="panel-header">
-            <h2>Zones</h2>
+            <div className="panel-header-title-group">
+              <h2>Zones</h2>
+              <button
+                type="button"
+                className="btn-secondary racking-add-btn racking-add-btn-inline"
+                onClick={() => setZoneModal({ mode: 'create' })}
+              >
+                + Thêm Zone
+              </button>
+            </div>
             {!zonesLoading && !zonesError && (
               <span className="result-count">{zones.length} zone</span>
             )}
           </div>
-
-          <button
-            type="button"
-            className="btn-secondary racking-add-btn"
-            onClick={() => setZoneModal({ mode: 'create' })}
-          >
-            + Thêm Zone
-          </button>
 
           {zonesLoading && (
             <ul className="racking-list">
@@ -782,6 +783,40 @@ export default function RackingPage() {
                         <div className="warehouse-map-row" key={level.id}>
                           <div className="warehouse-map-row-lead">
                             <span className="warehouse-map-row-label">L{level.levelNumber}</span>
+                          </div>
+                          <div className="warehouse-map-cells">
+                            {columns.map((code) => {
+                              const slot = codeToSlot.get(code);
+                              if (!slot) {
+                                return (
+                                  <span
+                                    key={code}
+                                    className="warehouse-map-cell is-placeholder"
+                                    aria-hidden="true"
+                                  />
+                                );
+                              }
+                              const status = slotStatus(slot);
+                              return (
+                                <button
+                                  key={slot.id}
+                                  type="button"
+                                  className={`warehouse-map-cell is-${status}`}
+                                  onClick={() => openSlotDetail(slot)}
+                                  title={`${slot.code} — ${Math.round(slot.occupancyRate)}%`}
+                                  aria-label={`Slot ${slot.code}, ${Math.round(slot.occupancyRate)}% lấp đầy`}
+                                />
+                              );
+                            })}
+                            <button
+                              type="button"
+                              className="warehouse-map-cell is-add"
+                              onClick={() => setSlotModal({ mode: 'create', levelId: level.id })}
+                              aria-label={`Thêm Slot vào Tầng ${level.levelNumber}`}
+                              title="Thêm Slot"
+                            >
+                              +
+                            </button>
                             <div className="row-menu">
                               <button
                                 type="button"
@@ -826,40 +861,6 @@ export default function RackingPage() {
                                 </>
                               )}
                             </div>
-                          </div>
-                          <div className="warehouse-map-cells">
-                            {columns.map((code) => {
-                              const slot = codeToSlot.get(code);
-                              if (!slot) {
-                                return (
-                                  <span
-                                    key={code}
-                                    className="warehouse-map-cell is-placeholder"
-                                    aria-hidden="true"
-                                  />
-                                );
-                              }
-                              const status = slotStatus(slot);
-                              return (
-                                <button
-                                  key={slot.id}
-                                  type="button"
-                                  className={`warehouse-map-cell is-${status}`}
-                                  onClick={() => openSlotDetail(slot)}
-                                  title={`${slot.code} — ${Math.round(slot.occupancyRate)}%`}
-                                  aria-label={`Slot ${slot.code}, ${Math.round(slot.occupancyRate)}% lấp đầy`}
-                                />
-                              );
-                            })}
-                            <button
-                              type="button"
-                              className="warehouse-map-cell is-add"
-                              onClick={() => setSlotModal({ mode: 'create', levelId: level.id })}
-                              aria-label={`Thêm Slot vào Tầng ${level.levelNumber}`}
-                              title="Thêm Slot"
-                            >
-                              +
-                            </button>
                           </div>
                         </div>
                       );
