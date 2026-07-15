@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { zoneService } from '../../services/zone.service';
 import { rackService } from '../../services/rack.service';
-import { WarehouseIcon, LayersIcon } from '../../components/icons';
-import type { Zone, Rack } from '../../types';
+import { levelService } from '../../services/level.service';
+import { WarehouseIcon, LayersIcon, GridIcon } from '../../components/icons';
+import type { Zone, Rack, Level } from '../../types';
 
 export default function RackingPage() {
   const [zones, setZones] = useState<Zone[]>([]);
@@ -14,6 +15,11 @@ export default function RackingPage() {
   const [racksLoading, setRacksLoading] = useState(false);
   const [racksError, setRacksError] = useState<string | null>(null);
   const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
+
+  const [levels, setLevels] = useState<Level[]>([]);
+  const [levelsLoading, setLevelsLoading] = useState(false);
+  const [levelsError, setLevelsError] = useState<string | null>(null);
+  const [selectedLevelId, setSelectedLevelId] = useState<string | null>(null);
 
   // Cột Zone
   useEffect(() => {
@@ -72,6 +78,39 @@ export default function RackingPage() {
       cancelled = true;
     };
   }, [selectedZoneId]);
+
+  // Cột Level — phụ thuộc Rack đang chọn
+  useEffect(() => {
+    setSelectedLevelId(null);
+
+    if (!selectedRackId) {
+      setLevels([]);
+      setLevelsError(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    setLevelsLoading(true);
+    levelService
+      .getAll(selectedRackId)
+      .then((result) => {
+        if (cancelled) return;
+        setLevels(result);
+        setLevelsError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setLevelsError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Level');
+      })
+      .finally(() => {
+        if (!cancelled) setLevelsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedRackId]);
 
   return (
     <main className="app-content">
@@ -194,7 +233,65 @@ export default function RackingPage() {
           )}
         </section>
 
-        {/* Cột Level/Slot sẽ được thêm ở Task 64/65 */}
+        <section className="panel racking-column">
+          <div className="panel-header">
+            <h2>Levels</h2>
+            {!levelsLoading && !levelsError && selectedRackId && (
+              <span className="result-count">{levels.length} level</span>
+            )}
+          </div>
+
+          {!selectedRackId && (
+            <div className="racking-empty-state">
+              <p>Chọn Rack để xem Level.</p>
+            </div>
+          )}
+
+          {selectedRackId && levelsLoading && (
+            <ul className="racking-list">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <li key={i} className="racking-list-item skeleton-row">
+                  <span className="skeleton" style={{ width: '120px' }} />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {selectedRackId && !levelsLoading && levelsError && (
+            <div className="racking-empty-state">
+              <p>{levelsError}</p>
+            </div>
+          )}
+
+          {selectedRackId && !levelsLoading && !levelsError && levels.length === 0 && (
+            <div className="racking-empty-state">
+              <p>Chưa có dữ liệu.</p>
+            </div>
+          )}
+
+          {selectedRackId && !levelsLoading && !levelsError && levels.length > 0 && (
+            <ul className="racking-list">
+              {levels.map((level) => (
+                <li key={level.id}>
+                  <button
+                    type="button"
+                    className={`racking-list-item${
+                      selectedLevelId === level.id ? ' is-active' : ''
+                    }`}
+                    onClick={() => setSelectedLevelId(level.id)}
+                  >
+                    <span className="racking-list-item-icon">
+                      <GridIcon size={16} />
+                    </span>
+                    <span className="racking-list-item-label">Tầng {level.levelNumber}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* Cột Slot sẽ được thêm ở Task 65 */}
       </div>
     </main>
   );
