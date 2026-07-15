@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react';
+import { isAxiosError } from 'axios';
 import { zoneService } from '../../services/zone.service';
 import { rackService } from '../../services/rack.service';
 import { levelService } from '../../services/level.service';
 import { slotService } from '../../services/slot.service';
 import { WarehouseIcon, LayersIcon, GridIcon, BoxIcon } from '../../components/icons';
-import type { Zone, Rack, Level, Slot, PaginationMeta } from '../../types';
+import { ZoneFormModal } from '../../components/ZoneFormModal';
+import { Toast } from '../../components/Toast';
+import type {
+  Zone,
+  Rack,
+  Level,
+  Slot,
+  PaginationMeta,
+  CreateZonePayload,
+  UpdateZonePayload,
+} from '../../types';
 
 export default function RackingPage() {
   const [zones, setZones] = useState<Zone[]>([]);
@@ -28,6 +39,27 @@ export default function RackingPage() {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+
+  const [zoneModal, setZoneModal] = useState<{ mode: 'create' | 'edit'; zone?: Zone } | null>(
+    null,
+  );
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  function loadZones() {
+    setZonesLoading(true);
+    return zoneService
+      .getAll()
+      .then((result) => {
+        setZones(result);
+        setZonesError(null);
+      })
+      .catch((err) => {
+        setZonesError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Zone');
+      })
+      .finally(() => {
+        setZonesLoading(false);
+      });
+  }
 
   // Cột Zone
   useEffect(() => {
@@ -53,6 +85,26 @@ export default function RackingPage() {
       cancelled = true;
     };
   }, []);
+
+  async function handleZoneSubmit(payload: CreateZonePayload | UpdateZonePayload) {
+    try {
+      if (zoneModal?.mode === 'create') {
+        await zoneService.create(payload as CreateZonePayload);
+      } else if (zoneModal?.mode === 'edit' && zoneModal.zone) {
+        await zoneService.update(zoneModal.zone.id, payload as UpdateZonePayload);
+      }
+      setZoneModal(null);
+      await loadZones();
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.status === 409) {
+        setToastMessage('Mã Zone này đã tồn tại. Vui lòng chọn mã khác.');
+      } else {
+        setToastMessage(
+          zoneModal?.mode === 'create' ? 'Không thể tạo Zone. Vui lòng thử lại.' : 'Không thể cập nhật Zone. Vui lòng thử lại.',
+        );
+      }
+    }
+  }
 
   // Cột Rack — phụ thuộc Zone đang chọn
   useEffect(() => {
@@ -161,6 +213,19 @@ export default function RackingPage() {
 
   return (
     <main className="app-content">
+      {toastMessage && (
+        <Toast message={toastMessage} type="error" onClose={() => setToastMessage(null)} />
+      )}
+
+      {zoneModal && (
+        <ZoneFormModal
+          mode={zoneModal.mode}
+          initialData={zoneModal.zone}
+          onSubmit={handleZoneSubmit}
+          onClose={() => setZoneModal(null)}
+        />
+      )}
+
       <div className="page-header">
         <div>
           <p className="eyebrow">Kho hàng</p>
@@ -177,6 +242,14 @@ export default function RackingPage() {
               <span className="result-count">{zones.length} zone</span>
             )}
           </div>
+
+          <button
+            type="button"
+            className="btn-secondary racking-add-btn"
+            onClick={() => setZoneModal({ mode: 'create' })}
+          >
+            + Thêm Zone
+          </button>
 
           {zonesLoading && (
             <ul className="racking-list">
@@ -203,7 +276,7 @@ export default function RackingPage() {
           {!zonesLoading && !zonesError && zones.length > 0 && (
             <ul className="racking-list">
               {zones.map((zone) => (
-                <li key={zone.id}>
+                <li key={zone.id} className="racking-list-row">
                   <button
                     type="button"
                     className={`racking-list-item${
@@ -215,6 +288,14 @@ export default function RackingPage() {
                       <WarehouseIcon size={16} />
                     </span>
                     <span className="racking-list-item-label">{zone.code}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="racking-list-item-edit"
+                    onClick={() => setZoneModal({ mode: 'edit', zone })}
+                    aria-label={`Sửa Zone ${zone.code}`}
+                  >
+                    Sửa
                   </button>
                 </li>
               ))}
