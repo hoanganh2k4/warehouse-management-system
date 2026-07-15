@@ -7,6 +7,7 @@ import { slotService } from '../../services/slot.service';
 import { WarehouseIcon, LayersIcon, GridIcon, BoxIcon } from '../../components/icons';
 import { ZoneFormModal } from '../../components/ZoneFormModal';
 import { RackFormModal } from '../../components/RackFormModal';
+import { LevelFormModal } from '../../components/LevelFormModal';
 import { Toast } from '../../components/Toast';
 import type {
   Zone,
@@ -18,6 +19,8 @@ import type {
   UpdateZonePayload,
   CreateRackPayload,
   UpdateRackPayload,
+  CreateLevelPayload,
+  UpdateLevelPayload,
 } from '../../types';
 
 export default function RackingPage() {
@@ -47,6 +50,9 @@ export default function RackingPage() {
     null,
   );
   const [rackModal, setRackModal] = useState<{ mode: 'create' | 'edit'; rack?: Rack } | null>(
+    null,
+  );
+  const [levelModal, setLevelModal] = useState<{ mode: 'create' | 'edit'; level?: Level } | null>(
     null,
   );
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -181,6 +187,22 @@ export default function RackingPage() {
     }
   }
 
+  function loadLevels(rackId: string) {
+    setLevelsLoading(true);
+    return levelService
+      .getAll(rackId)
+      .then((result) => {
+        setLevels(result);
+        setLevelsError(null);
+      })
+      .catch((err) => {
+        setLevelsError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Level');
+      })
+      .finally(() => {
+        setLevelsLoading(false);
+      });
+  }
+
   // Cột Level — phụ thuộc Rack đang chọn
   useEffect(() => {
     setSelectedLevelId(null);
@@ -213,6 +235,26 @@ export default function RackingPage() {
       cancelled = true;
     };
   }, [selectedRackId]);
+
+  async function handleLevelSubmit(payload: CreateLevelPayload | UpdateLevelPayload) {
+    try {
+      if (levelModal?.mode === 'create') {
+        await levelService.create(payload as CreateLevelPayload);
+      } else if (levelModal?.mode === 'edit' && levelModal.level) {
+        await levelService.update(levelModal.level.id, payload as UpdateLevelPayload);
+      }
+      setLevelModal(null);
+      if (selectedRackId) await loadLevels(selectedRackId);
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.status === 409) {
+        setToastMessage('Tầng này đã tồn tại trong Rack. Vui lòng chọn số tầng khác.');
+      } else {
+        setToastMessage(
+          levelModal?.mode === 'create' ? 'Không thể tạo Level. Vui lòng thử lại.' : 'Không thể cập nhật Level. Vui lòng thử lại.',
+        );
+      }
+    }
+  }
 
   // Reset trang + slot đang chọn mỗi khi đổi Level
   useEffect(() => {
@@ -275,6 +317,16 @@ export default function RackingPage() {
           zoneId={selectedZoneId ?? undefined}
           onSubmit={handleRackSubmit}
           onClose={() => setRackModal(null)}
+        />
+      )}
+
+      {levelModal && (
+        <LevelFormModal
+          mode={levelModal.mode}
+          initialData={levelModal.level}
+          rackId={selectedRackId ?? undefined}
+          onSubmit={handleLevelSubmit}
+          onClose={() => setLevelModal(null)}
         />
       )}
 
@@ -439,6 +491,16 @@ export default function RackingPage() {
             )}
           </div>
 
+          <button
+            type="button"
+            className="btn-secondary racking-add-btn"
+            onClick={() => setLevelModal({ mode: 'create' })}
+            disabled={!selectedRackId}
+            title={!selectedRackId ? 'Chọn Rack trước khi thêm Level' : undefined}
+          >
+            + Thêm Level
+          </button>
+
           {!selectedRackId && (
             <div className="racking-empty-state">
               <p>Chọn Rack để xem Level.</p>
@@ -470,7 +532,7 @@ export default function RackingPage() {
           {selectedRackId && !levelsLoading && !levelsError && levels.length > 0 && (
             <ul className="racking-list">
               {levels.map((level) => (
-                <li key={level.id}>
+                <li key={level.id} className="racking-list-row">
                   <button
                     type="button"
                     className={`racking-list-item${
@@ -482,6 +544,14 @@ export default function RackingPage() {
                       <GridIcon size={16} />
                     </span>
                     <span className="racking-list-item-label">Tầng {level.levelNumber}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="racking-list-item-edit"
+                    onClick={() => setLevelModal({ mode: 'edit', level })}
+                    aria-label={`Sửa Tầng ${level.levelNumber}`}
+                  >
+                    Sửa
                   </button>
                 </li>
               ))}
