@@ -6,6 +6,7 @@ import { levelService } from '../../services/level.service';
 import { slotService } from '../../services/slot.service';
 import { WarehouseIcon, LayersIcon, GridIcon, BoxIcon } from '../../components/icons';
 import { ZoneFormModal } from '../../components/ZoneFormModal';
+import { RackFormModal } from '../../components/RackFormModal';
 import { Toast } from '../../components/Toast';
 import type {
   Zone,
@@ -15,6 +16,8 @@ import type {
   PaginationMeta,
   CreateZonePayload,
   UpdateZonePayload,
+  CreateRackPayload,
+  UpdateRackPayload,
 } from '../../types';
 
 export default function RackingPage() {
@@ -41,6 +44,9 @@ export default function RackingPage() {
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
 
   const [zoneModal, setZoneModal] = useState<{ mode: 'create' | 'edit'; zone?: Zone } | null>(
+    null,
+  );
+  const [rackModal, setRackModal] = useState<{ mode: 'create' | 'edit'; rack?: Rack } | null>(
     null,
   );
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -106,6 +112,22 @@ export default function RackingPage() {
     }
   }
 
+  function loadRacks(zoneId: string) {
+    setRacksLoading(true);
+    return rackService
+      .getAll(zoneId)
+      .then((result) => {
+        setRacks(result);
+        setRacksError(null);
+      })
+      .catch((err) => {
+        setRacksError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tải danh sách Rack');
+      })
+      .finally(() => {
+        setRacksLoading(false);
+      });
+  }
+
   // Cột Rack — phụ thuộc Zone đang chọn
   useEffect(() => {
     setSelectedRackId(null);
@@ -138,6 +160,26 @@ export default function RackingPage() {
       cancelled = true;
     };
   }, [selectedZoneId]);
+
+  async function handleRackSubmit(payload: CreateRackPayload | UpdateRackPayload) {
+    try {
+      if (rackModal?.mode === 'create') {
+        await rackService.create(payload as CreateRackPayload);
+      } else if (rackModal?.mode === 'edit' && rackModal.rack) {
+        await rackService.update(rackModal.rack.id, payload as UpdateRackPayload);
+      }
+      setRackModal(null);
+      if (selectedZoneId) await loadRacks(selectedZoneId);
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.status === 409) {
+        setToastMessage('Mã Rack này đã tồn tại. Vui lòng chọn mã khác.');
+      } else {
+        setToastMessage(
+          rackModal?.mode === 'create' ? 'Không thể tạo Rack. Vui lòng thử lại.' : 'Không thể cập nhật Rack. Vui lòng thử lại.',
+        );
+      }
+    }
+  }
 
   // Cột Level — phụ thuộc Rack đang chọn
   useEffect(() => {
@@ -226,6 +268,16 @@ export default function RackingPage() {
         />
       )}
 
+      {rackModal && (
+        <RackFormModal
+          mode={rackModal.mode}
+          initialData={rackModal.rack}
+          zoneId={selectedZoneId ?? undefined}
+          onSubmit={handleRackSubmit}
+          onClose={() => setRackModal(null)}
+        />
+      )}
+
       <div className="page-header">
         <div>
           <p className="eyebrow">Kho hàng</p>
@@ -311,6 +363,16 @@ export default function RackingPage() {
             )}
           </div>
 
+          <button
+            type="button"
+            className="btn-secondary racking-add-btn"
+            onClick={() => setRackModal({ mode: 'create' })}
+            disabled={!selectedZoneId}
+            title={!selectedZoneId ? 'Chọn Zone trước khi thêm Rack' : undefined}
+          >
+            + Thêm Rack
+          </button>
+
           {!selectedZoneId && (
             <div className="racking-empty-state">
               <p>Chọn Zone để xem Rack.</p>
@@ -342,7 +404,7 @@ export default function RackingPage() {
           {selectedZoneId && !racksLoading && !racksError && racks.length > 0 && (
             <ul className="racking-list">
               {racks.map((rack) => (
-                <li key={rack.id}>
+                <li key={rack.id} className="racking-list-row">
                   <button
                     type="button"
                     className={`racking-list-item${
@@ -354,6 +416,14 @@ export default function RackingPage() {
                       <LayersIcon size={16} />
                     </span>
                     <span className="racking-list-item-label">{rack.code}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="racking-list-item-edit"
+                    onClick={() => setRackModal({ mode: 'edit', rack })}
+                    aria-label={`Sửa Rack ${rack.code}`}
+                  >
+                    Sửa
                   </button>
                 </li>
               ))}
