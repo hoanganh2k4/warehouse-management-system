@@ -9,6 +9,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Roles } from '../common/decorators/roles.decorator';
+import { MANAGER_ROLE } from '../common/constants/roles.constant';
 import { ZonesService } from './zones.service';
 import { CreateZoneDto, UpdateZoneDto } from './dto/zone.dto';
 import {
@@ -46,6 +48,7 @@ export class ZonesController {
   }
 
   @Post()
+  @Roles(MANAGER_ROLE)
   @ApiCreatedExample(SUCCESS_EXAMPLES.zone, '201 Created — Tạo zone')
   @ApiAuthWriteErrors()
   create(@Body() dto: CreateZoneDto) {
@@ -53,6 +56,7 @@ export class ZonesController {
   }
 
   @Put(':id')
+  @Roles(MANAGER_ROLE)
   @ApiSuccessExample(SUCCESS_EXAMPLES.zone, '200 OK — Cập nhật zone')
   @ApiAuthWriteErrors({ notFound: ERROR_EXAMPLES.zoneNotFound })
   update(@Param('id') id: string, @Body() dto: UpdateZoneDto) {
@@ -60,6 +64,7 @@ export class ZonesController {
   }
 
   @Delete(':id')
+  @Roles(MANAGER_ROLE)
   @ApiSuccessExample(SUCCESS_EXAMPLES.zone, '200 OK — Xóa zone')
   @ApiAuthWriteErrors({
     notFound: ERROR_EXAMPLES.zoneNotFound,

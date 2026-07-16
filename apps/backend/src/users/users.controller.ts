@@ -2,6 +2,8 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UserQueryDto } from './dto/user-query.dto';
+import { Roles } from '../common/decorators/roles.decorator';
+import { MANAGER_ROLE } from '../common/constants/roles.constant';
 import {
   ApiAuthReadErrors,
   ApiSuccessExample,
@@ -15,9 +17,10 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @Roles(MANAGER_ROLE)
   @ApiSuccessExample(
     SUCCESS_EXAMPLES.userList,
-    '200 OK — Danh sách nhân viên (phân trang)',
+    '200 OK — Danh sách nhân viên (phân trang, chỉ Quản lý)',
   )
   @ApiAuthReadErrors()
   findAll(@Query() query: UserQueryDto) {

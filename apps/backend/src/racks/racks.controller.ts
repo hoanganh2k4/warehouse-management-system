@@ -9,6 +9,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Roles } from '../common/decorators/roles.decorator';
+import { MANAGER_ROLE } from '../common/constants/roles.constant';
 import { RacksService } from './racks.service';
 import { CreateRackDto, UpdateRackDto } from './dto/rack.dto';
 import {
@@ -46,6 +48,7 @@ export class RacksController {
   }
 
   @Post()
+  @Roles(MANAGER_ROLE)
   @ApiCreatedExample(SUCCESS_EXAMPLES.rack, '201 Created — Tạo rack')
   @ApiAuthWriteErrors()
   create(@Body() dto: CreateRackDto) {
@@ -53,6 +56,7 @@ export class RacksController {
   }
 
   @Put(':id')
+  @Roles(MANAGER_ROLE)
   @ApiSuccessExample(SUCCESS_EXAMPLES.rack, '200 OK — Cập nhật rack')
   @ApiAuthWriteErrors({ notFound: ERROR_EXAMPLES.rackNotFound })
   update(@Param('id') id: string, @Body() dto: UpdateRackDto) {
@@ -60,6 +64,7 @@ export class RacksController {
   }
 
   @Delete(':id')
+  @Roles(MANAGER_ROLE)
   @ApiSuccessExample(SUCCESS_EXAMPLES.rack, '200 OK — Xóa rack')
   @ApiAuthWriteErrors({
     notFound: ERROR_EXAMPLES.rackNotFound,

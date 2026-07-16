@@ -1,6 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DashboardService } from './dashboard.service';
+import { Roles } from '../common/decorators/roles.decorator';
+import { MANAGER_ROLE } from '../common/constants/roles.constant';
 import {
   ApiAuthReadErrors,
   ApiSuccessExample,
@@ -14,7 +16,8 @@ export class DashboardController {
   constructor(private readonly service: DashboardService) {}
 
   @Get('summary')
-  @ApiSuccessExample(SUCCESS_EXAMPLES.dashboard, '200 OK — Tổng quan KPI')
+  @Roles(MANAGER_ROLE)
+  @ApiSuccessExample(SUCCESS_EXAMPLES.dashboard, '200 OK — Tổng quan KPI (chỉ Quản lý)')
   @ApiAuthReadErrors()
   summary() {
     return this.service.getSummary();

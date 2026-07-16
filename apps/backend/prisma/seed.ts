@@ -68,6 +68,18 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { username: 'staff02' },
+    update: { passwordHash: staffPasswordHash },
+    create: {
+      username: 'staff02',
+      email: 'staff02@smartwms.local',
+      fullName: 'Nhân viên kho 02',
+      passwordHash: staffPasswordHash,
+      roleId: staffRole.id,
+    },
+  });
+
   console.log('✅ Roles & users seeded');
 
   // ===================== Warehouse structure =====================
