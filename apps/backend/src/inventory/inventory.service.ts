@@ -33,26 +33,36 @@ export class InventoryService {
   async findAll(query: InventoryQueryDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
-    const where: Prisma.InventoryWhereInput = {};
 
-    if (query.batchId) where.batchId = query.batchId;
-    if (query.slotId) where.slotId = query.slotId;
-    if (query.productId) where.batch = { productId: query.productId };
+    // Mỗi điều kiện lọc được thêm như một phần tử AND độc lập, thay vì
+    // gán/merge nhiều lần lên cùng một field (batch/slot). Cách này giúp
+    // tránh lỗi TypeScript kiểu union quá phức tạp trong Prisma 7 khi
+    // spread lại một object where đã có type union hẹp từ lần gán trước.
+    const andConditions: Prisma.InventoryWhereInput[] = [];
+
+    if (query.batchId) andConditions.push({ batchId: query.batchId });
+    if (query.slotId) andConditions.push({ slotId: query.slotId });
+    if (query.productId) {
+      andConditions.push({ batch: { productId: query.productId } });
+    }
     if (query.sku) {
-      where.batch = {
-        ...(where.batch as Prisma.BatchWhereInput | undefined),
-        product: {
-          OR: [
-            { skuCode: { contains: query.sku, mode: 'insensitive' } },
-            { name: { contains: query.sku, mode: 'insensitive' } },
-          ],
+      andConditions.push({
+        batch: {
+          product: {
+            OR: [
+              { skuCode: { contains: query.sku, mode: 'insensitive' } },
+              { name: { contains: query.sku, mode: 'insensitive' } },
+            ],
+          },
         },
-      } as Prisma.BatchWhereInput;
+      });
     }
     if (query.warehouseId) {
-      where.slot = {
-        level: { rack: { zone: { warehouseId: query.warehouseId } } },
-      };
+      andConditions.push({
+        slot: {
+          level: { rack: { zone: { warehouseId: query.warehouseId } } },
+        },
+      });
     }
     if (query.zone) {
       // Số lượng Zone trong kho rất nhỏ nên load hết ra để so khớp linh hoạt
@@ -65,18 +75,21 @@ export class InventoryService {
         .filter((zone) => normalizeZoneCode(zone.code).includes(needle))
         .map((zone) => zone.id);
 
-      where.slot = {
-        ...(where.slot as Prisma.SlotWhereInput | undefined),
-        level: {
-          ...((where.slot as Prisma.SlotWhereInput | undefined)?.level as Prisma.LevelWhereInput | undefined),
-          rack: {
-            zoneId: {
-              in: matchedZoneIds.length > 0 ? matchedZoneIds : ['__no_match__'],
+      andConditions.push({
+        slot: {
+          level: {
+            rack: {
+              zoneId: {
+                in: matchedZoneIds.length > 0 ? matchedZoneIds : ['__no_match__'],
+              },
             },
           },
         },
-      } as Prisma.SlotWhereInput;
+      });
     }
+
+    const where: Prisma.InventoryWhereInput =
+      andConditions.length > 0 ? { AND: andConditions } : {};
 
     const [items, total] = await Promise.all([
       this.prisma.inventory.findMany({
