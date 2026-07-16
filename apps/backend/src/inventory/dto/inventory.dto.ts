@@ -49,11 +49,12 @@ export class InventoryQueryDto {
   sku?: string;
 
   @ApiPropertyOptional({
-    description: 'Tìm theo tên kho (không phân biệt hoa/thường, chấp nhận khớp một phần)',
+    description:
+      'Tìm theo mã Zone (không phân biệt hoa/thường, chấp nhận khớp một phần, ví dụ "Z-A" hoặc "A")',
   })
   @IsOptional()
   @IsString()
-  warehouseName?: string;
+  zone?: string;
 
   @ApiPropertyOptional({ description: 'Lọc chính xác theo UUID của kho (dùng cho tích hợp API)' })
   @IsOptional()

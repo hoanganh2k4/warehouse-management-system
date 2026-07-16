@@ -120,7 +120,7 @@ export type InventoryItem = {
 
 export type GetInventoryParams = {
   warehouseId?: string;
-  warehouseName?: string;
+  zone?: string;
   productId?: string;
   sku?: string;
   batchId?: string;

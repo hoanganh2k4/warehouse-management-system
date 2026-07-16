@@ -10,7 +10,7 @@ import { SlotCapacityService } from '../common/services/slot-capacity.service';
 import { FefoService } from '../common/services/fefo.service';
 import type { PickLine } from '../common/services/fefo.service';
 import { paginate, skipTake } from '../common/utils/pagination.util';
-import { formatSlotLocation } from '../common/utils/location.util';
+import { formatSlotLocation, normalizeZoneCode } from '../common/utils/location.util';
 import { AuthUser } from '../common/decorators/current-user.decorator';
 import {
   InboundDto,
@@ -35,9 +35,37 @@ export class InventoryService {
     if (query.batchId) where.batchId = query.batchId;
     if (query.slotId) where.slotId = query.slotId;
     if (query.productId) where.batch = { productId: query.productId };
+    if (query.sku) {
+      where.batch = {
+        ...where.batch,
+        product: {
+          OR: [
+            { skuCode: { contains: query.sku, mode: 'insensitive' } },
+            { name: { contains: query.sku, mode: 'insensitive' } },
+          ],
+        },
+      };
+    }
     if (query.warehouseId) {
       where.slot = {
         level: { rack: { zone: { warehouseId: query.warehouseId } } },
+      };
+    }
+    if (query.zone) {
+      // Số lượng Zone trong kho rất nhỏ nên load hết ra để so khớp linh hoạt
+      // (người dùng có thể gõ "A", "Z-A" hoặc "Zone A" đều ra cùng kết quả).
+      const zones = await this.prisma.zone.findMany({ select: { id: true, code: true } });
+      const needle = normalizeZoneCode(query.zone);
+      const matchedZoneIds = zones
+        .filter((zone) => normalizeZoneCode(zone.code).includes(needle))
+        .map((zone) => zone.id);
+
+      where.slot = {
+        ...where.slot,
+        level: {
+          ...(where.slot as Prisma.SlotWhereInput | undefined)?.level,
+          rack: { zoneId: { in: matchedZoneIds.length > 0 ? matchedZoneIds : ['__no_match__'] } },
+        },
       };
     }
 

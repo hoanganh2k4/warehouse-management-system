@@ -11,3 +11,14 @@ export function formatSlotLocation(params: {
   const levelPart = `L${String(params.levelNumber).padStart(2, '0')}`;
   return `${zonePart} / ${rackPart} / ${levelPart} / ${params.slotCode}`;
 }
+
+// Chuẩn hoá mã Zone để so khớp linh hoạt: "Zone A", "Z-A", "A" đều được xem là
+// cùng một Zone, không phân biệt hoa/thường.
+export function normalizeZoneCode(code: string): string {
+  return code
+    .trim()
+    .replace(/^Zone\s*/i, '')
+    .replace(/^Z-/i, '')
+    .replace(/[\s-]/g, '')
+    .toLowerCase();
+}
