@@ -40,14 +40,14 @@ export class InventoryService {
     if (query.productId) where.batch = { productId: query.productId };
     if (query.sku) {
       where.batch = {
-        ...where.batch,
+        ...(where.batch as Prisma.BatchWhereInput | undefined),
         product: {
           OR: [
             { skuCode: { contains: query.sku, mode: 'insensitive' } },
             { name: { contains: query.sku, mode: 'insensitive' } },
           ],
         },
-      };
+      } as Prisma.BatchWhereInput;
     }
     if (query.warehouseId) {
       where.slot = {
@@ -66,16 +66,16 @@ export class InventoryService {
         .map((zone) => zone.id);
 
       where.slot = {
-        ...where.slot,
+        ...(where.slot as Prisma.SlotWhereInput | undefined),
         level: {
-          ...where.slot?.level,
+          ...((where.slot as Prisma.SlotWhereInput | undefined)?.level as Prisma.LevelWhereInput | undefined),
           rack: {
             zoneId: {
               in: matchedZoneIds.length > 0 ? matchedZoneIds : ['__no_match__'],
             },
           },
         },
-      };
+      } as Prisma.SlotWhereInput;
     }
 
     const [items, total] = await Promise.all([
