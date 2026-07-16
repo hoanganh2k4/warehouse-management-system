@@ -56,7 +56,26 @@ export class InventoryService {
               product: { select: { skuCode: true, name: true } },
             },
           },
-          slot: { select: { code: true } },
+          slot: {
+            select: {
+              code: true,
+              level: {
+                select: {
+                  code: true,
+                  rack: {
+                    select: {
+                      code: true,
+                      zone: {
+                        select: {
+                          code: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }
         },
       }),
       this.prisma.inventory.count({ where }),
@@ -80,7 +99,26 @@ export class InventoryService {
             product: { select: { skuCode: true, name: true } },
           },
         },
-        slot: { select: { code: true } },
+        slot: {
+          select: {
+            code: true,
+            level: {
+              select: {
+                code: true,
+                rack: {
+                  select: {
+                    code: true,
+                    zone: {
+                      select: {
+                        code: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }
       },
     });
     if (!item) throw new NotFoundException('Inventory record not found');
@@ -248,14 +286,29 @@ function toInventoryView(item: {
   quantity: number;
   updatedAt: Date;
   batch: { batchCode: string; product: { skuCode: string; name: string } };
-  slot: { code: string };
+  slot: {
+    code: string;
+    level: {
+      code: string;
+      rack: {
+        code: string;
+        zone: {
+          code: string;
+        };
+      };
+    };
+  };
 }) {
   return {
     id: item.id,
     batchId: item.batchId,
     batchCode: item.batch.batchCode,
     slotId: item.slotId,
-    slotCode: item.slot.code,
+   slotCode:
+    `${item.slot.level.rack.zone.code} / ` +
+    `${item.slot.level.rack.code} / ` +
+    `${item.slot.level.code} / ` +
+    `${item.slot.code}`,
     productSkuCode: item.batch.product.skuCode,
     productName: item.batch.product.name,
     quantity: item.quantity,
