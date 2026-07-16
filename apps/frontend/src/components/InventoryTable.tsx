@@ -8,10 +8,6 @@ type InventoryTableProps = {
   error: string | null;
 };
 
-function shortenId(id: string) {
-  return id.slice(0, 8);
-}
-
 function formatDateTime(value: string) {
   try {
     const date = new Date(value);
@@ -31,8 +27,9 @@ export function InventoryTable({ items, totalCount, loading, error }: InventoryT
         <table className="product-table">
           <thead>
             <tr>
-              <th>Batch ID</th>
-              <th>Slot ID</th>
+              <th>Sản phẩm</th>
+              <th>Mã lô hàng</th>
+              <th>Vị trí</th>
               <th>Số lượng</th>
               <th>Cập nhật lúc</th>
             </tr>
@@ -40,8 +37,9 @@ export function InventoryTable({ items, totalCount, loading, error }: InventoryT
           <tbody>
             {Array.from({ length: 6 }).map((_, i) => (
               <tr key={i} className="skeleton-row">
+                <td><span className="skeleton" style={{ width: '160px' }} /></td>
                 <td><span className="skeleton" style={{ width: '80px' }} /></td>
-                <td><span className="skeleton" style={{ width: '80px' }} /></td>
+                <td><span className="skeleton" style={{ width: '60px' }} /></td>
                 <td><span className="skeleton" style={{ width: '50px' }} /></td>
                 <td><span className="skeleton" style={{ width: '120px' }} /></td>
               </tr>
@@ -87,8 +85,9 @@ export function InventoryTable({ items, totalCount, loading, error }: InventoryT
       <table className="product-table">
         <thead>
           <tr>
-            <th>Batch ID</th>
-            <th>Slot ID</th>
+            <th>Sản phẩm</th>
+            <th>Mã lô hàng</th>
+            <th>Vị trí</th>
             <th>Số lượng</th>
             <th>Cập nhật lúc</th>
           </tr>
@@ -97,10 +96,13 @@ export function InventoryTable({ items, totalCount, loading, error }: InventoryT
           {items.map((item) => (
             <tr key={item.id}>
               <td>
-                <span className="sku-code">{shortenId(item.batchId)}</span>
+                <span className="sku-code">{item.productSkuCode}</span> — {item.productName}
               </td>
               <td>
-                <span className="sku-code">{shortenId(item.slotId)}</span>
+                <span className="sku-code">{item.batchCode}</span>
+              </td>
+              <td>
+                <span className="sku-code">{item.slotCode}</span>
               </td>
               <td>{item.quantity}</td>
               <td className="muted-cell">{formatDateTime(item.updatedAt)}</td>

@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma/client';
+import { PrismaClient, TransactionType } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { hashPassword } from '../src/common/utils/password.util';
 
@@ -43,7 +43,7 @@ async function main() {
 
   // ===================== Users =====================
   const adminPasswordHash = await hashPassword(ADMIN_PASSWORD);
-  await prisma.user.upsert({
+  const adminUser = await prisma.user.upsert({
     where: { username: 'admin' },
     update: { passwordHash: adminPasswordHash },
     create: {
@@ -56,7 +56,7 @@ async function main() {
   });
 
   const staffPasswordHash = await hashPassword(STAFF_PASSWORD);
-  await prisma.user.upsert({
+  const staffUser = await prisma.user.upsert({
     where: { username: 'staff01' },
     update: { passwordHash: staffPasswordHash },
     create: {
@@ -263,9 +263,70 @@ async function main() {
         currentProductId: batch.productId,
       },
     });
+
+    // Ghi lại giao dịch NHẬP KHO tương ứng, trải đều ngày tạo trong ~14 ngày gần đây
+    // để trang Lịch sử giao dịch có dữ liệu và test được bộ lọc theo ngày.
+    const importedAt = new Date();
+    importedAt.setDate(importedAt.getDate() - (13 - (i % 14)));
+    await prisma.transaction.create({
+      data: {
+        type: TransactionType.IMPORT,
+        batchId: batch.id,
+        slotToId: slot.id,
+        quantity,
+        userId: i % 3 === 0 ? adminUser.id : staffUser.id,
+        note: 'Dữ liệu mẫu — nhập kho',
+        createdAt: importedAt,
+      },
+    });
   }
 
   console.log(`✅ Seeded ${allBatches.length} inventory records across ${seedSlots.length} slots`);
+  console.log(`✅ Seeded ${allBatches.length} giao dịch nhập kho tương ứng`);
+
+  // ----- Một vài giao dịch XUẤT KHO mẫu (để test bộ lọc loại/ngày) -----
+  // Xuất một phần số lượng ở vài slot đầu tiên, không xuất hết để tồn kho vẫn còn dữ liệu hiển thị.
+  const exportCount = Math.min(3, allBatches.length);
+  for (let i = 0; i < exportCount; i++) {
+    const batch = allBatches[i];
+    const slot = seedSlots[i];
+    const exportQty = 20;
+
+    const inventory = await prisma.inventory.findUnique({
+      where: { batchId_slotId: { batchId: batch.id, slotId: slot.id } },
+    });
+    if (!inventory || inventory.quantity <= exportQty) continue;
+
+    const newQuantity = inventory.quantity - exportQty;
+    await prisma.inventory.update({
+      where: { id: inventory.id },
+      data: { quantity: newQuantity },
+    });
+
+    const usedCapacity = newQuantity;
+    const availableCapacity = slot.maxCapacity - usedCapacity;
+    const occupancyRate = usedCapacity / slot.maxCapacity;
+    await prisma.slot.update({
+      where: { id: slot.id },
+      data: { usedCapacity, availableCapacity, occupancyRate },
+    });
+
+    const exportedAt = new Date();
+    exportedAt.setDate(exportedAt.getDate() - i);
+    await prisma.transaction.create({
+      data: {
+        type: TransactionType.EXPORT,
+        batchId: batch.id,
+        slotFromId: slot.id,
+        quantity: exportQty,
+        userId: staffUser.id,
+        note: 'Dữ liệu mẫu — xuất kho',
+        createdAt: exportedAt,
+      },
+    });
+  }
+
+  console.log(`✅ Seeded ${exportCount} giao dịch xuất kho mẫu`);
   console.log('🌱 Seed completed successfully.');
 }
 

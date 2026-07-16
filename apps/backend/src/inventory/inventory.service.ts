@@ -44,35 +44,47 @@ export class InventoryService {
       this.prisma.inventory.findMany({
         where,
         ...skipTake(page, limit),
-        include: {
-          batch: { include: { product: true } },
-          slot: {
-            include: {
-              level: { include: { rack: { include: { zone: true } } } },
+        select: {
+          id: true,
+          batchId: true,
+          slotId: true,
+          quantity: true,
+          updatedAt: true,
+          batch: {
+            select: {
+              batchCode: true,
+              product: { select: { skuCode: true, name: true } },
             },
           },
+          slot: { select: { code: true } },
         },
       }),
       this.prisma.inventory.count({ where }),
     ]);
 
-    return paginate(items, page, limit, total);
+    return paginate(items.map(toInventoryView), page, limit, total);
   }
 
   async findOne(id: string) {
     const item = await this.prisma.inventory.findUnique({
       where: { id },
-      include: {
-        batch: { include: { product: true } },
-        slot: {
-          include: {
-            level: { include: { rack: { include: { zone: true } } } },
+      select: {
+        id: true,
+        batchId: true,
+        slotId: true,
+        quantity: true,
+        updatedAt: true,
+        batch: {
+          select: {
+            batchCode: true,
+            product: { select: { skuCode: true, name: true } },
           },
         },
+        slot: { select: { code: true } },
       },
     });
     if (!item) throw new NotFoundException('Inventory record not found');
-    return item;
+    return toInventoryView(item);
   }
 
   async inbound(dto: InboundDto, user: AuthUser) {
@@ -225,4 +237,28 @@ export class InventoryService {
       };
     });
   }
+}
+
+// Làm phẳng batchCode/slotCode ra ngoài để phía frontend hiển thị mã dễ đọc
+// thay vì UUID nội bộ (batchId/slotId chỉ dùng cho việc lọc/liên kết, không hiển thị).
+function toInventoryView(item: {
+  id: string;
+  batchId: string;
+  slotId: string;
+  quantity: number;
+  updatedAt: Date;
+  batch: { batchCode: string; product: { skuCode: string; name: string } };
+  slot: { code: string };
+}) {
+  return {
+    id: item.id,
+    batchId: item.batchId,
+    batchCode: item.batch.batchCode,
+    slotId: item.slotId,
+    slotCode: item.slot.code,
+    productSkuCode: item.batch.product.skuCode,
+    productName: item.batch.product.name,
+    quantity: item.quantity,
+    updatedAt: item.updatedAt,
+  };
 }
