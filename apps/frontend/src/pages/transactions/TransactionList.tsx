@@ -86,26 +86,36 @@ export default function TransactionList() {
               ))}
           </select>
 
-          <input
-            type="date"
-            className="filter-input"
-            value={fromFilter}
-            onChange={(event) => {
-              setFromFilter(event.target.value);
-              setPage(1);
-            }}
-            aria-label="Từ ngày"
-          />
-          <input
-            type="date"
-            className="filter-input"
-            value={toFilter}
-            onChange={(event) => {
-              setToFilter(event.target.value);
-              setPage(1);
-            }}
-            aria-label="Đến ngày"
-          />
+          <div className="filter-field">
+            <label className="filter-field-label" htmlFor="txn-from-date">
+              Từ ngày
+            </label>
+            <input
+              id="txn-from-date"
+              type="date"
+              className="filter-input"
+              value={fromFilter}
+              onChange={(event) => {
+                setFromFilter(event.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+          <div className="filter-field">
+            <label className="filter-field-label" htmlFor="txn-to-date">
+              Đến ngày
+            </label>
+            <input
+              id="txn-to-date"
+              type="date"
+              className="filter-input"
+              value={toFilter}
+              onChange={(event) => {
+                setToFilter(event.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
         </div>
       </div>
 

@@ -7,10 +7,10 @@ import { useAuth } from '../../hooks/useAuth';
 
 export default function InventoryList() {
   const [skuInput, setSkuInput] = useState('');
-  const [warehouseNameInput, setWarehouseNameInput] = useState('');
+  const [zoneInput, setZoneInput] = useState('');
   // Trì hoãn 400ms trước khi gọi API để tránh gọi liên tục khi đang gõ.
   const [sku, setSku] = useState('');
-  const [warehouseName, setWarehouseName] = useState('');
+  const [zone, setZone] = useState('');
   const [page, setPage] = useState(1);
   const { isAuthenticated } = useAuth();
 
@@ -20,15 +20,15 @@ export default function InventoryList() {
   }, [skuInput]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setWarehouseName(warehouseNameInput.trim()), 400);
+    const timer = setTimeout(() => setZone(zoneInput.trim()), 400);
     return () => clearTimeout(timer);
-  }, [warehouseNameInput]);
+  }, [zoneInput]);
 
   const { items, meta, loading, error } = useInventory({
     page,
     limit: 20,
     sku: sku || undefined,
-    warehouseName: warehouseName || undefined,
+    zone: zone || undefined,
   });
 
   const totalCount = meta?.total ?? 0;
@@ -57,13 +57,13 @@ export default function InventoryList() {
           <input
             type="text"
             className="filter-input"
-            placeholder="Lọc theo tên kho"
-            value={warehouseNameInput}
+            placeholder="Lọc theo Zone (VD: Z-A)"
+            value={zoneInput}
             onChange={(event) => {
-              setWarehouseNameInput(event.target.value);
+              setZoneInput(event.target.value);
               setPage(1);
             }}
-            aria-label="Lọc theo tên kho"
+            aria-label="Lọc theo Zone"
           />
 
           {isAuthenticated() ? (

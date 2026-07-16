@@ -40,7 +40,7 @@ export function useInventory(params: GetInventoryParams) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     params.warehouseId,
-    params.warehouseName,
+    params.zone,
     params.productId,
     params.sku,
     params.batchId,
