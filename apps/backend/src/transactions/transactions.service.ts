@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma.service';
 import { paginate, skipTake } from '../common/utils/pagination.util';
+import { formatSlotLocation } from '../common/utils/location.util';
 import { TransactionQueryDto } from './dto/transaction.dto';
 
 @Injectable()
@@ -55,18 +56,17 @@ export class TransactionsService {
           },
           slotFromId: true,
           slotFrom: {
-              select: {
-                code: true,
-                level: {
-                  select: {
-                    code: true,
-                    rack: {
-                      select: {
-                        code: true,
-                        zone: {
-                          select: {
-                            code: true,
-                          },
+            select: {
+              code: true,
+              level: {
+                select: {
+                  levelNumber: true,
+                  rack: {
+                    select: {
+                      code: true,
+                      zone: {
+                        select: {
+                          code: true,
                         },
                       },
                     },
@@ -74,13 +74,14 @@ export class TransactionsService {
                 },
               },
             },
+          },
           slotToId: true,
           slotTo: {
             select: {
               code: true,
               level: {
                 select: {
-                  code: true,
+                  levelNumber: true,
                   rack: {
                     select: {
                       code: true,
@@ -107,7 +108,7 @@ export class TransactionsService {
 }
 
 // Làm phẳng batchCode/slotFromCode/slotToCode ra ngoài để phía frontend hiển thị
-// mã dễ đọc thay vì UUID nội bộ.
+// vị trí đầy đủ dạng "Z-A / R01 / L02 / S01" thay vì UUID nội bộ.
 function toTransactionView(item: {
   id: string;
   type: string;
@@ -120,7 +121,7 @@ function toTransactionView(item: {
   slotFrom: {
     code: string;
     level: {
-      code: string;
+      levelNumber: number;
       rack: {
         code: string;
         zone: {
@@ -133,7 +134,7 @@ function toTransactionView(item: {
   slotTo: {
     code: string;
     level: {
-      code: string;
+      levelNumber: number;
       rack: {
         code: string;
         zone: {
@@ -157,11 +158,21 @@ function toTransactionView(item: {
     productName: item.batch.product.name,
     slotFromId: item.slotFromId,
     slotFromCode: item.slotFrom
-      ? `${item.slotFrom.level.rack.zone.code} / ${item.slotFrom.level.rack.code} / ${item.slotFrom.level.code} / ${item.slotFrom.code}`
+      ? formatSlotLocation({
+          zoneCode: item.slotFrom.level.rack.zone.code,
+          rackCode: item.slotFrom.level.rack.code,
+          levelNumber: item.slotFrom.level.levelNumber,
+          slotCode: item.slotFrom.code,
+        })
       : null,
     slotToId: item.slotToId,
     slotToCode: item.slotTo
-      ? `${item.slotTo.level.rack.zone.code} / ${item.slotTo.level.rack.code} / ${item.slotTo.level.code} / ${item.slotTo.code}`
+      ? formatSlotLocation({
+          zoneCode: item.slotTo.level.rack.zone.code,
+          rackCode: item.slotTo.level.rack.code,
+          levelNumber: item.slotTo.level.levelNumber,
+          slotCode: item.slotTo.code,
+        })
       : null,
     userId: item.userId,
     user: item.user,
