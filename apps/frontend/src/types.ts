@@ -188,6 +188,12 @@ export type OutboundResult = {
   transactions: OutboundTransaction[];
 };
 
+export type Warehouse = {
+  id: string;
+  name: string;
+  address: string | null;
+};
+
 export type Zone = {
   id: string;
   warehouseId: string;

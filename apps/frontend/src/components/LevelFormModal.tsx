@@ -12,11 +12,19 @@ type LevelFormModalProps = {
   mode: 'create' | 'edit';
   initialData?: Level;
   rackId?: string;
+  rackCode?: string;
   onSubmit: (payload: CreateLevelPayload | UpdateLevelPayload) => Promise<void>;
   onClose: () => void;
 };
 
-export function LevelFormModal({ mode, initialData, rackId, onSubmit, onClose }: LevelFormModalProps) {
+export function LevelFormModal({
+  mode,
+  initialData,
+  rackId,
+  rackCode,
+  onSubmit,
+  onClose,
+}: LevelFormModalProps) {
   const [form, setForm] = useState<LevelFormState>({
     rackId: initialData?.rackId ?? rackId ?? '',
     levelNumber:
@@ -79,19 +87,8 @@ export function LevelFormModal({ mode, initialData, rackId, onSubmit, onClose }:
         <form className="product-form" onSubmit={handleSubmit}>
           {mode === 'create' && (
             <div className="form-group">
-              <label className="form-label" htmlFor="level-rack-id">
-                Rack ID
-              </label>
-              <input
-                id="level-rack-id"
-                name="rackId"
-                type="text"
-                className="form-input"
-                placeholder="ID của Rack"
-                value={form.rackId}
-                onChange={(e) => updateField('rackId', e.target.value)}
-                readOnly={Boolean(rackId)}
-              />
+              <span className="form-label">Thuộc Rack</span>
+              <p className="form-static-value">{rackCode ?? 'Không xác định'}</p>
               {errors.rackId && <p className="form-error">{errors.rackId}</p>}
             </div>
           )}

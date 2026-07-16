@@ -215,6 +215,29 @@
   font-family: var(--display);
   font-size: 0.75rem;
   font-weight: 600;
+  flex-shrink: 0;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-chip-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.user-chip-text strong {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.user-chip-text small {
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
 
 /* ---------- Content ---------- */
@@ -620,6 +643,10 @@
     display: none;
   }
 
+  .user-chip-text {
+    display: none;
+  }
+
   .app-content {
     padding: 18px 16px;
   }
@@ -722,6 +749,20 @@
   margin: 0;
   font-size: 0.78rem;
   color: var(--danger);
+}
+
+.form-static-value {
+  height: 40px;
+  padding: 0 12px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--canvas);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .form-group-checkbox {
@@ -1314,11 +1355,12 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  margin: 0 0 16px auto;
-  padding: 0;
+  margin: 0 0 18px auto;
+  padding: 0 0 16px;
   list-style: none;
   font-size: 0.82rem;
   color: var(--text-muted);
+  border-bottom: 1px solid var(--line);
 }
 
 .warehouse-map-legend li {

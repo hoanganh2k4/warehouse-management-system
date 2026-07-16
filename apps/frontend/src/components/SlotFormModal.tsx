@@ -15,11 +15,19 @@ type SlotFormModalProps = {
   mode: 'create' | 'edit';
   initialData?: Slot;
   levelId?: string;
+  levelLabel?: string;
   onSubmit: (payload: CreateSlotPayload | UpdateSlotPayload) => Promise<void>;
   onClose: () => void;
 };
 
-export function SlotFormModal({ mode, initialData, levelId, onSubmit, onClose }: SlotFormModalProps) {
+export function SlotFormModal({
+  mode,
+  initialData,
+  levelId,
+  levelLabel,
+  onSubmit,
+  onClose,
+}: SlotFormModalProps) {
   const [form, setForm] = useState<SlotFormState>({
     levelId: initialData?.levelId ?? levelId ?? '',
     code: initialData?.code ?? '',
@@ -113,19 +121,8 @@ export function SlotFormModal({ mode, initialData, levelId, onSubmit, onClose }:
         <form className="product-form" onSubmit={handleSubmit}>
           {mode === 'create' && (
             <div className="form-group">
-              <label className="form-label" htmlFor="slot-level-id">
-                Level ID
-              </label>
-              <input
-                id="slot-level-id"
-                name="levelId"
-                type="text"
-                className="form-input"
-                placeholder="ID của Level"
-                value={form.levelId}
-                onChange={(e) => updateField('levelId', e.target.value)}
-                readOnly={Boolean(levelId)}
-              />
+              <span className="form-label">Thuộc Tầng</span>
+              <p className="form-static-value">{levelLabel ?? 'Không xác định'}</p>
               {errors.levelId && <p className="form-error">{errors.levelId}</p>}
             </div>
           )}

@@ -379,6 +379,9 @@ export default function RackingPage() {
   const columns = Array.from(
     new Set(gridRows.flatMap((row) => row.slots.map((slot) => slot.code))),
   ).sort(naturalCompare);
+  const slotModalLevel = slotModal
+    ? gridRows.find((row) => row.level.id === slotModal.levelId)?.level
+    : undefined;
 
   return (
     <main className="app-content">
@@ -400,6 +403,7 @@ export default function RackingPage() {
           mode={rackModal.mode}
           initialData={rackModal.rack}
           zoneId={rackModal.zoneId}
+          zoneCode={zones.find((zone) => zone.id === rackModal.zoneId)?.code}
           onSubmit={handleRackSubmit}
           onClose={() => setRackModal(null)}
         />
@@ -410,6 +414,7 @@ export default function RackingPage() {
           mode={levelModal.mode}
           initialData={levelModal.level}
           rackId={selectedRackId ?? undefined}
+          rackCode={selectedRack?.code}
           onSubmit={handleLevelSubmit}
           onClose={() => setLevelModal(null)}
         />
@@ -420,6 +425,7 @@ export default function RackingPage() {
           mode={slotModal.mode}
           initialData={slotModal.slot}
           levelId={slotModal.levelId}
+          levelLabel={slotModalLevel ? `L${slotModalLevel.levelNumber}` : undefined}
           onSubmit={handleSlotSubmit}
           onClose={() => setSlotModal(null)}
         />

@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import './App.css';
 import Layout from './components/Layout';
 import Dashboard from './pages/dashboard/Dashboard';
@@ -16,7 +16,13 @@ import TeamList from './pages/team/TeamList';
 import RackingPage from './pages/racking/RackingPage';
 import TransactionList from './pages/transactions/TransactionList';
 import Login from './pages/login/Login';
+
 import ProtectedRoute from './components/ProtectedRoute';
+import IndexRedirect from './components/IndexRedirect';
+import Forbidden from './pages/forbidden/Forbidden';
+import { MANAGER_ROLE } from './lib/roles';
+import RoleRoute from './components/RoleRoute';
+
 
 function App() {
   return (
@@ -24,7 +30,8 @@ function App() {
       <Route path="/login" element={<Login />} />
 
       <Route path="/" element={<Layout />}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route index element={<IndexRedirect />} />
+        <Route path="403" element={<Forbidden />} />
         <Route path="products" element={<ProductList />} />
         <Route path="products/:id" element={<ProductDetail />} />
         <Route path="categories" element={<CategoryList />} />
@@ -32,16 +39,20 @@ function App() {
 
         {/* Chỉ những route ghi dữ liệu (create/edit) mới cần đăng nhập */}
         <Route element={<ProtectedRoute />}>
-          <Route path="dashboard" element={<Dashboard />} />
           <Route path="products/new" element={<ProductCreate />} />
           <Route path="products/:id/edit" element={<ProductEdit />} />
           <Route path="categories/new" element={<CategoryCreate />} />
           <Route path="categories/:id/edit" element={<CategoryEdit />} />
           <Route path="inventory/inbound" element={<InventoryInbound />} />
           <Route path="inventory/outbound" element={<InventoryOutbound />} />
-          <Route path="racking" element={<RackingPage />} />
-          <Route path="transactions" element={<TransactionList />} />
-          <Route path="team" element={<TeamList />} />
+
+          {/* Các trang quản lý/báo cáo — chỉ tài khoản Quản lý mới thấy */}
+          <Route element={<RoleRoute roles={[MANAGER_ROLE]} />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="racking" element={<RackingPage />} />
+            <Route path="transactions" element={<TransactionList />} />
+            <Route path="team" element={<TeamList />} />
+          </Route>
         </Route>
       </Route>
     </Routes>
