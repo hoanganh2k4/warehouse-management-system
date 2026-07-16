@@ -61,4 +61,16 @@ export const authStorage = {
     const token = this.getRefreshToken();
     return !!token && !isTokenExpired(token);
   },
+
+  // Đọc username/role trực tiếp từ access token đang có (không gọi API).
+  // Chỉ dùng để hiển thị UI (ẩn/hiện menu, badge...) — KHÔNG phải cơ chế bảo
+  // mật, vì token có thể hết hạn hoặc bị người dùng tự sửa ở phía client.
+  // Quyền thực sự luôn được BE kiểm tra lại qua RolesGuard.
+  getCurrentUser(): { username: string; role: string } | null {
+    const token = this.getAccessToken();
+    if (!token || isTokenExpired(token)) return null;
+    const payload = decodeJwtPayload(token);
+    if (!payload || payload.type === 'refresh') return null;
+    return { username: payload.username, role: payload.role };
+  },
 };

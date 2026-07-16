@@ -12,11 +12,19 @@ type RackFormModalProps = {
   mode: 'create' | 'edit';
   initialData?: Rack;
   zoneId?: string;
+  zoneCode?: string;
   onSubmit: (payload: CreateRackPayload | UpdateRackPayload) => Promise<void>;
   onClose: () => void;
 };
 
-export function RackFormModal({ mode, initialData, zoneId, onSubmit, onClose }: RackFormModalProps) {
+export function RackFormModal({
+  mode,
+  initialData,
+  zoneId,
+  zoneCode,
+  onSubmit,
+  onClose,
+}: RackFormModalProps) {
   const [form, setForm] = useState<RackFormState>({
     zoneId: initialData?.zoneId ?? zoneId ?? '',
     code: initialData?.code ?? '',
@@ -74,19 +82,8 @@ export function RackFormModal({ mode, initialData, zoneId, onSubmit, onClose }: 
         <form className="product-form" onSubmit={handleSubmit}>
           {mode === 'create' && (
             <div className="form-group">
-              <label className="form-label" htmlFor="rack-zone-id">
-                Zone ID
-              </label>
-              <input
-                id="rack-zone-id"
-                name="zoneId"
-                type="text"
-                className="form-input"
-                placeholder="ID của Zone"
-                value={form.zoneId}
-                onChange={(e) => updateField('zoneId', e.target.value)}
-                readOnly={Boolean(zoneId)}
-              />
+              <span className="form-label">Thuộc Zone</span>
+              <p className="form-static-value">{zoneCode ?? 'Không xác định'}</p>
               {errors.zoneId && <p className="form-error">{errors.zoneId}</p>}
             </div>
           )}

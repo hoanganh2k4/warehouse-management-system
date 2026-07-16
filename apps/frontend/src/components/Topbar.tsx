@@ -2,8 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import { ExternalLinkIcon } from './icons';
 import { useAuth } from '../hooks/useAuth';
 
+function initialsOf(username: string): string {
+  return username.slice(0, 2).toUpperCase();
+}
+
 export function Topbar() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, username, role } = useAuth();
   const navigate = useNavigate();
   const loggedIn = isAuthenticated();
 
@@ -25,10 +29,14 @@ export function Topbar() {
           <ExternalLinkIcon />
         </a>
 
-        {loggedIn ? (
+        {loggedIn && username ? (
           <>
-            <div className="user-chip" title="Signed in">
-              <span className="user-avatar">WM</span>
+            <div className="user-chip" title={role ? `${username} · ${role}` : username}>
+              <span className="user-avatar">{initialsOf(username)}</span>
+              <span className="user-chip-text">
+                <strong>{username}</strong>
+                {role && <small>{role}</small>}
+              </span>
             </div>
             <button type="button" className="docs-link" onClick={handleLogout}>
               Đăng xuất
