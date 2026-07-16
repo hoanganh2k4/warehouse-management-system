@@ -80,7 +80,8 @@ export class InventoryService {
           level: {
             rack: {
               zoneId: {
-                in: matchedZoneIds.length > 0 ? matchedZoneIds : ['__no_match__'],
+                in:
+                  matchedZoneIds.length > 0 ? matchedZoneIds : ['__no_match__'],
               },
             },
           },

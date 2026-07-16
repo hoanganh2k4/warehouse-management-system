@@ -1,6 +1,8 @@
 import type { Level, Rack, Slot, Zone } from '../../../types';
 import type { GridRow } from '../racking.types';
 import { slotStatus } from '../racking.types';
+import { CapacityBar, } from '../../../components/CapacityBar';
+import { formatNumber, getCapacityTier } from '../../../utils/Capacity.utils';
 
 type RackingGridPanelProps = {
   selectedRackId: string | null;
@@ -39,6 +41,22 @@ export function RackingGridPanel({
   onCreateSlot,
   onOpenSlotDetail,
 }: RackingGridPanelProps) {
+  // Tổng hợp sức chứa của toàn bộ Rack từ danh sách Slot thực tế (Level x Slot),
+  // KHÔNG hardcode 5 Level x 10 Slot — tính theo dữ liệu thật để luôn chính xác.
+  const allSlots = gridRows.flatMap((row) => row.slots);
+  const rackTotalCapacity = allSlots.reduce((sum, slot) => sum + slot.maxCapacity, 0);
+  const rackUsedCapacity = allSlots.reduce((sum, slot) => sum + slot.usedCapacity, 0);
+  const rackAvailableCapacity = rackTotalCapacity - rackUsedCapacity;
+  const rackPercent = rackTotalCapacity > 0 ? (rackUsedCapacity / rackTotalCapacity) * 100 : 0;
+  const usedSlotCount = allSlots.filter((slot) => slot.usedCapacity > 0).length;
+  const freeSlotCount = allSlots.length - usedSlotCount;
+  const rackTier = getCapacityTier(rackPercent, rackUsedCapacity);
+  const rackTooltip = [
+    `Đang lưu: ${formatNumber(rackUsedCapacity)} đơn vị`,
+    `Tổng sức chứa: ${formatNumber(rackTotalCapacity)}`,
+    `Tỷ lệ sử dụng: ${Math.round(rackPercent)}%`,
+  ].join('\n');
+
   return (
     <section className="panel racking-grid-panel">
       {!selectedRackId && (
@@ -71,6 +89,22 @@ export function RackingGridPanel({
               </div>
             )}
           </div>
+
+          {!gridLoading && !gridError && rackTotalCapacity > 0 && (
+            <div className="rack-summary-card">
+              <div className="capacity-progress-top">
+                <span className="capacity-progress-percent">{Math.round(rackPercent)}%</span>
+                <CapacityBar percent={rackPercent} tier={rackTier} tooltip={rackTooltip} />
+              </div>
+              <p className="rack-summary-meta">
+                Còn trống: <strong>{formatNumber(rackAvailableCapacity)}</strong> /{' '}
+                {formatNumber(rackTotalCapacity)} units
+              </p>
+              <p className="rack-summary-sub">
+                Đang dùng {usedSlotCount} slot · Còn trống {freeSlotCount} slot
+              </p>
+            </div>
+          )}
 
           <ul className="warehouse-map-legend">
             <li>
