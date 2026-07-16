@@ -10,6 +10,7 @@ import { SlotCapacityService } from '../common/services/slot-capacity.service';
 import { FefoService } from '../common/services/fefo.service';
 import type { PickLine } from '../common/services/fefo.service';
 import { paginate, skipTake } from '../common/utils/pagination.util';
+import { formatSlotLocation } from '../common/utils/location.util';
 import { AuthUser } from '../common/decorators/current-user.decorator';
 import {
   InboundDto,
@@ -61,7 +62,7 @@ export class InventoryService {
               code: true,
               level: {
                 select: {
-                  code: true,
+                  levelNumber: true,
                   rack: {
                     select: {
                       code: true,
@@ -75,7 +76,7 @@ export class InventoryService {
                 },
               },
             },
-          }
+          },
         },
       }),
       this.prisma.inventory.count({ where }),
@@ -104,7 +105,7 @@ export class InventoryService {
             code: true,
             level: {
               select: {
-                code: true,
+                levelNumber: true,
                 rack: {
                   select: {
                     code: true,
@@ -118,7 +119,7 @@ export class InventoryService {
               },
             },
           },
-        }
+        },
       },
     });
     if (!item) throw new NotFoundException('Inventory record not found');
@@ -289,7 +290,7 @@ function toInventoryView(item: {
   slot: {
     code: string;
     level: {
-      code: string;
+      levelNumber: number;
       rack: {
         code: string;
         zone: {
@@ -304,11 +305,12 @@ function toInventoryView(item: {
     batchId: item.batchId,
     batchCode: item.batch.batchCode,
     slotId: item.slotId,
-   slotCode:
-    `${item.slot.level.rack.zone.code} / ` +
-    `${item.slot.level.rack.code} / ` +
-    `${item.slot.level.code} / ` +
-    `${item.slot.code}`,
+    slotCode: formatSlotLocation({
+      zoneCode: item.slot.level.rack.zone.code,
+      rackCode: item.slot.level.rack.code,
+      levelNumber: item.slot.level.levelNumber,
+      slotCode: item.slot.code,
+    }),
     productSkuCode: item.batch.product.skuCode,
     productName: item.batch.product.name,
     quantity: item.quantity,
