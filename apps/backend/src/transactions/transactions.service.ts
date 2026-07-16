@@ -54,9 +54,47 @@ export class TransactionsService {
             },
           },
           slotFromId: true,
-          slotFrom: { select: { code: true } },
+          slotFrom: {
+              select: {
+                code: true,
+                level: {
+                  select: {
+                    code: true,
+                    rack: {
+                      select: {
+                        code: true,
+                        zone: {
+                          select: {
+                            code: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           slotToId: true,
-          slotTo: { select: { code: true } },
+          slotTo: {
+            select: {
+              code: true,
+              level: {
+                select: {
+                  code: true,
+                  rack: {
+                    select: {
+                      code: true,
+                      zone: {
+                        select: {
+                          code: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
           userId: true,
           user: { select: { id: true, username: true, fullName: true } },
         },
@@ -79,9 +117,31 @@ function toTransactionView(item: {
   batchId: string;
   batch: { batchCode: string; product: { skuCode: string; name: string } };
   slotFromId: string | null;
-  slotFrom: { code: string } | null;
+  slotFrom: {
+    code: string;
+    level: {
+      code: string;
+      rack: {
+        code: string;
+        zone: {
+          code: string;
+        };
+      };
+    };
+  } | null;
   slotToId: string | null;
-  slotTo: { code: string } | null;
+  slotTo: {
+    code: string;
+    level: {
+      code: string;
+      rack: {
+        code: string;
+        zone: {
+          code: string;
+        };
+      };
+    };
+  } | null;
   userId: string;
   user: { id: string; username: string; fullName: string | null };
 }) {
@@ -96,9 +156,13 @@ function toTransactionView(item: {
     productSkuCode: item.batch.product.skuCode,
     productName: item.batch.product.name,
     slotFromId: item.slotFromId,
-    slotFromCode: item.slotFrom?.code ?? null,
+    slotFromCode: item.slotFrom
+      ? `${item.slotFrom.level.rack.zone.code} / ${item.slotFrom.level.rack.code} / ${item.slotFrom.level.code} / ${item.slotFrom.code}`
+      : null,
     slotToId: item.slotToId,
-    slotToCode: item.slotTo?.code ?? null,
+    slotToCode: item.slotTo
+      ? `${item.slotTo.level.rack.zone.code} / ${item.slotTo.level.rack.code} / ${item.slotTo.level.code} / ${item.slotTo.code}`
+      : null,
     userId: item.userId,
     user: item.user,
   };
