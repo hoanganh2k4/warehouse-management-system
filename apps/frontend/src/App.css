@@ -1711,3 +1711,162 @@
     max-height: 40vh;
   }
 }
+/* =====================================================
+   Progress Bar sức chứa (Rack tổng + Slot chi tiết)
+   Chỉ bổ sung UI trực quan, không đổi bố cục hiện có.
+   ===================================================== */
+
+.capacity-progress-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.capacity-progress-percent {
+  flex: 0 0 auto;
+  min-width: 40px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.capacity-progress-percent--sm {
+  min-width: 34px;
+  font-size: 0.82rem;
+}
+
+.capacity-progress-track {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--cap-track);
+  overflow: hidden;
+}
+
+.capacity-progress-track--sm {
+  height: 8px;
+}
+
+.capacity-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease, background-color 0.3s ease;
+}
+
+.capacity-progress-fill.is-green {
+  background: var(--cap-green);
+}
+
+.capacity-progress-fill.is-yellow {
+  background: var(--cap-yellow);
+}
+
+.capacity-progress-fill.is-orange {
+  background: var(--cap-orange);
+}
+
+.capacity-progress-fill.is-red {
+  background: var(--cap-red);
+}
+
+.capacity-progress-fill.is-empty {
+  background: var(--cap-empty);
+}
+
+/* Card tổng sức chứa của Rack — nằm dưới tiêu đề Zone/Rack, trên sơ đồ Slot */
+.rack-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin: 0 0 16px;
+}
+
+.rack-summary-meta {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.rack-summary-meta strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.rack-summary-sub {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+
+/* Hàng Progress Bar riêng trong popup chi tiết Slot */
+.warehouse-map-popup-progress-row {
+  display: block !important;
+}
+
+.warehouse-map-popup-progress-row .capacity-progress-top {
+  width: 100%;
+}
+
+/* Badge trạng thái Slot (Trống / Đầy) cạnh tiêu đề popup */
+.slot-status-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--sans);
+  vertical-align: middle;
+}
+
+.slot-status-badge.is-empty-badge {
+  background: var(--cap-empty-soft);
+  color: var(--text-muted);
+}
+
+.slot-status-badge.is-full-badge {
+  background: var(--cap-red-soft);
+  color: var(--cap-red);
+}
+
+/* Tooltip dùng chung — hiện khi rê chuột vào Progress Bar */
+.has-tooltip {
+  position: relative;
+  cursor: default;
+}
+
+.has-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--text-on-ink);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.74rem;
+  line-height: 1.45;
+  white-space: pre-line;
+  text-align: left;
+  box-shadow: var(--shadow-md);
+  width: max-content;
+  max-width: 220px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+  z-index: 30;
+}
+
+.has-tooltip:hover::after,
+.has-tooltip:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+}

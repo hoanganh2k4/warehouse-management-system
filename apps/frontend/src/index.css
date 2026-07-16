@@ -26,6 +26,19 @@
   --success: #2f9e6b;
   --success-soft: rgba(47, 158, 107, 0.12);
 
+  /* Capacity progress bar (Racking) */
+  --cap-track: #e7e9ee;
+  --cap-empty: #b7bcc8;
+  --cap-empty-soft: rgba(183, 188, 200, 0.18);
+  --cap-green: #2f9e6b;
+  --cap-green-soft: rgba(47, 158, 107, 0.14);
+  --cap-yellow: #d9a521;
+  --cap-yellow-soft: rgba(217, 165, 33, 0.16);
+  --cap-orange: #e07a2f;
+  --cap-orange-soft: rgba(224, 122, 47, 0.16);
+  --cap-red: #d64545;
+  --cap-red-soft: rgba(214, 69, 69, 0.14);
+
   --shadow-sm: 0 1px 2px rgba(14, 20, 32, 0.05);
   --shadow-md: 0 8px 24px rgba(14, 20, 32, 0.08);
   --shadow-lg: 0 20px 45px rgba(14, 20, 32, 0.12);
@@ -74,6 +87,16 @@
 
     --danger-soft: rgba(214, 69, 69, 0.16);
     --success-soft: rgba(47, 158, 107, 0.18);
+
+    --cap-track: #232b3b;
+    --cap-empty: #4b5468;
+    --cap-empty-soft: rgba(75, 84, 104, 0.28);
+    --cap-yellow: #e0b94a;
+    --cap-yellow-soft: rgba(224, 185, 74, 0.18);
+    --cap-orange: #e79155;
+    --cap-orange-soft: rgba(231, 145, 85, 0.18);
+    --cap-red: #e0625f;
+    --cap-red-soft: rgba(224, 98, 95, 0.18);
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
