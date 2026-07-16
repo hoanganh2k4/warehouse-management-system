@@ -1,6 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDateString, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 
 export class InboundDto {
   @ApiProperty()
@@ -42,7 +49,8 @@ export class OutboundDto {
 
 export class InventoryQueryDto {
   @ApiPropertyOptional({
-    description: 'Tìm theo mã SKU hoặc tên sản phẩm (không phân biệt hoa/thường, chấp nhận khớp một phần)',
+    description:
+      'Tìm theo mã SKU hoặc tên sản phẩm (không phân biệt hoa/thường, chấp nhận khớp một phần)',
   })
   @IsOptional()
   @IsString()
@@ -56,12 +64,16 @@ export class InventoryQueryDto {
   @IsString()
   zone?: string;
 
-  @ApiPropertyOptional({ description: 'Lọc chính xác theo UUID của kho (dùng cho tích hợp API)' })
+  @ApiPropertyOptional({
+    description: 'Lọc chính xác theo UUID của kho (dùng cho tích hợp API)',
+  })
   @IsOptional()
   @IsUUID()
   warehouseId?: string;
 
-  @ApiPropertyOptional({ description: 'Lọc chính xác theo UUID của sản phẩm (dùng cho tích hợp API)' })
+  @ApiPropertyOptional({
+    description: 'Lọc chính xác theo UUID của sản phẩm (dùng cho tích hợp API)',
+  })
   @IsOptional()
   @IsUUID()
   productId?: string;
