@@ -109,7 +109,11 @@ export type DashboardSummary = {
 export type InventoryItem = {
   id: string;
   batchId: string;
+  batchCode: string;
   slotId: string;
+  slotCode: string;
+  productSkuCode: string;
+  productName: string;
   quantity: number;
   updatedAt: string;
 };
@@ -269,9 +273,15 @@ export type Transaction = {
   type: TransactionType;
   quantity: number;
   batchId: string;
+  batchCode: string;
+  productSkuCode: string;
+  productName: string;
   slotToId: string | null;
+  slotToCode: string | null;
   slotFromId: string | null;
+  slotFromCode: string | null;
   userId: string;
+  user: { id: string; username: string; fullName: string | null };
   note: string | null;
   createdAt: string;
 };

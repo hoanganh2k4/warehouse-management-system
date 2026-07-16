@@ -8,10 +8,6 @@ type TransactionTableProps = {
   error: string | null;
 };
 
-function shortenId(id: string) {
-  return id.slice(0, 8);
-}
-
 function formatDateTime(value: string) {
   try {
     const date = new Date(value);
@@ -44,10 +40,11 @@ export function TransactionTable({ items, totalCount, loading, error }: Transact
           <thead>
             <tr>
               <th>Loại</th>
+              <th>Sản phẩm</th>
               <th>Số lượng</th>
-              <th>Batch ID</th>
-              <th>Từ Slot</th>
-              <th>Đến Slot</th>
+              <th>Mã lô hàng</th>
+              <th>Từ vị trí</th>
+              <th>Đến vị trí</th>
               <th>Ghi chú</th>
               <th>Thời gian</th>
             </tr>
@@ -56,10 +53,11 @@ export function TransactionTable({ items, totalCount, loading, error }: Transact
             {Array.from({ length: 6 }).map((_, i) => (
               <tr key={i} className="skeleton-row">
                 <td><span className="skeleton" style={{ width: '70px' }} /></td>
+                <td><span className="skeleton" style={{ width: '140px' }} /></td>
                 <td><span className="skeleton" style={{ width: '40px' }} /></td>
                 <td><span className="skeleton" style={{ width: '80px' }} /></td>
-                <td><span className="skeleton" style={{ width: '80px' }} /></td>
-                <td><span className="skeleton" style={{ width: '80px' }} /></td>
+                <td><span className="skeleton" style={{ width: '60px' }} /></td>
+                <td><span className="skeleton" style={{ width: '60px' }} /></td>
                 <td><span className="skeleton" style={{ width: '100px' }} /></td>
                 <td><span className="skeleton" style={{ width: '120px' }} /></td>
               </tr>
@@ -106,10 +104,11 @@ export function TransactionTable({ items, totalCount, loading, error }: Transact
         <thead>
           <tr>
             <th>Loại</th>
+            <th>Sản phẩm</th>
             <th>Số lượng</th>
-            <th>Batch ID</th>
-            <th>Từ Slot</th>
-            <th>Đến Slot</th>
+            <th>Mã lô hàng</th>
+            <th>Từ vị trí</th>
+            <th>Đến vị trí</th>
             <th>Ghi chú</th>
             <th>Thời gian</th>
           </tr>
@@ -120,20 +119,23 @@ export function TransactionTable({ items, totalCount, loading, error }: Transact
               <td>
                 <span className={typeBadgeClass(item.type)}>{typeLabel(item.type)}</span>
               </td>
+              <td>
+                <span className="sku-code">{item.productSkuCode}</span> — {item.productName}
+              </td>
               <td>{item.quantity}</td>
               <td>
-                <span className="sku-code">{shortenId(item.batchId)}</span>
+                <span className="sku-code">{item.batchCode}</span>
               </td>
               <td>
-                {item.slotFromId ? (
-                  <span className="sku-code">{shortenId(item.slotFromId)}</span>
+                {item.slotFromCode ? (
+                  <span className="sku-code">{item.slotFromCode}</span>
                 ) : (
                   <span className="muted-cell">—</span>
                 )}
               </td>
               <td>
-                {item.slotToId ? (
-                  <span className="sku-code">{shortenId(item.slotToId)}</span>
+                {item.slotToCode ? (
+                  <span className="sku-code">{item.slotToCode}</span>
                 ) : (
                   <span className="muted-cell">—</span>
                 )}

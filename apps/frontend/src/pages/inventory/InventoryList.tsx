@@ -33,7 +33,7 @@ export default function InventoryList() {
           <input
             type="text"
             className="filter-input"
-            placeholder="Lọc theo Product ID (UUID)"
+            placeholder="Lọc theo mã sản phẩm"
             value={productIdInput}
             onChange={(event) => {
               setProductIdInput(event.target.value);
@@ -44,7 +44,7 @@ export default function InventoryList() {
           <input
             type="text"
             className="filter-input"
-            placeholder="Lọc theo Warehouse ID (UUID)"
+            placeholder="Lọc theo mã kho"
             value={warehouseIdInput}
             onChange={(event) => {
               setWarehouseIdInput(event.target.value);

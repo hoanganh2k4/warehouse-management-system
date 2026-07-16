@@ -40,16 +40,66 @@ export class TransactionsService {
         where,
         ...skipTake(page, limit),
         orderBy: { createdAt: 'desc' },
-        include: {
-          batch: { include: { product: true } },
-          slotFrom: true,
-          slotTo: true,
+        select: {
+          id: true,
+          type: true,
+          quantity: true,
+          note: true,
+          createdAt: true,
+          batchId: true,
+          batch: {
+            select: {
+              batchCode: true,
+              product: { select: { skuCode: true, name: true } },
+            },
+          },
+          slotFromId: true,
+          slotFrom: { select: { code: true } },
+          slotToId: true,
+          slotTo: { select: { code: true } },
+          userId: true,
           user: { select: { id: true, username: true, fullName: true } },
         },
       }),
       this.prisma.transaction.count({ where }),
     ]);
 
-    return paginate(items, page, limit, total);
+    return paginate(items.map(toTransactionView), page, limit, total);
   }
+}
+
+// Làm phẳng batchCode/slotFromCode/slotToCode ra ngoài để phía frontend hiển thị
+// mã dễ đọc thay vì UUID nội bộ.
+function toTransactionView(item: {
+  id: string;
+  type: string;
+  quantity: number;
+  note: string | null;
+  createdAt: Date;
+  batchId: string;
+  batch: { batchCode: string; product: { skuCode: string; name: string } };
+  slotFromId: string | null;
+  slotFrom: { code: string } | null;
+  slotToId: string | null;
+  slotTo: { code: string } | null;
+  userId: string;
+  user: { id: string; username: string; fullName: string | null };
+}) {
+  return {
+    id: item.id,
+    type: item.type,
+    quantity: item.quantity,
+    note: item.note,
+    createdAt: item.createdAt,
+    batchId: item.batchId,
+    batchCode: item.batch.batchCode,
+    productSkuCode: item.batch.product.skuCode,
+    productName: item.batch.product.name,
+    slotFromId: item.slotFromId,
+    slotFromCode: item.slotFrom?.code ?? null,
+    slotToId: item.slotToId,
+    slotToCode: item.slotTo?.code ?? null,
+    userId: item.userId,
+    user: item.user,
+  };
 }
