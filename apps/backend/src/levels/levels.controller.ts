@@ -9,6 +9,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Roles } from '../common/decorators/roles.decorator';
+import { MANAGER_ROLE } from '../common/constants/roles.constant';
 import { LevelsService } from './levels.service';
 import { CreateLevelDto, UpdateLevelDto } from './dto/level.dto';
 import {
@@ -46,6 +48,7 @@ export class LevelsController {
   }
 
   @Post()
+  @Roles(MANAGER_ROLE)
   @ApiCreatedExample(SUCCESS_EXAMPLES.level, '201 Created — Tạo level')
   @ApiAuthWriteErrors()
   create(@Body() dto: CreateLevelDto) {
@@ -53,6 +56,7 @@ export class LevelsController {
   }
 
   @Put(':id')
+  @Roles(MANAGER_ROLE)
   @ApiSuccessExample(SUCCESS_EXAMPLES.level, '200 OK — Cập nhật level')
   @ApiAuthWriteErrors({ notFound: ERROR_EXAMPLES.levelNotFound })
   update(@Param('id') id: string, @Body() dto: UpdateLevelDto) {
@@ -60,6 +64,7 @@ export class LevelsController {
   }
 
   @Delete(':id')
+  @Roles(MANAGER_ROLE)
   @ApiSuccessExample(SUCCESS_EXAMPLES.level, '200 OK — Xóa level')
   @ApiAuthWriteErrors({
     notFound: ERROR_EXAMPLES.levelNotFound,

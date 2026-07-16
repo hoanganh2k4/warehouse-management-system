@@ -9,6 +9,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Roles } from '../common/decorators/roles.decorator';
+import { MANAGER_ROLE } from '../common/constants/roles.constant';
 import { SlotsService } from './slots.service';
 import { CreateSlotDto, SlotQueryDto, UpdateSlotDto } from './dto/slot.dto';
 import { Public } from '../common/decorators/public.decorator';
@@ -50,6 +52,7 @@ export class SlotsController {
 
   @ApiBearerAuth()
   @Post()
+  @Roles(MANAGER_ROLE)
   @ApiCreatedExample(SUCCESS_EXAMPLES.slot, '201 Created — Tạo slot')
   @ApiAuthWriteErrors()
   create(@Body() dto: CreateSlotDto) {
@@ -58,6 +61,7 @@ export class SlotsController {
 
   @ApiBearerAuth()
   @Put(':id')
+  @Roles(MANAGER_ROLE)
   @ApiSuccessExample(SUCCESS_EXAMPLES.slot, '200 OK — Cập nhật slot')
   @ApiAuthWriteErrors({ notFound: ERROR_EXAMPLES.slotNotFound })
   update(@Param('id') id: string, @Body() dto: UpdateSlotDto) {
@@ -66,6 +70,7 @@ export class SlotsController {
 
   @ApiBearerAuth()
   @Delete(':id')
+  @Roles(MANAGER_ROLE)
   @ApiSuccessExample(SUCCESS_EXAMPLES.slot, '200 OK — Xóa slot')
   @ApiAuthWriteErrors({
     notFound: ERROR_EXAMPLES.slotNotFound,
