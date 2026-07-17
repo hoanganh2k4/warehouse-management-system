@@ -82,6 +82,71 @@ async function main() {
 
   console.log('✅ Roles & users seeded');
 
+  // ===================== Suppliers & Customers =====================
+  const SUPPLIERS = [
+    {
+      name: 'Công ty TNHH Thực phẩm An Phát',
+      contactName: 'Nguyễn Văn Hùng',
+      phone: '0901234567',
+      email: 'hung.nguyen@anphat.vn',
+      address: 'KCN Tân Bình, TP.HCM',
+    },
+    {
+      name: 'Công ty CP Sản xuất Đại Dương',
+      contactName: 'Trần Thị Mai',
+      phone: '0912345678',
+      email: 'mai.tran@daiduong.vn',
+      address: 'KCN Long Hậu, Long An',
+    },
+    {
+      name: 'Công ty TNHH Bao bì Việt Tín',
+      contactName: 'Lê Minh Khoa',
+      phone: '0923456789',
+      email: 'khoa.le@viettin.vn',
+      address: 'KCN Sóng Thần, Bình Dương',
+    },
+  ];
+
+  for (const supplier of SUPPLIERS) {
+    const existing = await prisma.supplier.findFirst({ where: { name: supplier.name } });
+    if (!existing) {
+      await prisma.supplier.create({ data: supplier });
+    }
+  }
+
+  const CUSTOMERS = [
+    {
+      name: 'Siêu thị Bình Minh',
+      contactName: 'Phạm Thu Hà',
+      phone: '0934567890',
+      email: 'ha.pham@binhminh.vn',
+      address: 'Quận 7, TP.HCM',
+    },
+    {
+      name: 'Chuỗi cửa hàng Tiện Lợi 24h',
+      contactName: 'Đỗ Quốc Bảo',
+      phone: '0945678901',
+      email: 'bao.do@tienloi24h.vn',
+      address: 'Quận 3, TP.HCM',
+    },
+    {
+      name: 'Công ty TNHH Thương mại Phú Gia',
+      contactName: 'Vũ Thị Ngọc',
+      phone: '0956789012',
+      email: 'ngoc.vu@phugia.vn',
+      address: 'TP. Thủ Đức, TP.HCM',
+    },
+  ];
+
+  for (const customer of CUSTOMERS) {
+    const existing = await prisma.customer.findFirst({ where: { name: customer.name } });
+    if (!existing) {
+      await prisma.customer.create({ data: customer });
+    }
+  }
+
+  console.log('✅ Suppliers & customers seeded');
+
   // ===================== Warehouse structure =====================
   let warehouse = await prisma.warehouse.findFirst({ where: { name: 'Warehouse A' } });
   if (!warehouse) {
