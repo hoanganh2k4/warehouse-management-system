@@ -1,5 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { DashboardService } from './dashboard.service';
 import { Roles } from '../common/decorators/roles.decorator';
 import { MANAGER_ROLE } from '../common/constants/roles.constant';
@@ -21,5 +21,22 @@ export class DashboardController {
   @ApiAuthReadErrors()
   summary() {
     return this.service.getSummary();
+  }
+
+  @Get('chart')
+  @Roles(MANAGER_ROLE)
+  @ApiQuery({
+    name: 'days',
+    required: false,
+    type: Number,
+    description: 'Số ngày gần nhất muốn xem (mặc định 14, tối đa 90)',
+  })
+  @ApiSuccessExample(
+    SUCCESS_EXAMPLES.dashboardChart,
+    '200 OK — Số liệu nhập/xuất theo ngày (chỉ Quản lý)',
+  )
+  @ApiAuthReadErrors()
+  chart(@Query('days') days?: string) {
+    return this.service.getChart(days ? Number(days) : undefined);
   }
 }

@@ -1,11 +1,16 @@
+import { useState } from 'react';
 import '../../App.css';
 import './Dashboard.css';
 import { StatCard } from '../../components/StatCard';
+import { InboundOutboundChart } from '../../components/InboundOutboundChart';
 import { AlertIcon, BoxIcon, GridIcon, LayersIcon, ScaleIcon, WarehouseIcon } from '../../components/icons';
 import { useDashboard } from '../../hooks/useDashboard';
+import { useDashboardChart } from '../../hooks/useDashboardChart';
 
 export default function Dashboard() {
   const { summary, loading, error, refetch } = useDashboard();
+  const [chartDays, setChartDays] = useState(14);
+  const { data: chartData, loading: chartLoading } = useDashboardChart(chartDays);
 
   return (
     <main className="app-content dashboard-page">
@@ -64,6 +69,29 @@ export default function Dashboard() {
             hint="Lô hàng cần chú ý"
             icon={<AlertIcon />}
           />
+        </div>
+      )}
+
+      {!error && (
+        <div className="panel chart-panel">
+          <div className="panel-header">
+            <div className="panel-header-title-group">
+              <h2>Nhập / Xuất kho</h2>
+              <span className="result-count">Tổng hợp theo ngày</span>
+            </div>
+            <select
+              className="chart-range-select"
+              value={chartDays}
+              onChange={(e) => setChartDays(Number(e.target.value))}
+            >
+              <option value={7}>7 ngày qua</option>
+              <option value={14}>14 ngày qua</option>
+              <option value={30}>30 ngày qua</option>
+            </select>
+          </div>
+          <div className="chart-panel-body">
+            <InboundOutboundChart data={chartData} loading={chartLoading} />
+          </div>
         </div>
       )}
     </main>
