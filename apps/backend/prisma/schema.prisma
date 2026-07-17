@@ -32,7 +32,9 @@ model User {
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
 
-  transactions Transaction[]
+  transactions      Transaction[]
+  schedulesCreated  Schedule[]    @relation("ScheduleCreatedBy")
+  schedulesExecuted Schedule[]    @relation("ScheduleExecutedBy")
 
   @@index([roleId])
   @@map("users")
@@ -64,8 +66,9 @@ model Product {
   updatedAt  DateTime @updatedAt
   deletedAt  DateTime?
 
-  batches Batch[]
-  slots   Slot[]  @relation("SlotCurrentProduct")
+  batches   Batch[]
+  slots     Slot[]     @relation("SlotCurrentProduct")
+  schedules Schedule[]
 
   @@index([categoryId])
   @@map("products")
@@ -81,12 +84,48 @@ model Batch {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  inventories  Inventory[]
-  transactions Transaction[]
+  inventories     Inventory[]
+  transactions    Transaction[]
+  schedulesSugg   Schedule[]    @relation("ScheduleSuggestedBatch")
+  schedulesActual Schedule[]    @relation("ScheduleActualBatch")
 
   @@index([productId])
   @@index([expiryDate])
   @@map("batches")
+}
+
+// ===================== Partners (Nhà cung cấp / Khách hàng) =====================
+
+model Supplier {
+  id          String    @id @default(uuid())
+  name        String
+  contactName String?
+  phone       String?
+  email       String?
+  address     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  schedules Schedule[]
+
+  @@map("suppliers")
+}
+
+model Customer {
+  id          String    @id @default(uuid())
+  name        String
+  contactName String?
+  phone       String?
+  email       String?
+  address     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  schedules Schedule[]
+
+  @@map("customers")
 }
 
 // ===================== Warehouse =====================
@@ -160,6 +199,8 @@ model Slot {
   inventories     Inventory[]
   transactionsIn  Transaction[] @relation("SlotTo")
   transactionsOut Transaction[] @relation("SlotFrom")
+  schedulesSugg   Schedule[]    @relation("ScheduleSuggestedSlot")
+  schedulesActual Schedule[]    @relation("ScheduleActualSlot")
 
   @@unique([levelId, code])
   @@index([currentProductId])
@@ -205,7 +246,108 @@ model Transaction {
   note       String?
   createdAt  DateTime        @default(now())
 
+  schedule Schedule?
+
   @@index([batchId])
   @@index([type])
   @@map("transactions")
+}
+
+// ===================== Scheduling (Đặt lịch nhập/xuất) =====================
+
+enum ScheduleType {
+  INBOUND
+  OUTBOUND
+}
+
+enum ScheduleStatus {
+  PENDING // Chờ thực hiện
+  IN_PROGRESS // Đang thực hiện
+  COMPLETED // Hoàn thành
+  CANCELLED // Đã hủy
+}
+
+// Cách vị trí lưu (nhập) hoặc lấy hàng (xuất) cuối cùng được xác định.
+enum AllocationMethod {
+  SMART_ALLOCATION
+  MANUAL_OVERRIDE
+}
+
+enum SelectionMethod {
+  FEFO
+  MANUAL_OVERRIDE
+}
+
+// Lý do nhân viên tự đổi vị trí so với đề xuất của Smart WMS.
+enum ScheduleOverrideReason {
+  SLOT_MAINTENANCE // Slot đang bảo trì
+  SLOT_FULL // Slot đã đầy
+  FORKLIFT_UNAVAILABLE // Xe nâng không thể tiếp cận
+  MANAGEMENT_REQUEST // Theo yêu cầu quản lý
+  OTHER // Khác (dùng kèm overrideReasonNote)
+}
+
+model Schedule {
+  id     String         @id @default(uuid())
+  type   ScheduleType
+  status ScheduleStatus @default(PENDING)
+
+  // Ngày + giờ dự kiến nhập/xuất (gộp làm 1 DateTime, FE tách hiển thị Ngày/Giờ riêng)
+  scheduledAt DateTime
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+
+  // Mã lô hàng do người dùng nhập tay khi đặt lịch (không bắt buộc)
+  batchCode String?
+
+  // Nhập kho -> supplier bắt buộc; Xuất kho -> customer bắt buộc (kiểm tra ở tầng service/DTO)
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  note String?
+
+  // ---- Smart Suggestion (snapshot tại thời điểm đặt lịch, chỉ mang tính tham khảo) ----
+  suggestedSlotId   String?
+  suggestedSlot     Slot?    @relation("ScheduleSuggestedSlot", fields: [suggestedSlotId], references: [id])
+  suggestedBatchId  String? // Chỉ dùng cho Outbound: Batch được FEFO đề xuất
+  suggestedBatch    Batch?   @relation("ScheduleSuggestedBatch", fields: [suggestedBatchId], references: [id])
+  suggestionScore   Float? // % độ phù hợp
+  suggestionReasons String[] // Danh sách lý do đề xuất, hiển thị dạng "✓ ..."
+  suggestedAt       DateTime?
+
+  // ---- Kết quả thực tế khi người dùng nhấn "Thực hiện" và xác nhận ----
+  actualSlotId        String?
+  actualSlot          Slot?                   @relation("ScheduleActualSlot", fields: [actualSlotId], references: [id])
+  actualBatchId       String?
+  actualBatch         Batch?                  @relation("ScheduleActualBatch", fields: [actualBatchId], references: [id])
+  allocationMethod    AllocationMethod? // Nhập kho
+  selectionMethod     SelectionMethod? // Xuất kho
+  overrideReason      ScheduleOverrideReason?
+  overrideReasonNote  String? // Khi overrideReason = OTHER
+
+  executedById String?
+  executedBy   User?     @relation("ScheduleExecutedBy", fields: [executedById], references: [id])
+  executedAt   DateTime?
+
+  // Transaction được sinh ra sau khi xác nhận thực hiện (1-1)
+  transactionId String?      @unique
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+
+  createdById String
+  createdBy   User     @relation("ScheduleCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  cancelledAt  DateTime?
+  cancelReason String?
+
+  @@index([type])
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([productId])
+  @@map("schedules")
 }
