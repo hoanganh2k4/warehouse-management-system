@@ -1284,6 +1284,113 @@
   color: var(--danger);
 }
 
+.badge-warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.badge-info {
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+/* ---------- Đặt lịch nhập/xuất: 2 nút + Tab + Chi tiết lịch ---------- */
+
+.schedule-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-schedule {
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: var(--shadow-sm);
+  transition: filter 0.15s, box-shadow 0.15s;
+}
+
+.btn-schedule:hover {
+  filter: brightness(0.96);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-schedule-inbound {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.btn-schedule-outbound {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.tab-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  padding: 0 22px;
+}
+
+.tab-button {
+  border: none;
+  background: none;
+  padding: 12px 6px;
+  margin-bottom: -1px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tab-button + .tab-button {
+  margin-left: 18px;
+}
+
+.tab-button:hover {
+  color: var(--text);
+}
+
+.tab-button.active {
+  color: var(--accent-strong);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.dialog-box-wide {
+  max-width: 560px;
+}
+
+.schedule-detail-grid {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  row-gap: 10px;
+  column-gap: 14px;
+  margin: 4px 0 20px;
+  font-size: 0.88rem;
+}
+
+.schedule-detail-label {
+  color: var(--text-faint);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  align-self: start;
+  padding-top: 1px;
+}
+
 .racking-pagination {
   display: flex;
   align-items: center;
@@ -1928,4 +2035,115 @@
 .has-tooltip:focus-visible::after {
   opacity: 1;
   visibility: visible;
+}
+
+/* ---------- Đặt lịch nhập/xuất: Modal form 2 cột + Smart Suggestion Card ---------- */
+
+.schedule-modal-form {
+  max-width: none;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.smart-card {
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-md, var(--radius-sm));
+  background: var(--surface-subtle, #f8fafc);
+  padding: 16px;
+  margin: 4px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.smart-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.smart-card-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.smart-card-loading {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted, var(--text));
+}
+
+.smart-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.85rem;
+}
+
+.smart-card-label {
+  color: var(--text-muted, var(--text));
+}
+
+.smart-card-value {
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+}
+
+.smart-card-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.smart-card-reasons ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.smart-card-note {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-muted, var(--text));
+  border-top: 1px dashed var(--border, #e2e8f0);
+  padding-top: 8px;
+}
+
+.smart-card-warning {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--warning);
+}
+
+.schedule-location-transition .smart-card-value {
+  font-weight: 500;
+}
+
+.schedule-override-note {
+  border-top: none;
+  padding-top: 0;
+  color: var(--info);
+}
+
+.schedule-actual-batch-row {
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .form-row,
+  .schedule-actual-batch-row {
+    grid-template-columns: 1fr;
+  }
 }
