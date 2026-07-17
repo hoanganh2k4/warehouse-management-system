@@ -49,8 +49,8 @@ export default function CategoryList() {
 
       <div className="page-header">
         <div>
-          <p className="eyebrow">Catalog</p>
-          <h1>Categories</h1>
+          <p className="eyebrow">Danh mục</p>
+          <h1>Danh mục sản phẩm</h1>
           <p className="page-desc">Quản lý danh mục sản phẩm dùng trong toàn bộ kho.</p>
         </div>
 
@@ -63,13 +63,13 @@ export default function CategoryList() {
 
       <div className="stat-row">
         <StatCard
-          label="Total categories"
+          label="Tổng số danh mục"
           value={loading ? '—' : String(items.length)}
           hint="Danh mục đang có"
           icon={<TagIcon />}
         />
         <StatCard
-          label="Products tagged"
+          label="Sản phẩm đã gán"
           value={loading ? '—' : String(totalProducts)}
           hint="Tổng số sản phẩm đã gán danh mục"
           icon={<BoxIcon />}
@@ -78,7 +78,7 @@ export default function CategoryList() {
 
       <section className="panel">
         <div className="panel-header">
-          <h2>All categories</h2>
+          <h2>Tất cả danh mục</h2>
           {!loading && !error && <span className="result-count">{items.length} danh mục</span>}
         </div>
         <CategoryTable

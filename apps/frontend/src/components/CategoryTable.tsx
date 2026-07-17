@@ -12,7 +12,7 @@ type CategoryTableProps = {
 
 function formatDate(value: string) {
   try {
-    return new Date(value).toLocaleDateString('en-US', {
+    return new Date(value).toLocaleDateString('vi-VN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

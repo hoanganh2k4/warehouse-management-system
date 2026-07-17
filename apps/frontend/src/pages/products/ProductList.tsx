@@ -68,9 +68,9 @@ export default function ProductList() {
     <main className="app-content">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Catalog</p>
-          <h1>Products</h1>
-          <p className="page-desc">Every SKU seeded into the warehouse system, in one place.</p>
+          <p className="eyebrow">Danh mục</p>
+          <h1>Sản phẩm</h1>
+          <p className="page-desc">Toàn bộ SKU trong hệ thống kho, tập trung một chỗ.</p>
         </div>
 
         <div className="page-header-controls">
@@ -78,10 +78,10 @@ export default function ProductList() {
             <SearchIcon />
             <input
               type="search"
-              placeholder="Search by name or SKU..."
+              placeholder="Tìm theo tên hoặc SKU..."
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
-              aria-label="Search products"
+              aria-label="Tìm sản phẩm"
             />
           </label>
 
@@ -92,7 +92,7 @@ export default function ProductList() {
               setSort(event.target.value as ProductSort);
               setPage(1);
             }}
-            aria-label="Sort products"
+            aria-label="Sắp xếp sản phẩm"
           >
             <option value="name">Tên sản phẩm</option>
             <option value="sku">Mã SKU</option>
@@ -107,37 +107,37 @@ export default function ProductList() {
 
       <div className="stat-row">
         <StatCard
-          label="Total SKUs"
+          label="Tổng số SKU"
           value={loading ? '—' : String(stats.total)}
-          hint="Active products"
+          hint="Sản phẩm đang hoạt động"
           icon={<BoxIcon />}
         />
         <StatCard
-          label="Categories"
+          label="Danh mục"
           value={loading ? '—' : String(stats.categories)}
-          hint="Distinct groupings"
+          hint="Số nhóm khác nhau"
           icon={<TagIcon />}
         />
         <StatCard
-          label="Units of measure"
+          label="Đơn vị tính"
           value={loading ? '—' : String(stats.units)}
-          hint="Across the catalog"
+          hint="Trong toàn bộ danh mục"
           icon={<LayersIcon />}
         />
         <StatCard
-          label="Heavy items"
+          label="Hàng nặng"
           value={loading ? '—' : String(stats.heavy)}
-          hint="Require special handling"
+          hint="Cần xử lý đặc biệt"
           icon={<ScaleIcon />}
         />
       </div>
 
       <section className="panel">
         <div className="panel-header">
-          <h2>All products</h2>
+          <h2>Tất cả sản phẩm</h2>
           {!loading && !error && (
             <span className="result-count">
-              {items.length} of {totalCount}
+              {items.length} / {totalCount}
             </span>
           )}
         </div>

@@ -66,7 +66,7 @@ export default function CategoryCreate() {
 
       <div className="page-header">
         <div>
-          <p className="eyebrow">Catalog</p>
+          <p className="eyebrow">Danh mục</p>
           <h1>Thêm danh mục mới</h1>
           <p className="page-desc">Danh mục dùng để phân loại sản phẩm trong kho.</p>
         </div>

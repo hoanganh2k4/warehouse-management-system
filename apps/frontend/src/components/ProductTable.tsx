@@ -13,7 +13,7 @@ type ProductTableProps = {
 
 function formatDate(value: string) {
   try {
-    return new Date(value).toLocaleDateString('en-US', {
+    return new Date(value).toLocaleDateString('vi-VN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -38,12 +38,12 @@ export function ProductTable({
           <thead>
             <tr>
               <th>SKU</th>
-              <th>Product</th>
-              <th>Category</th>
-              <th>Unit</th>
-              <th>Handling</th>
-              <th>Updated</th>
-              <th>Actions</th>
+              <th>Sản phẩm</th>
+              <th>Danh mục</th>
+              <th>Đơn vị</th>
+              <th>Xử lý</th>
+              <th>Cập nhật</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -68,8 +68,8 @@ export function ProductTable({
     return (
       <div className="state-panel state-error">
         <AlertIcon size={22} />
-        <p className="state-title">Couldn't load the catalog</p>
-        <p className="state-body">{error}. Check that the API is running and try again.</p>
+        <p className="state-title">Không tải được danh mục sản phẩm</p>
+        <p className="state-body">{error}. Kiểm tra API đã chạy chưa rồi thử lại.</p>
       </div>
     );
   }
@@ -78,8 +78,8 @@ export function ProductTable({
     return (
       <div className="state-panel">
         <TagIcon size={22} />
-        <p className="state-title">No products yet</p>
-        <p className="state-body">Seeded products will show up here once the catalog is populated.</p>
+        <p className="state-title">Chưa có sản phẩm nào</p>
+        <p className="state-body">Sản phẩm sẽ hiển thị ở đây sau khi được thêm vào hệ thống.</p>
       </div>
     );
   }
@@ -88,8 +88,8 @@ export function ProductTable({
     return (
       <div className="state-panel">
         <TagIcon size={22} />
-        <p className="state-title">No matches for "{query}"</p>
-        <p className="state-body">Try a different name, SKU or category.</p>
+        <p className="state-title">Không tìm thấy kết quả cho "{query}"</p>
+        <p className="state-body">Thử tên khác, SKU khác hoặc danh mục khác.</p>
       </div>
     );
   }
@@ -100,12 +100,12 @@ export function ProductTable({
         <thead>
           <tr>
             <th>SKU</th>
-            <th>Product</th>
-            <th>Category</th>
-            <th>Unit</th>
-            <th>Handling</th>
-            <th>Updated</th>
-            <th>Actions</th>
+            <th>Sản phẩm</th>
+            <th>Danh mục</th>
+            <th>Đơn vị</th>
+            <th>Xử lý</th>
+            <th>Cập nhật</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -123,10 +123,10 @@ export function ProductTable({
                 {product.isHeavy ? (
                   <span className="badge badge-heavy">
                     <ScaleIcon size={13} />
-                    Heavy
+                    Hàng nặng
                   </span>
                 ) : (
-                  <span className="badge badge-standard">Standard</span>
+                  <span className="badge badge-standard">Tiêu chuẩn</span>
                 )}
               </td>
               <td className="muted-cell">{formatDate(product.updatedAt)}</td>

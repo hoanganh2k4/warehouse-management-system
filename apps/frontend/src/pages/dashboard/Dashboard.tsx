@@ -16,9 +16,9 @@ export default function Dashboard() {
     <main className="app-content dashboard-page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Overview</p>
+          <p className="eyebrow">Tổng quan</p>
           <h1>Dashboard</h1>
-          <p className="page-desc">Snapshot of warehouse activity right now.</p>
+          <p className="page-desc">Toàn cảnh hoạt động kho hàng hiện tại.</p>
         </div>
       </div>
 

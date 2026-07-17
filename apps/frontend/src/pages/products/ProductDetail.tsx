@@ -7,7 +7,7 @@ import { productService } from '../../services/product.service';
 
 function formatDate(value: string) {
   try {
-    return new Date(value).toLocaleDateString('en-US', {
+    return new Date(value).toLocaleDateString('vi-VN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -76,7 +76,7 @@ export default function ProductDetail() {
           <Link to="/products" className="back-link">
             ← Quay lại danh sách
           </Link>
-          <p className="eyebrow">Catalog</p>
+          <p className="eyebrow">Danh mục</p>
           <h1>{product.name}</h1>
           <p className="page-desc">
             <span className="sku-code">{product.skuCode}</span>
@@ -127,10 +127,10 @@ export default function ProductDetail() {
                   {product.isHeavy ? (
                     <span className="badge badge-heavy">
                       <ScaleIcon size={13} />
-                      Heavy
+                      Hàng nặng
                     </span>
                   ) : (
-                    <span className="badge badge-standard">Standard</span>
+                    <span className="badge badge-standard">Tiêu chuẩn</span>
                   )}
                 </td>
               </tr>
@@ -162,7 +162,7 @@ export default function ProductDetail() {
             <table className="product-table">
               <thead>
                 <tr>
-                  <th>Batch Code</th>
+                  <th>Mã lô</th>
                   <th>Ngày sản xuất</th>
                   <th>Ngày hết hạn</th>
                 </tr>
