@@ -5,6 +5,10 @@ import {
   CreateInboundScheduleDto,
   InboundSuggestionPreviewDto,
 } from './dto/inbound-schedule.dto';
+import {
+  CreateOutboundScheduleDto,
+  OutboundSuggestionPreviewDto,
+} from './dto/outbound-schedule.dto';
 import { ScheduleQueryDto } from './dto/schedule-query.dto';
 import {
   CurrentUser,
@@ -33,6 +37,26 @@ const SUGGESTION_EXAMPLE = {
   reasons: [
     '✓ Cùng SKU với hàng đang lưu trong slot.',
     '✓ Đủ sức chứa cho toàn bộ số lượng.',
+  ],
+  splitRequired: false,
+};
+
+const PICKING_SUGGESTION_EXAMPLE = {
+  batchId: 'b1c2d3e4-f5a6-4789-bcde-f01234567890',
+  batchCode: 'AFC-B03',
+  expiryDate: '2026-08-20T00:00:00.000Z',
+  slotId: 'a1b2c3d4-e5f6-4789-bcde-f01234567890',
+  slotPath: 'Zone A / Rack 01 / L05 / S01',
+  availableQuantity: 150,
+  quantityToPick: 150,
+  totalQuantity: 150,
+  priority: 'HIGH',
+  selectionMethod: 'FEFO',
+  reasons: [
+    '✓ Batch có hạn sử dụng gần nhất.',
+    '✓ Đủ số lượng để xuất.',
+    '✓ Tuân thủ nguyên tắc FEFO.',
+    '✓ Vị trí lấy hàng duy nhất, không cần gộp nhiều Slot.',
   ],
   splitRequired: false,
 };
@@ -70,6 +94,33 @@ export class SchedulesController {
     @CurrentUser() user: AuthUser,
   ) {
     return this.service.createInboundSchedule(dto, user);
+  }
+
+  @Post('outbound/preview')
+  @ApiSuccessExample(
+    PICKING_SUGGESTION_EXAMPLE,
+    '200 OK — Smart Picking Suggestion / FEFO (chỉ xem trước, chưa lưu)',
+  )
+  @ApiValidationError()
+  @ApiAuthReadErrors()
+  previewOutbound(@Body() dto: OutboundSuggestionPreviewDto) {
+    return this.service.previewOutboundSuggestion(dto);
+  }
+
+  @Post('outbound')
+  @ApiCreatedExample(
+    {
+      schedule: { id: '...', type: 'OUTBOUND', status: 'PENDING' },
+      suggestion: PICKING_SUGGESTION_EXAMPLE,
+    },
+    '201 Created — Tạo lịch xuất kho (kèm Smart Picking Suggestion)',
+  )
+  @ApiAuthWriteErrors()
+  createOutbound(
+    @Body() dto: CreateOutboundScheduleDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.service.createOutboundSchedule(dto, user);
   }
 
   @Get()

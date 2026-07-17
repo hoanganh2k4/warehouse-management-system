@@ -6,6 +6,8 @@ import {
 } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma.service';
 import { SlotScoringService } from '../common/services/slot-scoring.service';
+import { FefoService } from '../common/services/fefo.service';
+import type { PickLine } from '../common/services/fefo.service';
 import { paginate, skipTake } from '../common/utils/pagination.util';
 import { formatSlotLocation } from '../common/utils/location.util';
 import { AuthUser } from '../common/decorators/current-user.decorator';
@@ -13,6 +15,10 @@ import {
   CreateInboundScheduleDto,
   InboundSuggestionPreviewDto,
 } from './dto/inbound-schedule.dto';
+import {
+  CreateOutboundScheduleDto,
+  OutboundSuggestionPreviewDto,
+} from './dto/outbound-schedule.dto';
 import { ScheduleQueryDto } from './dto/schedule-query.dto';
 
 // Kết quả Smart Location Suggestion dùng chung cho cả preview (chưa lưu) và
@@ -33,11 +39,39 @@ export interface InboundSuggestionResult {
   splitRequired: boolean; // true nếu 1 slot không đủ chứa hết số lượng
 }
 
+// Kết quả Smart Picking Suggestion (FEFO) dùng chung cho preview và lúc tạo
+// lịch xuất (lưu snapshot vào Schedule).
+export interface OutboundSuggestionResult {
+  batchId: string;
+  batchCode: string;
+  expiryDate: Date;
+  slotId: string;
+  slotPath: string;
+  availableQuantity: number;
+  quantityToPick: number;
+  totalQuantity: number;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  selectionMethod: 'FEFO';
+  reasons: string[];
+  splitRequired: boolean; // true nếu cần lấy từ nhiều Batch/Slot mới đủ số lượng
+  pickingList: PickLine[];
+}
+
+// Outbound (FEFO) không có điểm % "Độ phù hợp" hiển thị trên UI, nhưng vẫn
+// lưu một điểm số xấp xỉ vào suggestionScore để đồng bộ cấu trúc dữ liệu
+// với Inbound (Smart Allocation).
+const PRIORITY_SCORE: Record<OutboundSuggestionResult['priority'], number> = {
+  HIGH: 95,
+  MEDIUM: 75,
+  LOW: 50,
+};
+
 @Injectable()
 export class SchedulesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly slotScoring: SlotScoringService,
+    private readonly fefo: FefoService,
   ) {}
 
   // ===================== Smart Location Suggestion (Inbound) =====================
@@ -172,6 +206,126 @@ export class SchedulesService {
         note: dto.note,
         suggestedSlotId: suggestion.slotId,
         suggestionScore: suggestion.score,
+        suggestionReasons: suggestion.reasons,
+        suggestedAt: new Date(),
+        createdById: user.id,
+      },
+      include: scheduleInclude,
+    });
+
+    return { schedule: toScheduleView(schedule), suggestion };
+  }
+
+  // ===================== Smart Picking Suggestion (Outbound / FEFO) =====================
+
+  private async computeOutboundSuggestion(
+    productId: string,
+    quantity: number,
+  ): Promise<OutboundSuggestionResult> {
+    const product = await this.prisma.product.findFirst({
+      where: { id: productId, deletedAt: null },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+
+    let pickingList: PickLine[];
+    try {
+      pickingList = await this.fefo.buildPickingList(productId, quantity);
+    } catch (e) {
+      throw new NotFoundException(
+        e instanceof Error
+          ? e.message
+          : 'Không đủ tồn kho để đề xuất lịch xuất',
+      );
+    }
+
+    // Chỉ hiển thị 1 Batch/Slot chính (đề xuất tốt nhất theo FEFO) trên Card,
+    // đúng theo thiết kế UI — các route còn lại (nếu có) chỉ dùng khi thực hiện.
+    const primary = pickingList[0];
+    const distinctBatchIds = new Set(pickingList.map((l) => l.batchId));
+    const splitRequired = pickingList.length > 1;
+    const splitAcrossBatches = distinctBatchIds.size > 1;
+
+    const availableAgg = await this.prisma.inventory.aggregate({
+      where: { batchId: primary.batchId },
+      _sum: { quantity: true },
+    });
+    const availableQuantity = availableAgg._sum.quantity ?? primary.quantity;
+
+    const reasons: string[] = ['✓ Batch có hạn sử dụng gần nhất.'];
+    if (!splitAcrossBatches) {
+      reasons.push('✓ Đủ số lượng để xuất.');
+    } else {
+      reasons.push(
+        `⚠ Batch này không đủ số lượng, hệ thống sẽ cần dùng thêm ${
+          distinctBatchIds.size - 1
+        } batch khác (vẫn theo FEFO) khi thực hiện.`,
+      );
+    }
+    reasons.push('✓ Tuân thủ nguyên tắc FEFO.');
+    if (!splitRequired)
+      reasons.push('✓ Vị trí lấy hàng duy nhất, không cần gộp nhiều Slot.');
+
+    const priority: OutboundSuggestionResult['priority'] = splitAcrossBatches
+      ? 'LOW'
+      : splitRequired
+        ? 'MEDIUM'
+        : 'HIGH';
+
+    return {
+      batchId: primary.batchId,
+      batchCode: primary.batchCode,
+      expiryDate: primary.expiryDate,
+      slotId: primary.slotId,
+      slotPath: primary.slotPath,
+      availableQuantity,
+      quantityToPick: primary.quantity,
+      totalQuantity: quantity,
+      priority,
+      selectionMethod: 'FEFO',
+      reasons,
+      splitRequired,
+      pickingList,
+    };
+  }
+
+  // Preview: gọi khi người dùng vừa điền xong Sản phẩm/Số lượng trong Modal
+  // "Đặt lịch xuất" — KHÔNG ghi gì vào DB, không giảm Inventory (mục 10-11).
+  async previewOutboundSuggestion(dto: OutboundSuggestionPreviewDto) {
+    return this.computeOutboundSuggestion(dto.productId, dto.quantity);
+  }
+
+  async createOutboundSchedule(
+    dto: CreateOutboundScheduleDto,
+    user: AuthUser,
+  ) {
+    const customer = await this.prisma.customer.findFirst({
+      where: { id: dto.customerId, deletedAt: null },
+    });
+    if (!customer) throw new NotFoundException('Customer not found');
+
+    const scheduledAt = combineDateAndTime(
+      dto.scheduledDate,
+      dto.scheduledTime,
+    );
+
+    const suggestion = await this.computeOutboundSuggestion(
+      dto.productId,
+      dto.quantity,
+    );
+
+    const schedule = await this.prisma.schedule.create({
+      data: {
+        type: ScheduleType.OUTBOUND,
+        status: ScheduleStatus.PENDING,
+        scheduledAt,
+        productId: dto.productId,
+        quantity: dto.quantity,
+        batchCode: dto.batchCode,
+        customerId: dto.customerId,
+        note: dto.note,
+        suggestedSlotId: suggestion.slotId,
+        suggestedBatchId: suggestion.batchId,
+        suggestionScore: PRIORITY_SCORE[suggestion.priority],
         suggestionReasons: suggestion.reasons,
         suggestedAt: new Date(),
         createdById: user.id,
