@@ -153,6 +153,19 @@ export function TagIcon({ size = 18 }: IconProps) {
   );
 }
 
+export function CalendarPlusIcon({ size = 16 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base}>
+      <rect x="3" y="4.5" width="18" height="16" rx="2.2" />
+      <path d="M3 9.5h18" />
+      <path d="M8 2.5v4" />
+      <path d="M16 2.5v4" />
+      <path d="M12 13v6" />
+      <path d="M9 16h6" />
+    </svg>
+  );
+}
+
 export function AlertIcon({ size = 18 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" {...base}>
