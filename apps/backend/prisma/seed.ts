@@ -264,7 +264,7 @@ async function main() {
 
     const usedCapacity = quantity;
     const availableCapacity = slot.maxCapacity - usedCapacity;
-    const occupancyRate = usedCapacity / slot.maxCapacity;
+    const occupancyRate = (usedCapacity / slot.maxCapacity) * 100;
 
     await prisma.slot.update({
       where: { id: slot.id },
@@ -317,7 +317,7 @@ async function main() {
 
     const usedCapacity = newQuantity;
     const availableCapacity = slot.maxCapacity - usedCapacity;
-    const occupancyRate = usedCapacity / slot.maxCapacity;
+    const occupancyRate = (usedCapacity / slot.maxCapacity) * 100;
     await prisma.slot.update({
       where: { id: slot.id },
       data: { usedCapacity, availableCapacity, occupancyRate },
