@@ -51,9 +51,6 @@ export function SlotDetailDialog({
           <div className="warehouse-map-popup-progress-row">
             <div className="capacity-progress-top">
               <CapacityBar percent={slot.occupancyRate} tier={tier} tooltip={slotTooltip} size="sm" />
-              <span className="capacity-progress-percent capacity-progress-percent--sm">
-                {Math.round(slot.occupancyRate)}%
-              </span>
             </div>
           </div>
           <div>
