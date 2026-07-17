@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import {
   Prisma,
   Schedule,
@@ -304,10 +308,7 @@ export class SchedulesService {
     return this.computeOutboundSuggestion(dto.productId, dto.quantity);
   }
 
-  async createOutboundSchedule(
-    dto: CreateOutboundScheduleDto,
-    user: AuthUser,
-  ) {
+  async createOutboundSchedule(dto: CreateOutboundScheduleDto, user: AuthUser) {
     const customer = await this.prisma.customer.findFirst({
       where: { id: dto.customerId, deletedAt: null },
     });
@@ -407,7 +408,10 @@ export class SchedulesService {
   async executeSchedule(id: string, dto: ExecuteScheduleDto, user: AuthUser) {
     const schedule = await this.getPendingScheduleOrThrow(id);
 
-    if (dto.override?.reason === ScheduleOverrideReason.OTHER && !dto.override.reasonNote) {
+    if (
+      dto.override?.reason === ScheduleOverrideReason.OTHER &&
+      !dto.override.reasonNote
+    ) {
       throw new BadRequestException('Vui lòng nhập lý do khi chọn "Khác"');
     }
 
@@ -454,7 +458,10 @@ export class SchedulesService {
         schedule.quantity,
         expiryProxy,
       );
-      if (allocations.length === 0 || allocations[0].allocateQty < schedule.quantity) {
+      if (
+        allocations.length === 0 ||
+        allocations[0].allocateQty < schedule.quantity
+      ) {
         throw new BadRequestException(
           'Không tìm được 1 Slot đủ sức chứa toàn bộ số lượng. Vui lòng dùng chức năng "Thay đổi vị trí" để chọn thủ công.',
         );
@@ -556,7 +563,10 @@ export class SchedulesService {
       const inv = dto.override.batchId
         ? await this.prisma.inventory.findUnique({
             where: {
-              batchId_slotId: { batchId: dto.override.batchId, slotId: slot.id },
+              batchId_slotId: {
+                batchId: dto.override.batchId,
+                slotId: slot.id,
+              },
             },
             include: { batch: { include: { product: true } } },
           })
@@ -693,7 +703,8 @@ export class SchedulesService {
     const scheduledAt =
       dto.scheduledDate || dto.scheduledTime
         ? combineDateAndTime(
-            dto.scheduledDate ?? schedule.scheduledAt.toISOString().slice(0, 10),
+            dto.scheduledDate ??
+              schedule.scheduledAt.toISOString().slice(0, 10),
             dto.scheduledTime ??
               schedule.scheduledAt.toISOString().slice(11, 16),
           )
