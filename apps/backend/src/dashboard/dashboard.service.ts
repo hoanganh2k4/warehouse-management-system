@@ -70,4 +70,46 @@ export class DashboardService {
       outboundToday: outboundToday._sum.quantity ?? 0,
     };
   }
+
+  /**
+   * Tổng hợp số lượng nhập/xuất theo từng ngày trong N ngày gần nhất
+   * để vẽ chart tổng quan trên Dashboard (chỉ Quản lý xem được).
+   */
+  async getChart(days = 14) {
+    const safeDays = Math.min(Math.max(days, 1), 90);
+
+    const end = new Date();
+    end.setHours(0, 0, 0, 0);
+    end.setDate(end.getDate() + 1); // hết ngày hôm nay
+    const start = new Date(end);
+    start.setDate(start.getDate() - safeDays);
+
+    const transactions = await this.prisma.transaction.findMany({
+      where: { createdAt: { gte: start, lt: end } },
+      select: { type: true, quantity: true, createdAt: true },
+    });
+
+    // Khởi tạo từng ngày trong khoảng để chart không bị thiếu ngày trống
+    const buckets = new Map<string, { inbound: number; outbound: number }>();
+    for (let i = 0; i < safeDays; i++) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      buckets.set(d.toISOString().slice(0, 10), { inbound: 0, outbound: 0 });
+    }
+
+    for (const tx of transactions) {
+      const key = tx.createdAt.toISOString().slice(0, 10);
+      const bucket = buckets.get(key);
+      if (!bucket) continue;
+      if (tx.type === TransactionType.IMPORT) bucket.inbound += tx.quantity;
+      else if (tx.type === TransactionType.EXPORT)
+        bucket.outbound += tx.quantity;
+    }
+
+    return Array.from(buckets.entries()).map(([date, v]) => ({
+      date,
+      inbound: v.inbound,
+      outbound: v.outbound,
+    }));
+  }
 }

@@ -429,6 +429,14 @@ export const SUCCESS_EXAMPLES = {
       outboundToday: 50,
     },
   },
+  dashboardChart: {
+    success: true,
+    data: [
+      { date: '2026-07-10', inbound: 120, outbound: 80 },
+      { date: '2026-07-11', inbound: 60, outbound: 45 },
+      { date: '2026-07-12', inbound: 0, outbound: 0 },
+    ],
+  },
   reportInventory: {
     success: true,
     data: {

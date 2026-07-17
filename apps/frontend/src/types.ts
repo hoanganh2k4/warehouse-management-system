@@ -106,6 +106,12 @@ export type DashboardSummary = {
   outboundToday: number;
 };
 
+export type DashboardChartPoint = {
+  date: string;
+  inbound: number;
+  outbound: number;
+};
+
 export type InventoryItem = {
   id: string;
   batchId: string;

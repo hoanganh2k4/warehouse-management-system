@@ -123,7 +123,7 @@ export function ProductEdit() {
           <Link to={`/products/${id}`} className="back-link">
             ← Quay lại chi tiết
           </Link>
-          <p className="eyebrow">Catalog</p>
+          <p className="eyebrow">Danh mục</p>
           <h1>Sửa sản phẩm</h1>
         </div>
       </div>

@@ -93,7 +93,7 @@ export default function ProductCreate() {
 
       <div className="page-header">
         <div>
-          <p className="eyebrow">Catalog</p>
+          <p className="eyebrow">Danh mục</p>
           <h1>Thêm sản phẩm mới</h1>
           <p className="page-desc">Điền thông tin sản phẩm để thêm vào kho.</p>
         </div>

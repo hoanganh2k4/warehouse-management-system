@@ -110,7 +110,7 @@ export default function CategoryEdit() {
           <Link to="/categories" className="back-link">
             ← Quay lại danh sách
           </Link>
-          <p className="eyebrow">Catalog</p>
+          <p className="eyebrow">Danh mục</p>
           <h1>Sửa danh mục</h1>
         </div>
       </div>
