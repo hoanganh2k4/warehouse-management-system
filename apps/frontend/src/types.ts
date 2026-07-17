@@ -309,3 +309,209 @@ export type GetTransactionsParams = {
   page?: number;
   limit?: number;
 };
+
+// ---------- Đặt lịch nhập / xuất (Tab "Lịch nhập / xuất") ----------
+
+export type ScheduleType = 'INBOUND' | 'OUTBOUND';
+
+export type ScheduleStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
+export type ScheduleSuggestion = {
+  slotPath: string | null;
+  score: number | null;
+  reasons: string[];
+  batchCode: string | null;
+  suggestedAt: string | null;
+} | null;
+
+export type ScheduleActual = {
+  slotPath: string | null;
+  batchCode: string | null;
+  allocationMethod: string | null;
+  selectionMethod: string | null;
+  overrideReason: string | null;
+  overrideReasonNote: string | null;
+} | null;
+
+export type Schedule = {
+  id: string;
+  type: ScheduleType;
+  status: ScheduleStatus;
+  scheduledDate: string;
+  scheduledTime: string;
+  product: { id: string; skuCode: string; name: string } | null;
+  quantity: number;
+  batchCode: string | null;
+  supplier: { id: string; name: string } | null;
+  customer: { id: string; name: string } | null;
+  partnerName: string | null;
+  note: string | null;
+  suggestion: ScheduleSuggestion;
+  actual: ScheduleActual;
+  executedBy: string | null;
+  executedAt: string | null;
+  transactionId: string | null;
+  createdBy: string | null;
+  createdAt: string;
+  cancelledAt: string | null;
+  cancelReason: string | null;
+};
+
+export type GetSchedulesParams = {
+  type?: ScheduleType;
+  status?: ScheduleStatus;
+  productId?: string;
+  page?: number;
+  limit?: number;
+};
+
+// ---------- Nhà cung cấp / Khách hàng ----------
+
+export type Supplier = {
+  id: string;
+  name: string;
+  contactName: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Customer = {
+  id: string;
+  name: string;
+  contactName: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// ---------- Smart Location Suggestion (Đặt lịch nhập) ----------
+
+export type SchedulePriority = 'HIGH' | 'MEDIUM' | 'LOW';
+
+export type InboundSuggestionResult = {
+  slotId: string;
+  zoneCode: string;
+  rackCode: string;
+  levelNumber: number;
+  slotCode: string;
+  slotPath: string;
+  capacityBefore: number;
+  capacityAfter: number;
+  maxCapacity: number;
+  score: number;
+  priority: SchedulePriority;
+  reasons: string[];
+  splitRequired: boolean;
+};
+
+export type InboundSuggestionPreviewPayload = {
+  productId: string;
+  quantity: number;
+  scheduledDate: string;
+};
+
+export type CreateInboundSchedulePayload = {
+  scheduledDate: string;
+  scheduledTime: string;
+  supplierId: string;
+  productId: string;
+  quantity: number;
+  batchCode?: string;
+  note?: string;
+};
+
+export type CreateInboundScheduleResult = {
+  schedule: Schedule;
+  suggestion: InboundSuggestionResult;
+};
+
+// ---------- Smart Picking Suggestion / FEFO (Đặt lịch xuất) ----------
+
+export type OutboundSuggestionResult = {
+  batchId: string;
+  batchCode: string;
+  expiryDate: string;
+  slotId: string;
+  slotPath: string;
+  availableQuantity: number;
+  quantityToPick: number;
+  totalQuantity: number;
+  priority: SchedulePriority;
+  selectionMethod: 'FEFO';
+  reasons: string[];
+  splitRequired: boolean;
+};
+
+export type OutboundSuggestionPreviewPayload = {
+  productId: string;
+  quantity: number;
+};
+
+export type CreateOutboundSchedulePayload = {
+  scheduledDate: string;
+  scheduledTime: string;
+  customerId: string;
+  productId: string;
+  quantity: number;
+  batchCode?: string;
+  note?: string;
+};
+
+export type CreateOutboundScheduleResult = {
+  schedule: Schedule;
+  suggestion: OutboundSuggestionResult;
+};
+
+// ---------- Sửa lịch ----------
+
+export type UpdateSchedulePayload = {
+  scheduledDate?: string;
+  scheduledTime?: string;
+  supplierId?: string;
+  customerId?: string;
+  productId?: string;
+  quantity?: number;
+  batchCode?: string;
+  note?: string;
+};
+
+// ---------- Thực hiện lịch (Execute) ----------
+
+export type ExecutePreviewResult = {
+  scheduleId: string;
+  type: ScheduleType;
+  previousSuggestedSlotId: string | null;
+  recommended: InboundSuggestionResult | OutboundSuggestionResult;
+  isSameAsSuggested: boolean;
+};
+
+export type ScheduleOverrideReasonCode =
+  | 'SLOT_MAINTENANCE'
+  | 'SLOT_FULL'
+  | 'FORKLIFT_UNAVAILABLE'
+  | 'MANAGEMENT_REQUEST'
+  | 'OTHER';
+
+export type OverrideLocationPayload = {
+  slotId: string;
+  batchId?: string;
+  reason: ScheduleOverrideReasonCode;
+  reasonNote?: string;
+};
+
+export type ExecuteSchedulePayload = {
+  override?: OverrideLocationPayload;
+  actualBatchCode?: string;
+  manufactureDate?: string;
+  expiryDate?: string;
+};
+
+export type ExecuteScheduleResult = {
+  schedule: Schedule;
+  transactions: Array<{ id: string; type: TransactionType }>;
+};
