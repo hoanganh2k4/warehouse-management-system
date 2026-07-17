@@ -17,7 +17,10 @@ export class DashboardController {
 
   @Get('summary')
   @Roles(MANAGER_ROLE)
-  @ApiSuccessExample(SUCCESS_EXAMPLES.dashboard, '200 OK — Tổng quan KPI (chỉ Quản lý)')
+  @ApiSuccessExample(
+    SUCCESS_EXAMPLES.dashboard,
+    '200 OK — Tổng quan KPI (chỉ Quản lý)',
+  )
   @ApiAuthReadErrors()
   summary() {
     return this.service.getSummary();

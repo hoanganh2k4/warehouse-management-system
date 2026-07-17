@@ -102,7 +102,8 @@ export class DashboardService {
       const bucket = buckets.get(key);
       if (!bucket) continue;
       if (tx.type === TransactionType.IMPORT) bucket.inbound += tx.quantity;
-      else if (tx.type === TransactionType.EXPORT) bucket.outbound += tx.quantity;
+      else if (tx.type === TransactionType.EXPORT)
+        bucket.outbound += tx.quantity;
     }
 
     return Array.from(buckets.entries()).map(([date, v]) => ({
