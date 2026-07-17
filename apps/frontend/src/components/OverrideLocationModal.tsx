@@ -55,7 +55,7 @@ export function OverrideLocationModal({ onClose, onSave, saving }: OverrideLocat
       setSlotId('');
       setSlots([]);
       if (!levelId) return;
-      slotService.getAll({ levelId, page: 1, limit: 200 }).then((result) => setSlots(result.items));
+      slotService.getAll({ levelId, page: 1, limit: 100 }).then((result) => setSlots(result.items));
     }
     resetSlot();
   }, [levelId]);

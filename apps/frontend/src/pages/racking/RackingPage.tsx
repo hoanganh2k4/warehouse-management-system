@@ -176,7 +176,7 @@ export default function RackingPage() {
       .then(async (levels) => {
         const sortedLevels = [...levels].sort((a, b) => b.levelNumber - a.levelNumber);
         const slotsByLevel = await Promise.all(
-          sortedLevels.map((level) => slotService.getAll({ levelId: level.id, limit: 200 })),
+          sortedLevels.map((level) => slotService.getAll({ levelId: level.id, limit: 100 })),
         );
         setGridRows(
           sortedLevels.map((level, index) => ({ level, slots: slotsByLevel[index].items })),
@@ -204,7 +204,7 @@ export default function RackingPage() {
       .then(async (levels) => {
         const sortedLevels = [...levels].sort((a, b) => b.levelNumber - a.levelNumber);
         const slotsByLevel = await Promise.all(
-          sortedLevels.map((level) => slotService.getAll({ levelId: level.id, limit: 200 })),
+          sortedLevels.map((level) => slotService.getAll({ levelId: level.id, limit: 100 })),
         );
         if (cancelled) return;
         setGridRows(
