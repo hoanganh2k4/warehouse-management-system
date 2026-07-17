@@ -27,8 +27,8 @@ export class CategoriesService {
   }
 
   async create(dto: CreateCategoryDto) {
-    const exists = await this.prisma.category.findUnique({
-      where: { name: dto.name },
+    const exists = await this.prisma.category.findFirst({
+      where: { name: { equals: dto.name, mode: 'insensitive' } },
     });
     if (exists) throw new ConflictException('Category name already exists');
     return this.prisma.category.create({ data: dto });
@@ -38,8 +38,8 @@ export class CategoriesService {
     await this.findOne(id);
 
     if (dto.name) {
-      const exists = await this.prisma.category.findUnique({
-        where: { name: dto.name },
+      const exists = await this.prisma.category.findFirst({
+        where: { name: { equals: dto.name, mode: 'insensitive' } },
       });
       if (exists && exists.id !== id) {
         throw new ConflictException('Category name already exists');
