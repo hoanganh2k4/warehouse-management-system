@@ -182,7 +182,12 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  width: 100%;
   flex-shrink: 0;
+}
+
+.topbar-actions > .docs-link:first-child {
+  margin-right: auto;
 }
 
 .docs-link {
@@ -1848,10 +1853,18 @@
 /* Hàng Progress Bar riêng trong popup chi tiết Slot */
 .warehouse-map-popup-progress-row {
   display: block !important;
+  width: 100%;
+  align-self: stretch;
 }
 
 .warehouse-map-popup-progress-row .capacity-progress-top {
   width: 100%;
+  min-width: 0;
+}
+
+.warehouse-map-popup-progress-row .capacity-progress-track {
+  width: 100%;
+  min-width: 0;
 }
 
 /* Badge trạng thái Slot (Trống / Đầy) cạnh tiêu đề popup */
@@ -1881,6 +1894,10 @@
 .has-tooltip {
   position: relative;
   cursor: default;
+}
+
+.capacity-progress-track.has-tooltip {
+  overflow: visible;
 }
 
 .has-tooltip::after {
