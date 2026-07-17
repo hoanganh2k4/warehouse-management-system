@@ -4,14 +4,18 @@ import type { DashboardChartPoint } from '../types';
 
 export function useDashboardChart(days = 14) {
   const [data, setData] = useState<DashboardChartPoint[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  // Đánh dấu key của lần fetch đã hoàn thành gần nhất, dùng để "suy ra" loading
+  // thay vì gọi setLoading(true) đồng bộ trong effect (tránh cascading renders).
+  const [resolvedKey, setResolvedKey] = useState<string | null>(null);
+
+  const requestKey = `${days}-${reloadToken}`;
+  const loading = requestKey !== resolvedKey;
 
   useEffect(() => {
     let cancelled = false;
 
-    setLoading(true);
     dashboardService
       .getChart(days)
       .then((result) => {
@@ -24,13 +28,13 @@ export function useDashboardChart(days = 14) {
         setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setResolvedKey(requestKey);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [days, reloadToken]);
+  }, [days, reloadToken, requestKey]);
 
   function refetch() {
     setReloadToken((t) => t + 1);
