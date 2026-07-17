@@ -23,6 +23,7 @@ import { SearchModule } from './search/search.module';
 import { UsersModule } from './users/users.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { CustomersModule } from './customers/customers.module';
+import { SchedulesModule } from './schedules/schedules.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { CustomersModule } from './customers/customers.module';
     UsersModule,
     SuppliersModule,
     CustomersModule,
+    SchedulesModule,
   ],
   controllers: [HealthController],
   providers: [
