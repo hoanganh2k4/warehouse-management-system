@@ -1,11 +1,26 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { SchedulesService } from './schedules.service';
 import {
   CreateInboundScheduleDto,
   InboundSuggestionPreviewDto,
 } from './dto/inbound-schedule.dto';
+import {
+  CreateOutboundScheduleDto,
+  OutboundSuggestionPreviewDto,
+} from './dto/outbound-schedule.dto';
 import { ScheduleQueryDto } from './dto/schedule-query.dto';
+import { ExecuteScheduleDto } from './dto/execute-schedule.dto';
+import { CancelScheduleDto } from './dto/cancel-schedule.dto';
+import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import {
   CurrentUser,
   AuthUser,
@@ -33,6 +48,26 @@ const SUGGESTION_EXAMPLE = {
   reasons: [
     '✓ Cùng SKU với hàng đang lưu trong slot.',
     '✓ Đủ sức chứa cho toàn bộ số lượng.',
+  ],
+  splitRequired: false,
+};
+
+const PICKING_SUGGESTION_EXAMPLE = {
+  batchId: 'b1c2d3e4-f5a6-4789-bcde-f01234567890',
+  batchCode: 'AFC-B03',
+  expiryDate: '2026-08-20T00:00:00.000Z',
+  slotId: 'a1b2c3d4-e5f6-4789-bcde-f01234567890',
+  slotPath: 'Zone A / Rack 01 / L05 / S01',
+  availableQuantity: 150,
+  quantityToPick: 150,
+  totalQuantity: 150,
+  priority: 'HIGH',
+  selectionMethod: 'FEFO',
+  reasons: [
+    '✓ Batch có hạn sử dụng gần nhất.',
+    '✓ Đủ số lượng để xuất.',
+    '✓ Tuân thủ nguyên tắc FEFO.',
+    '✓ Vị trí lấy hàng duy nhất, không cần gộp nhiều Slot.',
   ],
   splitRequired: false,
 };
@@ -72,6 +107,33 @@ export class SchedulesController {
     return this.service.createInboundSchedule(dto, user);
   }
 
+  @Post('outbound/preview')
+  @ApiSuccessExample(
+    PICKING_SUGGESTION_EXAMPLE,
+    '200 OK — Smart Picking Suggestion / FEFO (chỉ xem trước, chưa lưu)',
+  )
+  @ApiValidationError()
+  @ApiAuthReadErrors()
+  previewOutbound(@Body() dto: OutboundSuggestionPreviewDto) {
+    return this.service.previewOutboundSuggestion(dto);
+  }
+
+  @Post('outbound')
+  @ApiCreatedExample(
+    {
+      schedule: { id: '...', type: 'OUTBOUND', status: 'PENDING' },
+      suggestion: PICKING_SUGGESTION_EXAMPLE,
+    },
+    '201 Created — Tạo lịch xuất kho (kèm Smart Picking Suggestion)',
+  )
+  @ApiAuthWriteErrors()
+  createOutbound(
+    @Body() dto: CreateOutboundScheduleDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.service.createOutboundSchedule(dto, user);
+  }
+
   @Get()
   @ApiSuccessExample(
     { items: [], meta: { page: 1, limit: 20, total: 0, totalPages: 0 } },
@@ -88,5 +150,58 @@ export class SchedulesController {
   @ApiAuthReadErrors()
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
+  }
+
+  @Post(':id/execute/preview')
+  @ApiSuccessExample(
+    {
+      scheduleId: '...',
+      type: 'INBOUND',
+      previousSuggestedSlotId: '...',
+      recommended: SUGGESTION_EXAMPLE,
+      isSameAsSuggested: true,
+    },
+    '200 OK — Chạy lại thuật toán, dùng cho Dialog xác nhận vị trí thực tế (chưa lưu)',
+  )
+  @ApiAuthReadErrors()
+  previewExecute(@Param('id') id: string) {
+    return this.service.previewExecute(id);
+  }
+
+  @Post(':id/execute')
+  @ApiSuccessExample(
+    {
+      schedule: { id: '...', status: 'COMPLETED' },
+      transactions: [{ id: '...', type: 'IMPORT' }],
+    },
+    '200 OK — Xác nhận thực hiện lịch (cập nhật Inventory, Progress Bar, sinh Transaction)',
+  )
+  @ApiAuthWriteErrors()
+  execute(
+    @Param('id') id: string,
+    @Body() dto: ExecuteScheduleDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.service.executeSchedule(id, dto, user);
+  }
+
+  @Patch(':id/cancel')
+  @ApiSuccessExample(
+    { id: '...', status: 'CANCELLED' },
+    '200 OK — Hủy lịch (chỉ áp dụng cho lịch đang "Chờ thực hiện")',
+  )
+  @ApiAuthWriteErrors()
+  cancel(@Param('id') id: string, @Body() dto: CancelScheduleDto) {
+    return this.service.cancelSchedule(id, dto);
+  }
+
+  @Patch(':id')
+  @ApiSuccessExample(
+    { id: '...', status: 'PENDING' },
+    '200 OK — Sửa lịch (chỉ áp dụng cho lịch đang "Chờ thực hiện", tự chạy lại Smart Suggestion)',
+  )
+  @ApiAuthWriteErrors()
+  update(@Param('id') id: string, @Body() dto: UpdateScheduleDto) {
+    return this.service.updateSchedule(id, dto);
   }
 }
