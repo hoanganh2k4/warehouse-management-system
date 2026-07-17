@@ -294,10 +294,7 @@ export class SchedulesService {
     return this.computeOutboundSuggestion(dto.productId, dto.quantity);
   }
 
-  async createOutboundSchedule(
-    dto: CreateOutboundScheduleDto,
-    user: AuthUser,
-  ) {
+  async createOutboundSchedule(dto: CreateOutboundScheduleDto, user: AuthUser) {
     const customer = await this.prisma.customer.findFirst({
       where: { id: dto.customerId, deletedAt: null },
     });
