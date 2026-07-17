@@ -13,7 +13,7 @@ export function useCustomers(enabled: boolean = true) {
     function fetchCustomers() {
       setLoading(true);
       customerService
-        .getCustomers({ page: 1, limit: 200 })
+        .getCustomers({ page: 1, limit: 100 })
         .then((result) => {
           if (!cancelled) setItems(result.items);
         })

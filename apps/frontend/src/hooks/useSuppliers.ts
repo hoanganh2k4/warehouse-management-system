@@ -13,7 +13,7 @@ export function useSuppliers(enabled: boolean = true) {
     function fetchSuppliers() {
       setLoading(true);
       supplierService
-        .getSuppliers({ page: 1, limit: 200 })
+        .getSuppliers({ page: 1, limit: 100 })
         .then((result) => {
           if (!cancelled) setItems(result.items);
         })

@@ -50,7 +50,7 @@ export function OutboundScheduleModal({ onClose, onCreated }: OutboundScheduleMo
   useEffect(() => {
     let cancelled = false;
     productService
-      .getProducts({ page: 1, limit: 200 })
+      .getProducts({ page: 1, limit: 100 })
       .then((result) => {
         if (!cancelled) setProducts(result.items);
       })
