@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { SchedulesService } from './schedules.service';
 import {
@@ -10,6 +18,9 @@ import {
   OutboundSuggestionPreviewDto,
 } from './dto/outbound-schedule.dto';
 import { ScheduleQueryDto } from './dto/schedule-query.dto';
+import { ExecuteScheduleDto } from './dto/execute-schedule.dto';
+import { CancelScheduleDto } from './dto/cancel-schedule.dto';
+import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import {
   CurrentUser,
   AuthUser,
@@ -139,5 +150,58 @@ export class SchedulesController {
   @ApiAuthReadErrors()
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
+  }
+
+  @Post(':id/execute/preview')
+  @ApiSuccessExample(
+    {
+      scheduleId: '...',
+      type: 'INBOUND',
+      previousSuggestedSlotId: '...',
+      recommended: SUGGESTION_EXAMPLE,
+      isSameAsSuggested: true,
+    },
+    '200 OK — Chạy lại thuật toán, dùng cho Dialog xác nhận vị trí thực tế (chưa lưu)',
+  )
+  @ApiAuthReadErrors()
+  previewExecute(@Param('id') id: string) {
+    return this.service.previewExecute(id);
+  }
+
+  @Post(':id/execute')
+  @ApiSuccessExample(
+    {
+      schedule: { id: '...', status: 'COMPLETED' },
+      transactions: [{ id: '...', type: 'IMPORT' }],
+    },
+    '200 OK — Xác nhận thực hiện lịch (cập nhật Inventory, Progress Bar, sinh Transaction)',
+  )
+  @ApiAuthWriteErrors()
+  execute(
+    @Param('id') id: string,
+    @Body() dto: ExecuteScheduleDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.service.executeSchedule(id, dto, user);
+  }
+
+  @Patch(':id/cancel')
+  @ApiSuccessExample(
+    { id: '...', status: 'CANCELLED' },
+    '200 OK — Hủy lịch (chỉ áp dụng cho lịch đang "Chờ thực hiện")',
+  )
+  @ApiAuthWriteErrors()
+  cancel(@Param('id') id: string, @Body() dto: CancelScheduleDto) {
+    return this.service.cancelSchedule(id, dto);
+  }
+
+  @Patch(':id')
+  @ApiSuccessExample(
+    { id: '...', status: 'PENDING' },
+    '200 OK — Sửa lịch (chỉ áp dụng cho lịch đang "Chờ thực hiện", tự chạy lại Smart Suggestion)',
+  )
+  @ApiAuthWriteErrors()
+  update(@Param('id') id: string, @Body() dto: UpdateScheduleDto) {
+    return this.service.updateSchedule(id, dto);
   }
 }
