@@ -2050,9 +2050,9 @@
 }
 
 .smart-card {
-  border: 1px solid var(--border, #e2e8f0);
+  /* border: 1px solid var(--border, #e2e8f0); */
   border-radius: var(--radius-md, var(--radius-sm));
-  background: var(--surface-subtle, #f8fafc);
+  /* background: var(--surface-subtle, #f8fafc); */
   padding: 16px;
   margin: 4px 0 16px;
   display: flex;
