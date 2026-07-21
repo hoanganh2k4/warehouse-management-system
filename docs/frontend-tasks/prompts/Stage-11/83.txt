@@ -1,0 +1,58 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần THÊM 1 BẢNG MỚI + 1 ENUM MỚI vào schema.prisma để hỗ
+trợ lưu NHIỀU vị trí (slot) / NHIỀU lô (batch) cho 1 lịch nhập/xuất, KHÔNG được xoá hay đổi field nào đang
+có trên các model liên quan.
+
+BỐI CẢNH:
+Dự án Warehouse Management System, backend NestJS + Prisma. Model `Schedule` hiện chỉ có 1
+`suggestedSlotId`/`actualSlotId` (single slot), nhưng khi số lượng nhập/xuất lớn, cần chia hàng vào nhiều
+slot khác nhau. Cần thêm bảng quan hệ 1-n để lưu danh sách đầy đủ các vị trí/lô được gợi ý hoặc thực hiện
+thực tế cho 1 lịch, mà KHÔNG xoá field `suggestedSlotId`/`actualSlotId`/`suggestedBatchId`/`actualBatchId`
+hiện có (giữ lại làm "vị trí chính", bảng mới lưu toàn bộ danh sách).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Thêm enum `AllocationKind` gồm 2 giá trị: `SUGGESTED`, `ACTUAL`.
+2. Thêm model `ScheduleAllocation` với các field:
+   - id (uuid, primary key)
+   - scheduleId (String, FK tới Schedule, onDelete: Cascade)
+   - kind (AllocationKind)
+   - slotId (String, FK tới Slot, bắt buộc)
+   - batchId (String?, FK tới Batch, optional vì lúc gợi ý Inbound có thể chưa có batch thật)
+   - quantity (Int)
+   - sortOrder (Int, default 0) — thứ tự ưu tiên hiển thị
+   - createdAt (DateTime, default now())
+   - index trên (scheduleId, kind)
+   - map tên bảng SQL là "schedule_allocations"
+3. Thêm relation `allocations ScheduleAllocation[]` vào model `Schedule`.
+4. Thêm relation ngược `scheduleAllocations ScheduleAllocation[]` vào model `Slot` VÀ model `Batch` (Prisma
+   bắt buộc phải có đủ 2 chiều quan hệ, nếu không sẽ lỗi validate).
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG xoá/đổi field nào đang tồn tại trên `Schedule`, `Slot`, `Batch`.
+- `batchId` PHẢI optional (`String?`).
+- Quan hệ `scheduleId -> Schedule` PHẢI có `onDelete: Cascade`.
+- KHÔNG chạy migration, KHÔNG tạo file trong prisma/migrations/.
+- KHÔNG đụng vào bất kỳ file `.ts` nào trong apps/backend/src.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/prisma/schema.prisma
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- Toàn bộ apps/backend/src/**
+- apps/backend/prisma/migrations/**
+
+YÊU CẦU ĐẦU RA:
+Trả về: (1) đoạn enum mới, (2) đoạn model `ScheduleAllocation` mới đầy đủ, (3) model `Schedule` sau khi
+thêm 1 dòng relation `allocations`, (4) model `Slot` sau khi thêm relation ngược, (5) model `Batch` sau khi
+thêm relation ngược — cả 3 model (3)(4)(5) trả về ĐẦY ĐỦ nội dung (không rút gọn bằng comment "giữ nguyên")
+để tôi paste đè.
+
+Đây là nội dung hiện tại của 3 model liên quan (đã bao gồm field Task 82 vừa thêm, nếu có):
+
+--- model Schedule (hiện tại) ---
+[DÁN NỘI DUNG MODEL SCHEDULE Ở ĐÂY]
+
+--- model Slot (hiện tại) ---
+[DÁN NỘI DUNG MODEL SLOT Ở ĐÂY]
+
+--- model Batch (hiện tại) ---
+[DÁN NỘI DUNG MODEL BATCH Ở ĐÂY]

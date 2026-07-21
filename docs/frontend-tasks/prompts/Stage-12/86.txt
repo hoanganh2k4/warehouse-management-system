@@ -1,0 +1,53 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần sửa công thức tính "occupancyPercent" trong
+DashboardService để tính theo dung lượng (capacity), thay vì đếm nhị phân số slot có hàng.
+
+BỐI CẢNH:
+Hàm `getSummary()` trong `apps/backend/src/dashboard/dashboard.service.ts` hiện tính:
+```
+occupancyPercent = occupiedSlots / totalSlots * 100
+```
+trong đó `occupiedSlots` là số slot có `usedCapacity > 0` — nghĩa là 1 slot chỉ dùng 5% sức chứa vẫn bị tính
+như đầy 100%. Trong khi đó, trang Racking ở frontend (không sửa trong task này, chỉ tham khảo) tính đúng
+theo công thức `sum(usedCapacity) / sum(maxCapacity) * 100`. Cần đổi Dashboard dùng cùng công thức
+capacity-based này để số liệu 2 nơi nhất quán.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Thêm 1 query Prisma mới trong `Promise.all` hiện có của `getSummary()`:
+   `this.prisma.slot.aggregate({ _sum: { usedCapacity: true, maxCapacity: true } })`, gán vào biến
+   `slotCapacityAgg`.
+2. Thay công thức `occupancyPercent` cũ bằng:
+   ```ts
+   const totalCapacity = slotCapacityAgg._sum.maxCapacity ?? 0;
+   const usedCapacityTotal = slotCapacityAgg._sum.usedCapacity ?? 0;
+   const occupancyPercent =
+     totalCapacity > 0
+       ? Math.round((usedCapacityTotal / totalCapacity) * 100)
+       : 0;
+   ```
+3. GIỮ NGUYÊN toàn bộ field khác trong object trả về của `getSummary()` (products, batches, totalSlots,
+   availableSlots, occupiedSlots, inventory, expiringSoon, inboundToday, outboundToday) — không đổi cách
+   tính, không xoá field nào.
+4. KHÔNG đụng tới hàm `getChart()` trong cùng file — giữ nguyên 100%.
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi shape response (không thêm/xoá key nào khác ngoài việc đổi giá trị occupancyPercent).
+- KHÔNG đụng file `dashboard.controller.ts`.
+- KHÔNG đụng bất kỳ file nào trong apps/frontend.
+- Xử lý chia cho 0 an toàn (nếu totalCapacity = 0 thì occupancyPercent = 0).
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/dashboard/dashboard.service.ts (chỉ hàm getSummary)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/src/dashboard/dashboard.controller.ts
+- apps/frontend/**
+- Hàm getChart() trong cùng file
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `dashboard.service.ts` sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ
+nguyên").
+
+Đây là nội dung file hiện tại:
+
+--- dashboard.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG DASHBOARD.SERVICE.TS Ở ĐÂY]

@@ -1,0 +1,60 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần tạo 1 util dùng chung để tính trạng thái hết hạn
+(expiryStatus), và gắn vào response của Batch API + Inventory API.
+
+BỐI CẢNH:
+- `apps/backend/src/inventory/inventory.service.ts`: hàm `toInventoryView` hiện KHÔNG trả `expiryDate` (vì
+  `select` của `batch` chỉ lấy `batchCode` + `product`, thiếu `expiryDate`). Cần thêm `expiryDate` vào select
+  và trả thêm `expiryStatus`/`daysUntilExpiry` tính từ đó.
+- `apps/backend/src/batches/batches.service.ts`: `findAll`/`findOne` đã trả `expiryDate` thô (qua include
+  nguyên Batch), nhưng chưa có trạng thái tính sẵn.
+- Ngưỡng cảnh báo phải khớp với ngưỡng 30 ngày mà `dashboard.service.ts` đang dùng cho biến `expiringSoon`
+  (xem đoạn `batch.count({ where: { expiryDate: { lte: ... 30 * 24 * 60 * 60 * 1000 ... } } })`), để không
+  tạo thêm 1 ngưỡng lệch pha.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Tạo file mới `apps/backend/src/common/utils/expiry.util.ts`:
+   ```ts
+   export const EXPIRY_WARNING_DAYS = 30;
+   export const EXPIRY_CRITICAL_DAYS = 7;
+   export type ExpiryStatus = 'OK' | 'WARNING' | 'CRITICAL' | 'EXPIRED';
+   export function getExpiryStatus(expiryDate: Date): { status: ExpiryStatus; daysUntilExpiry: number }
+   ```
+   Logic: so sánh theo NGÀY (bỏ giờ/phút/giây bằng setHours(0,0,0,0) cho cả hôm nay và expiryDate trước khi
+   trừ) — < 0 ngày = EXPIRED, <= 7 ngày = CRITICAL, <= 30 ngày = WARNING, còn lại = OK.
+2. Sửa `inventory.service.ts`:
+   - Thêm `expiryDate: true` vào `batch: { select: { ... } }` ở CẢ HAI chỗ dùng trong `findAll()` và
+     `findOne()`.
+   - Sửa type tham số và nội dung hàm `toInventoryView` để nhận `batch.expiryDate`, gọi `getExpiryStatus`,
+     trả thêm 3 field mới vào object trả về: `expiryDate`, `expiryStatus`, `daysUntilExpiry`.
+3. Sửa `batches.service.ts`:
+   - Trong `findAll()`, map từng item trong mảng `items` trước khi `paginate(...)`, gắn thêm
+     `expiryStatus`/`daysUntilExpiry` từ `getExpiryStatus(batch.expiryDate)`.
+   - Trong `findOne()`, làm tương tự cho object `batch` trước khi return.
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi ngưỡng 30 ngày / 7 ngày.
+- KHÔNG xoá/đổi field nào khác trong response cũ của 2 service này — chỉ thêm field mới.
+- KHÔNG đụng tới `dashboard.service.ts` (việc dùng hàm này ở Dashboard nằm ở task khác).
+- KHÔNG đụng schema.prisma hay bất kỳ file frontend nào.
+
+FILE ĐƯỢC PHÉP SỬA/TẠO:
+- Tạo mới: apps/backend/src/common/utils/expiry.util.ts
+- Sửa: apps/backend/src/inventory/inventory.service.ts
+- Sửa: apps/backend/src/batches/batches.service.ts
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/src/dashboard/dashboard.service.ts
+- apps/backend/prisma/schema.prisma
+- apps/frontend/**
+
+YÊU CẦU ĐẦU RA:
+Trả về: (1) nội dung đầy đủ file `expiry.util.ts`, (2) nội dung đầy đủ file `inventory.service.ts` sau khi
+sửa, (3) nội dung đầy đủ file `batches.service.ts` sau khi sửa (không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung 2 file hiện tại:
+
+--- inventory.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG INVENTORY.SERVICE.TS Ở ĐÂY]
+
+--- batches.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG BATCHES.SERVICE.TS Ở ĐÂY]

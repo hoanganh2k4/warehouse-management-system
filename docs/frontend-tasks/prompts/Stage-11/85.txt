@@ -1,0 +1,42 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần sửa file seed.ts để dữ liệu mẫu (Transaction) có đủ
+giá trị cho 3 field mới vừa thêm vào schema: quantityBefore, quantityAfter, dailySeq.
+
+BỐI CẢNH:
+`schema.prisma` model `Transaction` vừa có thêm field `quantityBefore Int?`, `quantityAfter Int?`,
+`dailySeq Int?`. File `apps/backend/prisma/seed.ts` hiện tạo dữ liệu mẫu Transaction ở 2 đoạn: (1) vòng lặp
+tạo giao dịch NHẬP KHO (type IMPORT) khi seed Inventory, biến `quantity` seed chính là số lượng SAU khi nhập
+(vì slot đang trống, trước đó là 0); (2) đoạn tạo vài giao dịch XUẤT KHO mẫu (type EXPORT), trong đó biến
+`inventory.quantity` (đọc được trước khi update) là số TRƯỚC, biến `newQuantity` là số SAU khi trừ.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Ở đoạn `prisma.transaction.create` cho type IMPORT, thêm vào object `data`:
+   - quantityBefore: 0
+   - quantityAfter: quantity   (dùng đúng biến `quantity` đã có sẵn trong scope)
+   - dailySeq: 1
+2. Ở đoạn `prisma.transaction.create` cho type EXPORT, thêm vào object `data`:
+   - quantityBefore: inventory.quantity   (biến đã có sẵn trong scope, đọc trước khi update)
+   - quantityAfter: newQuantity           (biến đã có sẵn trong scope)
+   - dailySeq: 1
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi bất kỳ logic/số lượng dữ liệu mẫu nào khác (số slot, số batch, ngày tạo, note, v.v.) — chỉ thêm
+  đúng 3 field vào 2 chỗ `data` nêu trên.
+- KHÔNG đổi field nào trong `schema.prisma`.
+- KHÔNG đụng file nào khác ngoài `seed.ts`.
+- Giữ nguyên toàn bộ comment, cấu trúc code hiện có — chỉ chèn thêm dòng.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/prisma/seed.ts
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/prisma/schema.prisma
+- apps/backend/prisma/backfill-order-code.ts
+- apps/backend/src/**
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `seed.ts` sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung `seed.ts` hiện tại (đầy đủ):
+
+--- seed.ts (hiện tại) ---
+[DÁN TOÀN BỘ NỘI DUNG SEED.TS Ở ĐÂY]

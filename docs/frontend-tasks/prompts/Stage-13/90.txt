@@ -1,0 +1,61 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần thêm 1 API MỚI (không sửa API cũ) trả danh sách chi
+tiết các lô hàng sắp/đã hết hạn.
+
+BỐI CẢNH:
+`DashboardService.getSummary()` hiện chỉ trả `expiringSoon: number` (đếm số batch sắp hết hạn trong 30
+ngày, còn tồn kho > 0). Tôi cần thêm 1 endpoint riêng `GET /dashboard/expiring-batches` trả đầy đủ chi tiết
+từng batch (mã lô, sản phẩm, vị trí, số ngày còn lại, trạng thái) — KHÔNG sửa `getSummary()` hiện có. Đã có
+sẵn 2 helper dùng chung cần tái sử dụng, không viết lại:
+- `getExpiryStatus(expiryDate: Date)` trong `apps/backend/src/common/utils/expiry.util.ts`, trả về
+  `{ status: 'OK'|'WARNING'|'CRITICAL'|'EXPIRED', daysUntilExpiry: number }`, và hằng số
+  `EXPIRY_WARNING_DAYS = 30`.
+- `formatSlotLocation({ zoneCode, rackCode, levelNumber, slotCode })` trong
+  `apps/backend/src/common/utils/location.util.ts`, trả về chuỗi vị trí dễ đọc.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Thêm method mới `getExpiringBatches()` vào `DashboardService`:
+   - Query `prisma.batch.findMany`, where: `expiryDate <= now + EXPIRY_WARNING_DAYS ngày` (dùng hằng số,
+     KHÔNG hardcode lại số 30) VÀ `inventories.some.quantity > 0`.
+   - Include: `product` (skuCode, name) và `inventories` (chỉ lấy inventory có `quantity > 0`, kèm `slot`
+     với đủ field để format vị trí: code, level.levelNumber, level.rack.code, level.rack.zone.code).
+   - orderBy: expiryDate asc.
+   - Map mỗi batch thành object: `{ batchId, batchCode, productSkuCode, productName, expiryDate,
+     expiryStatus, daysUntilExpiry, quantity (tổng các inventories), locations (mảng string, mỗi phần tử
+     là formatSlotLocation của 1 inventory) }`.
+2. Thêm route mới trong `DashboardController`: `GET /dashboard/expiring-batches`, dùng cùng decorator
+   `@Roles(MANAGER_ROLE)` và `@ApiAuthReadErrors()` như các route khác trong file, gọi
+   `this.service.getExpiringBatches()`.
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG sửa method `getSummary()` hoặc `getChart()` hiện có trong DashboardService.
+- KHÔNG sửa file expiry.util.ts hay location.util.ts — chỉ import và dùng.
+- Dùng đúng hằng số `EXPIRY_WARNING_DAYS`, không hardcode lại số 30 lần nữa.
+- `locations` trả về dạng MẢNG string, không gộp thành 1 chuỗi nối dấu phẩy.
+- Chỉ tính vào `locations`/`quantity` những inventory có `quantity > 0` (loại bỏ vị trí đã xuất hết hàng).
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/dashboard/dashboard.service.ts (chỉ thêm method mới, không sửa method cũ)
+- apps/backend/src/dashboard/dashboard.controller.ts (chỉ thêm route mới)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/src/common/utils/expiry.util.ts
+- apps/backend/src/common/utils/location.util.ts
+- apps/frontend/**
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung 2 file `dashboard.service.ts` và `dashboard.controller.ts` sau khi sửa (đầy đủ,
+không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung hiện tại của các file liên quan:
+
+--- dashboard.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG DASHBOARD.SERVICE.TS Ở ĐÂY]
+
+--- dashboard.controller.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG DASHBOARD.CONTROLLER.TS Ở ĐÂY]
+
+--- expiry.util.ts (tham khảo, không sửa) ---
+[DÁN TOÀN BỘ NỘI DUNG EXPIRY.UTIL.TS Ở ĐÂY]
+
+--- location.util.ts (tham khảo, không sửa) ---
+[DÁN TOÀN BỘ NỘI DUNG LOCATION.UTIL.TS Ở ĐÂY]

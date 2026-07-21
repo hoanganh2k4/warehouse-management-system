@@ -1,0 +1,47 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần bạn RÀ SOÁT code (không sửa lung tung) để tìm thêm
+những chỗ có thể bị lỗi giống Task trước: đếm (`_count`/`count`/`aggregate`) trên bảng có soft-delete
+(`deletedAt`) mà không lọc `deletedAt: null`, rồi viết 1 test hồi quy.
+
+BỐI CẢNH:
+Đã sửa 1 lỗi: `CategoriesService._count.products` từng đếm cả sản phẩm đã xoá mềm. Nay cần kiểm tra toàn hệ
+thống có còn chỗ nào bị lỗi tương tự không, dựa trên danh sách model có field `deletedAt` trong
+schema.prisma (đã biết có Product, Supplier, Customer — bạn xác nhận lại từ nội dung schema tôi dán bên
+dưới).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Từ danh sách các đoạn code sử dụng `_count`/`.count(`/`.aggregate(` mà tôi liệt kê bên dưới (kết quả
+   grep), với mỗi đoạn: xác định model đích có nằm trong danh sách model có `deletedAt` không; nếu có, xác
+   định câu query đó đã lọc `deletedAt: null` chưa (trực tiếp trong where hoặc lồng trong _count.select).
+2. Với MỖI chỗ bạn kết luận là lỗi thật (có deletedAt nhưng chưa lọc, VÀ có ý nghĩa nghiệp vụ tương tự nơi
+   khác có lọc), hãy: nêu rõ file + số dòng + lý do là lỗi, và đề xuất đoạn sửa (theo đúng kiểu
+   `{ where: { deletedAt: null } }` lồng trong _count.select nếu là quan hệ, hoặc thêm `where: { deletedAt: null }`
+   nếu là count/aggregate trực tiếp trên bảng đó).
+3. Nếu KHÔNG tìm thấy lỗi nào khác ngoài chỗ đã sửa, hãy nói rõ ràng "không phát hiện thêm lỗi tương tự" và
+   liệt kê ngắn gọn những chỗ đã kiểm tra kèm kết luận (model đó có deletedAt hay không).
+4. Viết thêm 1 file test Jest `apps/backend/src/categories/categories.service.spec.ts` (nếu tôi báo là chưa
+   có) theo pattern NestJS Testing Module, mock PrismaService, test rằng `findAll()` gọi `prisma.category.findMany`
+   với `include: { _count: { select: { products: { where: { deletedAt: null } } } } }`.
+
+QUY TẮC BẮT BUỘC:
+- TUYỆT ĐỐI KHÔNG tự ý sửa code ở những chỗ bạn không chắc chắn là lỗi thật — chỉ liệt kê và đề xuất, để tôi
+  duyệt trước khi áp dụng, TRỪ trường hợp tôi xác nhận rõ trong bước 2 rằng đó là lỗi (nếu bạn không chắc,
+  hãy hỏi lại tôi thay vì tự sửa).
+- KHÔNG sửa model không có field `deletedAt`.
+- Test viết theo đúng framework/pattern project đang dùng (NestJS + Jest).
+
+FILE ĐƯỢC PHÉP TẠO/SỬA:
+- Tạo mới: apps/backend/src/categories/categories.service.spec.ts (nếu chưa có)
+- Chỉ sửa các file khác NẾU đã liệt kê rõ và tôi xác nhận đó là lỗi thật
+
+YÊU CẦU ĐẦU RA:
+1. Bảng/danh sách kết quả rà soát (model, có deletedAt hay không, đã lọc hay chưa, kết luận lỗi/không lỗi).
+2. Nội dung đầy đủ file test spec.
+3. Nếu có đề xuất sửa thêm, liệt kê riêng từng đoạn diff, CHƯA áp dụng ngay, chờ tôi duyệt.
+
+Đây là kết quả grep `_count/.count(/.aggregate(` trong apps/backend/src, và nội dung schema.prisma:
+
+--- grep result ---
+[DÁN KẾT QUẢ LỆNH: grep -rn "_count\|\.count(\|\.aggregate(" apps/backend/src --include=*.ts | grep -v spec]
+
+--- schema.prisma (đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SCHEMA.PRISMA Ở ĐÂY]
