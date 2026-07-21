@@ -1,0 +1,41 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần sửa 1 lỗi đếm sai: `_count.products` của Category
+đang đếm cả sản phẩm đã bị xoá mềm (soft delete).
+
+BỐI CẢNH:
+File `apps/backend/src/categories/categories.service.ts` có 2 hàm `findAll()` và `findOne()`, cả 2 đều dùng:
+```ts
+include: { _count: { select: { products: true } } }
+```
+Prisma `_count` mặc định đếm TẤT CẢ sản phẩm thuộc category, kể cả sản phẩm có `deletedAt != null` (đã xoá
+mềm). Trong khi đó "Tổng sản phẩm" toàn hệ thống ở nơi khác (Dashboard, ProductsService) luôn lọc
+`deletedAt: null`. Cần sửa để `_count.products` chỉ đếm sản phẩm còn hoạt động, khớp với số liệu tổng.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+Đổi CẢ HAI chỗ `include: { _count: { select: { products: true } } }` trong `findAll()` và `findOne()` thành:
+```ts
+include: { _count: { select: { products: { where: { deletedAt: null } } } } }
+```
+(Prisma hỗ trợ truyền `where` để lọc quan hệ trước khi đếm trong `_count.select`.)
+
+QUY TẮC BẮT BUỘC:
+- CHỈ sửa đúng 2 dòng `_count` nói trên trong `findAll()` và `findOne()`.
+- KHÔNG đụng tới hàm `create()`, `update()`, `remove()` trong cùng file — các hàm đó không liên quan tới
+  lỗi này.
+- KHÔNG đụng file controller, dto, hay schema.prisma.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/categories/categories.service.ts
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/src/categories/categories.controller.ts
+- apps/backend/src/categories/dto/category.dto.ts
+- apps/backend/prisma/schema.prisma
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `categories.service.ts` sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ
+nguyên").
+
+Đây là nội dung file hiện tại:
+
+--- categories.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG CATEGORIES.SERVICE.TS Ở ĐÂY]

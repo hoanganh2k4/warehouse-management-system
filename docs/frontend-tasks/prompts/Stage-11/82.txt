@@ -1,0 +1,43 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần THÊM FIELD MỚI vào schema.prisma, KHÔNG được xoá,
+đổi tên, hay đổi kiểu dữ liệu của bất kỳ field nào đang có.
+
+BỐI CẢNH:
+Dự án Warehouse Management System, backend NestJS + Prisma. File `apps/backend/prisma/schema.prisma` hiện
+có model `Schedule` (đặt lịch nhập/xuất) và `Transaction` (giao dịch nhập/xuất đã thực hiện). Cần thêm field
+để hỗ trợ: mã đơn riêng để tra cứu, ngày hết hạn thu ngay lúc đặt lịch, và số liệu tồn kho trước/sau mỗi
+giao dịch + thứ tự trong ngày.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Thêm vào model `Schedule`:
+   - `orderCode String? @unique` (mã đơn riêng, optional vì dữ liệu cũ chưa có, sẽ tự sinh ở task khác)
+   - `expiryDate DateTime?` (HSD lô hàng, thu lúc đặt lịch, optional)
+2. Thêm vào model `Transaction`:
+   - `quantityBefore Int?`
+   - `quantityAfter Int?`
+   - `dailySeq Int?`
+3. Thêm index `@@index([createdAt, dailySeq])` vào model `Transaction`.
+
+QUY TẮC BẮT BUỘC:
+- TẤT CẢ field mới phải optional (`?`) — vì bảng đã có dữ liệu, field bắt buộc sẽ làm migration lỗi.
+- KHÔNG xoá, đổi tên, đổi kiểu bất kỳ field/relation nào đang tồn tại trong 2 model này hoặc model khác.
+- KHÔNG chạy migration, KHÔNG tạo file migration — chỉ sửa `schema.prisma`.
+- KHÔNG đụng vào bất kỳ file `.ts` nào trong `apps/backend/src`.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/prisma/schema.prisma
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- Toàn bộ apps/backend/src/**
+- Không tạo file trong apps/backend/prisma/migrations/
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung model `Schedule` và model `Transaction` sau khi sửa (đầy đủ, không rút gọn bằng
+comment "giữ nguyên"), để tôi paste đè vào đúng vị trí trong file.
+
+Đây là nội dung hiện tại của 2 model (trích từ schema.prisma):
+
+--- model Schedule (hiện tại) ---
+[DÁN NỘI DUNG MODEL SCHEDULE Ở ĐÂY]
+
+--- model Transaction (hiện tại) ---
+[DÁN NỘI DUNG MODEL TRANSACTION Ở ĐÂY]

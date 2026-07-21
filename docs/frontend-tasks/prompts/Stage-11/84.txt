@@ -1,0 +1,49 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần viết 1 SCRIPT BACKFILL độc lập (không phải NestJS
+module/controller), chạy 1 lần để gán `orderCode` cho các `Schedule` cũ trong DB đang có `orderCode = NULL`.
+
+BỐI CẢNH:
+Schema `Schedule` vừa được thêm field `orderCode String? @unique` (optional vì dữ liệu cũ chưa có giá trị).
+Migration đã chạy xong, cột đã tồn tại trong DB nhưng toàn bộ record cũ có `orderCode = NULL`. Cần 1 script
+Node/ts-node dùng Prisma Client để gán mã cho các record này, theo định dạng sẽ dùng chính thức về sau:
+`SCH-YYYYMMDD-xxxx` (YYYYMMDD lấy từ `createdAt` của schedule, xxxx là số thứ tự 4 chữ số, đếm riêng theo
+từng ngày, bắt đầu từ 0001).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Tạo file `apps/backend/prisma/backfill-order-code.ts`:
+   - Lấy toàn bộ Schedule có `orderCode: null`, sort theo `createdAt` tăng dần.
+   - Gán orderCode tuần tự theo ngày như mô tả trên.
+   - PHẢI cập nhật TUẦN TỰ (dùng `for...of` + `await`), TUYỆT ĐỐI KHÔNG dùng `Promise.all`/`map` chạy song
+     song — vì `orderCode` là unique, chạy song song có thể sinh trùng số thứ tự trong cùng 1 ngày.
+   - Log ra console tổng số record đã cập nhật khi chạy xong.
+   - Đóng kết nối Prisma bằng `finally(() => prisma.$disconnect())`.
+2. Thêm 1 script mới vào `apps/backend/package.json`, đặt tên `"backfill:order-code"`, chạy file trên bằng
+   `ts-node` (xem cú pháp script `seed` hiện có trong package.json để dùng đúng convention của project,
+   KHÔNG đổi script `seed` cũ).
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG sửa `schema.prisma`, KHÔNG sửa `seed.ts`.
+- KHÔNG đụng bất kỳ file nào trong `apps/backend/src`.
+- KHÔNG tạo/sửa migration — migration coi như đã chạy xong trước khi làm task này.
+- Import PrismaClient đúng đường dẫn generated client mà project đang dùng (xem cách `seed.ts` import).
+
+FILE ĐƯỢC PHÉP SỬA/TẠO:
+- Tạo mới: apps/backend/prisma/backfill-order-code.ts
+- Sửa: apps/backend/package.json (chỉ thêm 1 dòng script mới)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/prisma/schema.prisma
+- apps/backend/prisma/seed.ts
+- apps/backend/src/**
+- apps/backend/prisma/migrations/**
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `backfill-order-code.ts`, và đoạn script cần thêm vào `package.json` (chỉ đoạn
+liên quan, ghi rõ thêm vào object "scripts" ở đâu).
+
+Đây là nội dung `seed.ts` hiện tại (để bạn biết cách import PrismaClient đúng convention của project):
+
+--- seed.ts (hiện tại, chỉ để tham khảo cách import) ---
+[DÁN NỘI DUNG SEED.TS Ở ĐÂY]
+
+--- package.json (apps/backend, hiện tại) ---
+[DÁN NỘI DUNG PACKAGE.JSON Ở ĐÂY]
