@@ -1,0 +1,71 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần tự động sinh mã đơn (`orderCode`) khi tạo lịch
+nhập/xuất, và thêm API tra cứu theo mã đơn.
+
+BỐI CẢNH:
+Model `Schedule` đã có field `orderCode String? @unique`. Các hàm `createInboundSchedule` và
+`createOutboundSchedule` trong `apps/backend/src/schedules/schedules.service.ts` hiện tạo Schedule mà KHÔNG
+gán `orderCode`. Hàm `toScheduleView` (map dữ liệu trả về cho FE) cũng chưa liệt kê field này trong object
+trả về dù đã có trong model. Định dạng mã đã thống nhất trước đó: `SCH-YYYYMMDD-xxxx` (YYYYMMDD = ngày tạo,
+xxxx = số thứ tự 4 chữ số trong ngày, bắt đầu 0001).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Tạo file mới `apps/backend/src/common/utils/order-code.util.ts`, export hàm:
+   ```ts
+   export async function generateOrderCode(tx: Prisma.TransactionClient, at: Date = new Date()): Promise<string>
+   ```
+   Logic: đếm số `Schedule` có `createdAt` trong cùng ngày dương lịch với `at`, trả về
+   `SCH-${YYYYMMDD}-${(count+1) padStart 4 số 0}`.
+2. Trong `createInboundSchedule` và `createOutboundSchedule`: đảm bảo việc tạo Schedule chạy trong
+   `prisma.$transaction` (dùng transaction sẵn có nếu đã có, hoặc bọc thêm nếu đang gọi trực tiếp
+   `this.prisma.schedule.create`). Gọi `generateOrderCode(tx)` để lấy mã, gán vào `data.orderCode` khi tạo.
+   Nếu Prisma ném lỗi có `code === 'P2002'` (đụng độ unique do race condition), gọi lại `generateOrderCode`
+   và thử tạo lại, tối đa 3 lần, nếu vẫn lỗi thì throw lỗi gốc.
+3. Trong hàm `toScheduleView`, thêm dòng `orderCode: item.orderCode,` vào object trả về (ngay sau `id:
+   item.id,`).
+4. Thêm hàm mới `async findByOrderCode(orderCode: string)` trong `SchedulesService`: query
+   `prisma.schedule.findUnique({ where: { orderCode }, include: scheduleInclude })`, nếu null thì throw
+   `NotFoundException('Schedule not found for this order code')`, nếu có thì `return toScheduleView(item)`.
+5. Trong `schedules.controller.ts`: thêm route `GET /schedules/by-code/:orderCode` gọi
+   `service.findByOrderCode(orderCode)`. QUAN TRỌNG: đặt route này TRƯỚC bất kỳ route `GET /schedules/:id`
+   nào đang có trong file (nếu có), để tránh Nest hiểu nhầm "by-code" là 1 giá trị :id.
+6. Trong `apps/backend/src/transactions/dto/transaction.dto.ts`, thêm field optional `orderCode?: string`
+   vào `TransactionQueryDto` (dùng decorator `@ApiPropertyOptional()`, `@IsOptional()`, `@IsString()`, theo
+   đúng convention các field khác trong file).
+7. Trong `apps/backend/src/transactions/transactions.service.ts`, hàm `findAll`, thêm điều kiện lọc: nếu
+   `query.orderCode` có giá trị, thêm `where.schedule = { orderCode: query.orderCode }` (dùng relation
+   ngược `schedule` sẵn có trên model Transaction).
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi logic khác trong `createInboundSchedule`/`createOutboundSchedule` (validate, tính suggestion,
+  v.v.) — chỉ thêm phần sinh + gán `orderCode`.
+- Định dạng mã PHẢI đúng `SCH-YYYYMMDD-xxxx`, khớp với script backfill đã dùng trước đó.
+- Route `by-code/:orderCode` PHẢI khai báo trước route `:id` (nếu tồn tại) trong controller.
+- KHÔNG đụng schema.prisma hay file backfill-order-code.ts.
+
+FILE ĐƯỢC PHÉP SỬA/TẠO:
+- Tạo mới: apps/backend/src/common/utils/order-code.util.ts
+- Sửa: apps/backend/src/schedules/schedules.service.ts
+- Sửa: apps/backend/src/schedules/schedules.controller.ts
+- Sửa: apps/backend/src/transactions/dto/transaction.dto.ts
+- Sửa: apps/backend/src/transactions/transactions.service.ts
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/prisma/schema.prisma
+- apps/backend/prisma/backfill-order-code.ts
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung 5 file đã sửa/tạo (đầy đủ, không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung các file hiện tại:
+
+--- schedules.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SCHEDULES.SERVICE.TS Ở ĐÂY]
+
+--- schedules.controller.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SCHEDULES.CONTROLLER.TS Ở ĐÂY]
+
+--- transaction.dto.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG TRANSACTION.DTO.TS Ở ĐÂY]
+
+--- transactions.service.ts (hiện tại, đầy đủ, đã bao gồm thay đổi Task 91 nếu có) ---
+[DÁN TOÀN BỘ NỘI DUNG TRANSACTIONS.SERVICE.TS Ở ĐÂY]

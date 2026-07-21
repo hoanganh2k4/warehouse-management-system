@@ -1,0 +1,60 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần thêm field `expiryDate` (optional) vào form đặt lịch
+nhập, dùng nó thay cho `scheduledDate` khi tính gợi ý vị trí (nếu có nhập).
+
+BỐI CẢNH:
+`apps/backend/src/schedules/schedules.service.ts` có hàm `computeInboundSuggestion(productId, quantity,
+scheduledDate)` — hiện luôn dùng `scheduledDate` làm mốc "incoming expiry" khi gọi
+`slotScoring.findBestSlots`, vì form đặt lịch chưa thu HSD thật (xem comment dòng 93-99 giải thích lý do).
+Cần thêm khả năng nhận `expiryDate` thật (nếu nhân viên đã biết trước), ưu tiên dùng giá trị này thay cho
+`scheduledDate`, nhưng vẫn phải hoạt động bình thường nếu không truyền (giữ nguyên hành vi cũ).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Trong `apps/backend/src/schedules/dto/inbound-schedule.dto.ts`, thêm field optional vào CẢ HAI class
+   `InboundSuggestionPreviewDto` và `CreateInboundScheduleDto`:
+   ```ts
+   @ApiPropertyOptional({ description: 'Hạn sử dụng (HSD) dự kiến của lô hàng, nếu đã biết trước khi hàng về' })
+   @IsOptional()
+   @IsDateString()
+   expiryDate?: string;
+   ```
+2. Trong `schedules.service.ts`, sửa `computeInboundSuggestion` để nhận thêm tham số optional thứ 4
+   `expiryDate?: Date`, và dùng `expiryDate ?? scheduledDate` khi gọi `this.slotScoring.findBestSlots(...)`
+   (thay vì luôn dùng `scheduledDate`).
+3. Sửa `previewInboundSuggestion` để truyền `dto.expiryDate ? new Date(dto.expiryDate) : undefined` làm
+   tham số thứ 4.
+4. Sửa `createInboundSchedule`: truyền `dto.expiryDate ? new Date(dto.expiryDate) : undefined` khi gọi
+   `computeInboundSuggestion`, và thêm `expiryDate: dto.expiryDate ? new Date(dto.expiryDate) : undefined`
+   vào object `data` khi `this.prisma.schedule.create(...)`.
+5. Kiểm tra hàm `toScheduleView` — nếu chưa có dòng trả `expiryDate: item.expiryDate,` trong object trả về,
+   thêm vào (đặt gần `orderCode` nếu đã có từ trước).
+6. Cập nhật lại nội dung đoạn comment giải thích ở đầu `computeInboundSuggestion` (hiện nói "form Đặt lịch
+   nhập không thu thập HSD") cho khớp với thực tế mới: form CÓ THỂ thu thập HSD nếu biết trước, nếu không sẽ
+   dùng `scheduledDate` làm mốc tạm.
+
+QUY TẮC BẮT BUỘC:
+- `expiryDate` PHẢI là optional ở cả 2 DTO — không được bắt buộc.
+- TUYỆT ĐỐI KHÔNG đổi `ExecuteScheduleDto` hay hàm `executeInboundSchedule` — đó là 1 khái niệm `expiryDate`
+  KHÁC (HSD chính thức lúc thực hiện lịch, dùng để tạo Batch), không liên quan tới task này.
+- Không truyền `expiryDate` → hành vi phải giống hệt trước khi sửa (dùng `scheduledDate`).
+- KHÔNG đổi `slot-scoring.service.ts`.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/schedules/dto/inbound-schedule.dto.ts
+- apps/backend/src/schedules/schedules.service.ts (chỉ các hàm computeInboundSuggestion,
+  previewInboundSuggestion, createInboundSchedule, toScheduleView)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/src/schedules/dto/execute-schedule.dto.ts
+- apps/backend/src/common/services/slot-scoring.service.ts
+- Hàm executeInboundSchedule, executeOutboundSchedule
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung 2 file đã sửa (đầy đủ, không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung 2 file hiện tại:
+
+--- inbound-schedule.dto.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG INBOUND-SCHEDULE.DTO.TS Ở ĐÂY]
+
+--- schedules.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SCHEDULES.SERVICE.TS Ở ĐÂY]

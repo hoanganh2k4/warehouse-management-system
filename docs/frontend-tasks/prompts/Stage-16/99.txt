@@ -1,0 +1,68 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần bỏ chặn cứng "1 slot không đủ chỗ thì báo lỗi" trong
+`executeInboundSchedule`, thay bằng tự động chia hàng vào nhiều slot.
+
+BỐI CẢNH:
+File `apps/backend/src/schedules/schedules.service.ts`, hàm `executeInboundSchedule`, nhánh KHÔNG override
+(không phải nhân viên tự chọn thủ công), đoạn:
+```ts
+const allocations = await this.slotScoring.findBestSlots(product, schedule.quantity, expiryProxy);
+if (allocations.length === 0 || allocations[0].allocateQty < schedule.quantity) {
+  throw new BadRequestException('Không tìm được 1 Slot đủ sức chứa toàn bộ số lượng. ...');
+}
+slotId = allocations[0].slot.id;
+```
+chỉ chấp nhận đúng 1 slot duy nhất đủ chứa hết số lượng, dù `allocations` có thể chứa nhiều slot mà TỔNG
+dung lượng đủ dùng. Phần xử lý phía dưới (trong `this.prisma.$transaction`) hiện chỉ xử lý 1 `slotId`: 1 lần
+`inventory.upsert`, 1 lần `transaction.create`.
+
+Có sẵn helper `getNextDailySeq(tx, at?)` trong `common/utils/transaction-seq.util.ts` để tính `dailySeq` cho
+mỗi Transaction (đã dùng ở chỗ khác trong file này).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Trong nhánh KHÔNG override: đổi điều kiện chặn thành kiểm tra TỔNG `allocateQty` của toàn bộ
+   `allocations` có đủ `schedule.quantity` không (dùng `.reduce`), thay vì chỉ kiểm tra phần tử đầu.
+2. Xây dựng mảng `multiSlots: { slotId: string; quantity: number }[]` từ `allocations`: duyệt qua từng
+   allocation, lấy `Math.min(a.allocateQty, remaining)` (với `remaining` bắt đầu bằng `schedule.quantity`,
+   trừ dần sau mỗi vòng), dừng khi `remaining === 0`. Đây là danh sách slot + số lượng thực tế sẽ dùng.
+3. Với nhánh override (nhân viên tự chọn 1 slot cụ thể qua `dto.override`), giữ nguyên hành vi cũ nhưng gán
+   vào cùng biến `multiSlots` dạng mảng 1 phần tử: `[{ slotId: slot.id, quantity: schedule.quantity }]`.
+4. Trong khối `this.prisma.$transaction(async (tx) => {...})`, đổi phần xử lý inventory/transaction (hiện
+   xử lý 1 slotId) thành vòng lặp `for` qua `multiSlots`: với mỗi phần tử, đọc tồn kho hiện tại TRƯỚC khi
+   upsert (`quantityBefore`), upsert inventory, gọi `slotCapacity.recalculate`, tạo `Transaction` với đủ
+   `quantityBefore`, `quantityAfter`, `dailySeq: await getNextDailySeq(tx)`. Gom tất cả Transaction tạo ra
+   vào mảng `transactions`.
+5. Sau vòng lặp, insert `ScheduleAllocation` (kind `'ACTUAL'`) cho từng phần tử trong `multiSlots`
+   (`scheduleId`, `slotId`, `batchId: batch.id`, `quantity`, `sortOrder` = index) bằng `tx.scheduleAllocation.createMany`.
+6. Cập nhật `tx.schedule.update`: `actualSlotId: multiSlots[0].slotId`, `transactionId: transactions[0].id`
+   (giữ đúng field hiện có, vẫn set vị trí "chính" là phần tử đầu tiên).
+7. Đổi câu return cuối hàm từ `{ schedule: toScheduleView(updated), transactions: [transaction] }` thành
+   `{ schedule: toScheduleView(updated), transactions }` (trả nguyên mảng).
+8. Thêm import `getNextDailySeq` từ `'../common/utils/transaction-seq.util'` ở đầu file nếu chưa có.
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi nhánh override sang multi-slot — override luôn là đúng 1 slot theo lựa chọn thủ công của nhân
+  viên.
+- KHÔNG đổi `executeOutboundSchedule`, `computeInboundSuggestion`, `SlotScoringService`.
+- Việc cắt số lượng cho từng slot PHẢI dùng `Math.min(allocateQty, remaining)` và trừ dần `remaining`, không
+  được gán nguyên `allocateQty` gốc (có thể gây nhập dư nếu tổng các allocation lớn hơn số lượng cần).
+- `ScheduleAllocation` (kind ACTUAL) PHẢI được insert bên trong CÙNG `tx.$transaction`, không insert ngoài.
+- Nếu tổng `allocateQty` vẫn không đủ `schedule.quantity` (dù cộng hết `allocations`) → vẫn phải throw
+  `BadRequestException` với thông báo tương tự thông báo cũ.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/schedules/schedules.service.ts (chỉ hàm executeInboundSchedule)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- Bất kỳ hàm nào khác trong file, và bất kỳ file nào khác trong dự án.
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `schedules.service.ts` sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ
+nguyên").
+
+Đây là nội dung file hiện tại (đã bao gồm thay đổi Task 97, 98 nếu có):
+
+--- schedules.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SCHEDULES.SERVICE.TS Ở ĐÂY]
+
+--- transaction-seq.util.ts (tham khảo, không sửa) ---
+[DÁN TOÀN BỘ NỘI DUNG TRANSACTION-SEQ.UTIL.TS Ở ĐÂY]

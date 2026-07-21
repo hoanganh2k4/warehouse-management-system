@@ -1,0 +1,51 @@
+Bạn là trợ lý lập trình backend NestJS/Jest. Tôi cần viết unit test cho `SlotScoringService` để khoá lại 2
+hành vi vừa sửa: (1) hàng nặng ưu tiên level thấp nhất hợp lệ, (2) khi điểm số gần bằng nhau trong cùng
+level, Slot 1 được lấp trước Slot 2, Slot 3... Đồng thời xác nhận hàng tiêu chuẩn KHÔNG bị ảnh hưởng bởi 2
+thay đổi trên.
+
+BỐI CẢNH:
+`SlotScoringService` chỉ phụ thuộc `PrismaService` (mock được, không cần DB thật). Hàm chính cần test:
+`findBestSlots(product, quantity, incomingExpiry)`, trả về mảng slot đã sắp xếp theo điểm số giảm dần (có
+tie-break riêng cho hàng nặng ưu tiên level thấp, và tie-break theo mã slot khi điểm gần bằng nhau cùng
+level).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+Tạo file `apps/backend/src/common/services/slot-scoring.service.spec.ts` với ít nhất 5 test case:
+1. Hàng nặng (`isHeavy: true`): cho 2 slot khác level, level thấp hơn có `distanceToGate` KÉM hơn hẳn (xa
+   cổng hơn) — vẫn phải được xếp trước (vì ưu tiên level thấp mạnh hơn khoảng cách).
+2. Hàng tiêu chuẩn (`isHeavy: false`): CÙNG bộ dữ liệu 2 slot ở test 1 — slot gần cổng hơn (distanceToGate
+   thấp hơn) phải được xếp trước, đúng hành vi gốc không bị ảnh hưởng bởi ưu tiên hàng nặng.
+3. 3 slot cùng level (S01, S02, S03), điểm gần bằng nhau (chênh distanceToGate rất nhỏ, trong khoảng làm
+   chênh lệch điểm < 0.02) — thứ tự trả về phải đúng S01, S02, S03 dù dữ liệu đầu vào bị xáo trộn thứ tự.
+4. 2 slot cùng level, 1 slot mã lớn hơn nhưng distanceToGate tốt hơn RÕ RỆT (đủ để chênh điểm > 0.02) — slot
+   đó vẫn phải thắng theo điểm số, KHÔNG bị ép theo mã slot.
+5. 2 slot KHÁC level, điểm gần bằng nhau — thứ tự vẫn theo điểm số, KHÔNG áp dụng so sánh mã slot (vì
+   tie-break mã slot chỉ áp dụng khi cùng level).
+
+Viết 1 hàm helper `makeSlot(opts)` để tạo dữ liệu slot giả lập cho từng test case, tránh lặp code. Dùng
+`Test.createTestingModule` chuẩn NestJS, mock `PrismaService` (chỉ cần mock `slot.findMany`).
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG sửa file `slot-scoring.service.ts` — nếu phát hiện bug khi viết test, dừng lại và báo cho tôi, KHÔNG
+  tự ý sửa code service.
+- Assertion phải cụ thể (so sánh đúng id/code slot theo đúng thứ tự mong đợi), không viết assertion lỏng lẻo
+  kiểu chỉ kiểm tra độ dài mảng.
+- Dữ liệu test phải tính toán hợp lý để rơi đúng vào nhánh cần kiểm tra (đặc biệt lưu ý ngưỡng
+  SCORE_TIE_EPSILON = 0.02 khi thiết kế test case 3, 4, 5 — chênh lệch dữ liệu phải đủ nhỏ/đủ lớn tương ứng
+  để rơi đúng nhánh).
+
+FILE ĐƯỢC PHÉP TẠO:
+- apps/backend/src/common/services/slot-scoring.service.spec.ts
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/src/common/services/slot-scoring.service.ts
+- Bất kỳ file nào khác.
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file test.
+
+Đây là nội dung `slot-scoring.service.ts` hiện tại (đã bao gồm thay đổi từ các task trước — ưu tiên hàng
+nặng theo level, tie-break theo mã slot):
+
+--- slot-scoring.service.ts (hiện tại, đầy đủ, chỉ để tham khảo — KHÔNG sửa) ---
+[DÁN TOÀN BỘ NỘI DUNG SLOT-SCORING.SERVICE.TS Ở ĐÂY]

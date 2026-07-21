@@ -1,0 +1,63 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần (1) expose dữ liệu `ScheduleAllocation` qua API chi
+tiết lịch, và (2) bổ sung việc lưu `ScheduleAllocation` (kind ACTUAL) cho luồng xuất kho (hiện chỉ Inbound
+mới có).
+
+BỐI CẢNH:
+`apps/backend/src/schedules/schedules.service.ts`:
+- `scheduleInclude` (object dùng `include` cho mọi query Schedule) hiện KHÔNG có `allocations` — dù bảng
+  `ScheduleAllocation` đã được ghi dữ liệu từ các task trước (SUGGESTED lúc tạo lịch, ACTUAL lúc thực hiện
+  lịch nhập).
+- `toScheduleView` (hàm map dữ liệu trả cho FE) do đó cũng chưa có field nào cho allocation.
+- `executeOutboundSchedule` có vòng lặp tạo nhiều `Transaction` cho từng dòng pick (biến vòng lặp và tên
+  field cụ thể — bạn đọc trong code dán bên dưới để dùng đúng tên), nhưng KHÔNG lưu gì vào
+  `ScheduleAllocation` — cần bổ sung đoạn `createMany` với `kind: 'ACTUAL'` sau khi vòng lặp kết thúc (vẫn ở
+  trong cùng `tx.$transaction`).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Thêm vào `scheduleInclude` field `allocations`, select đủ: `kind, slotId, batchId, quantity, sortOrder`,
+   kèm `slot` (code + level.levelNumber + level.rack.code + level.rack.zone.code) và `batch` (batchCode),
+   `orderBy: { sortOrder: 'asc' }`.
+2. Trong `toScheduleView`, viết hàm nhỏ `mapAllocation(a)` chuyển 1 allocation thành object phẳng:
+   `{ slotId, slotPath (dùng formatSlotLocation), batchId, batchCode: a.batch?.batchCode ?? null, quantity }`.
+   Thêm 2 field vào object trả về của `toScheduleView`:
+   - `suggestedAllocations`: lọc `item.allocations` có `kind === 'SUGGESTED'`, map qua `mapAllocation`.
+   - `actualAllocations`: lọc `item.allocations` có `kind === 'ACTUAL'`, map qua `mapAllocation`.
+3. Trong `executeOutboundSchedule`, NGAY SAU vòng lặp tạo nhiều Transaction (vẫn trong cùng
+   `tx.$transaction`), thêm đoạn insert `ScheduleAllocation`:
+   ```ts
+   await tx.scheduleAllocation.createMany({
+     data: <danh_sách_dòng_pick>.map((line, idx) => ({
+       scheduleId: schedule.id,
+       kind: 'ACTUAL' as const,
+       slotId: line.<field_slotId_thực_tế>,
+       batchId: line.<field_batchId_thực_tế>,
+       quantity: line.<field_quantity_thực_tế>,
+       sortOrder: idx,
+     })),
+   });
+   ```
+   Dùng ĐÚNG tên biến vòng lặp và tên field thực tế có trong code (đọc kỹ đoạn `executeOutboundSchedule`
+   trong nội dung file dán bên dưới), KHÔNG đoán/bịa tên biến.
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đụng tới `executeInboundSchedule` (đã hoàn thiện ở task trước).
+- KHÔNG đổi field nào khác trong `scheduleInclude` (chỉ THÊM `allocations`).
+- KHÔNG đổi field nào khác trong object trả về của `toScheduleView` (chỉ THÊM `suggestedAllocations` và
+  `actualAllocations`).
+- Đoạn `scheduleAllocation.createMany` cho Outbound PHẢI nằm bên trong cùng `tx.$transaction` đang chạy,
+  không tách ra ngoài.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/schedules/schedules.service.ts
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- Bất kỳ file nào khác trong dự án.
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `schedules.service.ts` sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ
+nguyên").
+
+Đây là nội dung file hiện tại (đã bao gồm thay đổi các task trước — Task 97, 98, 99):
+
+--- schedules.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SCHEDULES.SERVICE.TS Ở ĐÂY]

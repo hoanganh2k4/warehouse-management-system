@@ -1,0 +1,45 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần thêm tie-break vào `orderBy` của 2 API danh sách để
+tránh thứ tự bị đảo lộn/không ổn định khi nhiều bản ghi có cùng mốc thời gian chính.
+
+BỐI CẢNH:
+- `apps/backend/src/transactions/transactions.service.ts`, hàm `findAll`, hiện `orderBy: { createdAt: 'desc' }`
+  — chỉ 1 tiêu chí. Khi nhiều Transaction được tạo cực nhanh trong cùng 1 `prisma.$transaction` (ví dụ xuất
+  kho chia nhiều slot), `createdAt` có thể trùng nhau tới mili-giây, khiến PostgreSQL không đảm bảo thứ tự
+  cố định giữa các lần gọi/các trang phân trang. Model Transaction đã có field `dailySeq` (số thứ tự tăng
+  dần trong ngày, ghi đúng theo thứ tự tạo thật) dùng làm tie-break.
+- `apps/backend/src/schedules/schedules.service.ts`, hàm `findAll`, hiện `orderBy: { scheduledAt: 'asc' }`
+  — cùng vấn đề khi nhiều lịch có cùng `scheduledAt`.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Trong `transactions.service.ts`, đổi `orderBy: { createdAt: 'desc' }` thành:
+   ```ts
+   orderBy: [{ createdAt: 'desc' }, { dailySeq: 'desc' }],
+   ```
+2. Trong `schedules.service.ts`, đổi `orderBy: { scheduledAt: 'asc' }` (trong hàm `findAll`, KHÔNG đụng
+   `orderBy` ở nơi khác nếu có) thành:
+   ```ts
+   orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+   ```
+
+QUY TẮC BẮT BUỘC:
+- CHỈ đổi đúng dòng `orderBy` ở 2 chỗ nêu trên, KHÔNG đổi `where`, `select`, `include`, hay bất kỳ logic
+  nào khác trong 2 file.
+- Giữ đúng chiều sort: `dailySeq` phải cùng chiều `desc` với `createdAt` (không đảo thành `asc`).
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/transactions/transactions.service.ts (chỉ orderBy trong findAll)
+- apps/backend/src/schedules/schedules.service.ts (chỉ orderBy trong findAll)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- Bất kỳ phần nào khác trong 2 file, và tất cả file khác trong dự án.
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung 2 file sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung 2 file hiện tại:
+
+--- transactions.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG TRANSACTIONS.SERVICE.TS Ở ĐÂY]
+
+--- schedules.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SCHEDULES.SERVICE.TS Ở ĐÂY]
