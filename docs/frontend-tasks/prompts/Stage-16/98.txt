@@ -1,0 +1,65 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần sửa để API đặt lịch nhập trả về ĐẦY ĐỦ danh sách vị
+trí cần dùng (không chỉ 1 vị trí chính), và lưu danh sách gợi ý (cả nhập lẫn xuất) vào bảng
+`ScheduleAllocation` (kind SUGGESTED).
+
+BỐI CẢNH:
+`apps/backend/src/schedules/schedules.service.ts`, hàm `computeInboundSuggestion`, đã tính ra biến
+`allocations` (mảng nhiều slot khi cần chia hàng) nhưng dòng `const top = allocations[0];` chỉ lấy phần tử
+đầu để hiển thị — các vị trí còn lại bị bỏ qua trong response, chỉ có cờ `splitRequired` báo chung chung.
+Phía Outbound, `computeOutboundSuggestion`/`OutboundSuggestionResult.pickingList: PickLine[]` ĐÃ trả đủ danh
+sách rồi, không cần sửa phần tính toán.
+
+Bảng `ScheduleAllocation` (đã có trong schema từ trước) có field: scheduleId, kind (SUGGESTED/ACTUAL),
+slotId, batchId (optional), quantity, sortOrder.
+
+Type `PickLine` (trong `common/services/fefo.service.ts`) có các field: skuCode, productName, batchId,
+batchCode, expiryDate, slotId, slotCode, slotPath, quantity, route, distanceToGate.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Thêm interface mới trong schedules.service.ts (đặt cạnh `InboundSuggestionResult`):
+   ```ts
+   export interface AlternativeSlot {
+     slotId: string;
+     slotPath: string;
+     allocateQty: number;
+     score: number;
+   }
+   ```
+2. Thêm field `alternativeSlots: AlternativeSlot[]` vào interface `InboundSuggestionResult`.
+3. Trong `computeInboundSuggestion`, sau khi có `allocations`, query CHI TIẾT (1 lần `findMany`, KHÔNG loop
+   gọi findUnique nhiều lần) toàn bộ slot trong `allocations` để lấy đủ thông tin format slotPath (giống
+   cách đang làm với biến `slotDetail` cho `top`, nhưng áp dụng cho TẤT CẢ phần tử trong `allocations`). Xây
+   dựng mảng `alternativeSlots` từ toàn bộ `allocations` (không chỉ top), thêm vào object trả về cuối hàm
+   (giữ nguyên mọi field cũ khác trong return).
+4. Trong `createInboundSchedule`, sau khi `this.prisma.schedule.create(...)` thành công, nếu
+   `suggestion.alternativeSlots.length > 0`, insert vào `ScheduleAllocation` bằng `createMany`:
+   `kind: 'SUGGESTED'`, `slotId` từ từng phần tử, `batchId: null` (vì Inbound chưa có batch thật lúc đặt
+   lịch), `quantity: allocateQty`, `sortOrder` = index trong mảng.
+5. Trong `createOutboundSchedule`, sau khi tạo `schedule` thành công, nếu `suggestion.pickingList.length > 0`,
+   insert `ScheduleAllocation` tương tự: `kind: 'SUGGESTED'`, lấy `slotId`, `batchId`, `quantity` trực tiếp
+   từ từng `PickLine`, `sortOrder` = index.
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi `SlotScoringService`/`FefoService` — chỉ dùng lại kết quả `allocations`/`pickingList` đã tính
+  sẵn, không tính toán lại.
+- KHÔNG đổi `executeInboundSchedule`/`executeOutboundSchedule` trong task này.
+- Dùng đúng tên field thật của `PickLine` như liệt kê ở trên (KHÔNG đoán tên field khác).
+- Query chi tiết slot phải dùng 1 lần `findMany({ where: { id: { in: [...] } } })`, không loop N lần.
+- Object trả về của `computeInboundSuggestion` phải giữ NGUYÊN mọi field cũ, chỉ THÊM `alternativeSlots`.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/schedules/schedules.service.ts
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/src/common/services/slot-scoring.service.ts
+- apps/backend/src/common/services/fefo.service.ts
+- Bất kỳ file nào khác.
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `schedules.service.ts` sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ
+nguyên").
+
+Đây là nội dung file hiện tại (đã bao gồm thay đổi Task 97 nếu có):
+
+--- schedules.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SCHEDULES.SERVICE.TS Ở ĐÂY]

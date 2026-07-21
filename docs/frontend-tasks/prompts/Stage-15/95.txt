@@ -1,0 +1,59 @@
+Bạn là trợ lý lập trình backend NestJS. Tôi cần sửa cách SẮP XẾP (không sửa cách TÍNH ĐIỂM) trong
+`SlotScoringService` để khi nhiều slot cùng level có điểm số gần bằng nhau, slot có mã số nhỏ hơn (Slot 1
+trước Slot 2...) được ưu tiên chọn trước.
+
+BỐI CẢNH:
+File `apps/backend/src/common/services/slot-scoring.service.ts`, hàm `findBestSlots`, dòng
+`scored.sort((a, b) => b.score - a.score);` — chỉ sort theo điểm, không có tie-break. Khi 2 slot cùng level
+có điểm gần bằng nhau (chênh lệch nhỏ do sai số/khác biệt nhỏ ở distanceToGate), Slot 1 có thể bị xếp sau
+Slot 2/3 một cách không mong muốn. Mã slot có định dạng `S01`, `S02`, ... (xem seed.ts: `code:
+\`S${String(s).padStart(2, '0')}\``).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Thêm vào đầu file (sau các dòng import, trước khai báo `class SlotScoringService`):
+   ```ts
+   const SCORE_TIE_EPSILON = 0.02;
+
+   function extractSlotNumber(code: string): number {
+     const digits = code.replace(/\D/g, '');
+     return digits ? parseInt(digits, 10) : 0;
+   }
+   ```
+2. Đổi dòng `scored.sort((a, b) => b.score - a.score);` thành:
+   ```ts
+   scored.sort((a, b) => {
+     const scoreDiff = b.score - a.score;
+     const sameLevel = a.level.levelNumber === b.level.levelNumber;
+
+     if (sameLevel && Math.abs(scoreDiff) < SCORE_TIE_EPSILON) {
+       return extractSlotNumber(a.code) - extractSlotNumber(b.code);
+     }
+     return scoreDiff;
+   });
+   ```
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi hàm `computeScore`, `isValidSlot`, `computeFefoScore` — chỉ sửa đúng dòng `sort` nêu trên và
+  thêm 2 khai báo hằng số/hàm helper ở đầu file.
+- Tie-break theo mã slot CHỈ áp dụng khi 2 slot CÙNG level (`a.level.levelNumber === b.level.levelNumber`)
+  — khác level thì vẫn sort theo điểm số như cũ dù điểm gần bằng nhau.
+- So sánh mã slot PHẢI theo giá trị SỐ trích ra từ chuỗi (dùng `extractSlotNumber`), KHÔNG so sánh chuỗi
+  trực tiếp (vì "S10" < "S2" theo alphabet là sai thứ tự thực tế).
+- `a.level`/`b.level` đã có sẵn trong object (vì `findBestSlots` đã `include: { level: true }` khi query
+  slot ban đầu) — không cần sửa câu query.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/common/services/slot-scoring.service.ts
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- Bất kỳ file nào khác trong dự án.
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `slot-scoring.service.ts` sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ
+nguyên"). Nếu file này đã có thay đổi từ 1 task trước đó (thêm ưu tiên level cho hàng nặng), hãy giữ nguyên
+toàn bộ thay đổi đó, chỉ thêm đúng phần sort tie-break nêu trên.
+
+Đây là nội dung file hiện tại (có thể đã bao gồm thay đổi ưu tiên hàng nặng từ task trước):
+
+--- slot-scoring.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SLOT-SCORING.SERVICE.TS Ở ĐÂY]

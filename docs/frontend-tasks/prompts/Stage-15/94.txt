@@ -1,0 +1,52 @@
+Bạn là trợ lý lập trình backend NestJS. Tôi cần sửa thuật toán chấm điểm chọn vị trí kho (`SlotScoringService`)
+để hàng nặng được ƯU TIÊN THẬT SỰ vào level thấp nhất còn hợp lệ, còn hàng tiêu chuẩn giữ nguyên hành vi cũ
+100% không đổi.
+
+BỐI CẢNH:
+File `apps/backend/src/common/services/slot-scoring.service.ts` có hàm `isValidSlot` đã loại slot ở
+level > 2 cho sản phẩm `isHeavy = true`, nhưng đó chỉ là bộ lọc loại trừ — trong các level còn hợp lệ (level
+1, level 2), thuật toán `computeScore` không hề ưu tiên level thấp hơn, tham số `_product` trong
+`computeScore` hoàn toàn không được dùng (đặt tên có gạch dưới = cố tình không dùng). Công thức điểm hiện
+tại: `0.4*D + 0.3*F + 0.2*C + 0.1*O` áp dụng như nhau cho mọi sản phẩm.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Trong `findBestSlots`, sau khi có mảng `valid`, tính thêm
+   `const maxLevelNumber = Math.max(...valid.map((s) => s.level.levelNumber), 1);`
+2. Sửa lời gọi `computeScore` trong việc tạo mảng `scored`, truyền thêm `maxLevelNumber` làm tham số cuối.
+3. Sửa hàm `computeScore`:
+   - Đổi tên tham số `_product` thành `product` (bỏ gạch dưới, giờ dùng tới).
+   - Thêm tham số mới `maxLevelNumber: number`.
+   - Thêm `level: { levelNumber: number }` vào type của tham số `slot` (hiện type slot trong hàm này chưa
+     khai báo field `level`, dù dữ liệu thực tế luôn có sẵn từ `include` ở `findBestSlots`).
+   - Thêm 1 hàm private mới `computeLevelScore(levelNumber: number, maxLevelNumber: number): number`:
+     nếu `maxLevelNumber <= 1` trả về `1`; ngược lại trả về `1 - (levelNumber - 1) / (maxLevelNumber - 1)`.
+   - Trong `computeScore`, sau khi tính D, C, O, F như cũ, tính thêm `const L = this.computeLevelScore(slot.level.levelNumber, maxLevelNumber);`
+   - Nếu `product.isHeavy === true`: return `0.5 * L + 0.2 * D + 0.2 * F + 0.1 * C` (không dùng O).
+   - Ngược lại (hàng tiêu chuẩn): return ĐÚNG công thức cũ `0.4 * D + 0.3 * F + 0.2 * C + 0.1 * O` — không
+     đổi bất kỳ hệ số nào.
+
+QUY TẮC BẮT BUỘC:
+- TUYỆT ĐỐI KHÔNG đổi hàm `isValidSlot` — giữ nguyên 100%.
+- TUYỆT ĐỐI KHÔNG đổi hàm `computeFefoScore`.
+- Với sản phẩm `isHeavy = false`, kết quả điểm số phải giống hệt (bit-for-bit về công thức) như trước khi
+  sửa — không được vô tình đổi công thức nhánh này.
+- KHÔNG đổi chữ ký (tên hàm, thứ tự/kiểu tham số đầu vào, kiểu trả về) của `findBestSlots` — các nơi khác
+  trong code đang gọi hàm này với đúng 3 tham số (product, quantity, incomingExpiry), không được yêu cầu
+  sửa thêm ở nơi gọi.
+- Phải xử lý an toàn trường hợp `maxLevelNumber <= 1` (tránh chia cho 0 / NaN).
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/common/services/slot-scoring.service.ts
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- Bất kỳ file nào khác, kể cả nơi gọi SlotScoringService (schedules.service.ts) — chữ ký hàm public không
+  đổi nên không cần sửa nơi gọi.
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `slot-scoring.service.ts` sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ
+nguyên").
+
+Đây là nội dung file hiện tại:
+
+--- slot-scoring.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SLOT-SCORING.SERVICE.TS Ở ĐÂY]

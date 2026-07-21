@@ -1,0 +1,70 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần ghi lại tồn kho TRƯỚC/SAU mỗi giao dịch nhập/xuất
+(field `quantityBefore`/`quantityAfter`/`dailySeq` đã có sẵn trong schema Transaction), và thêm endpoint chi
+tiết 1 giao dịch.
+
+BỐI CẢNH:
+File `apps/backend/src/schedules/schedules.service.ts` có 2 chỗ tạo `Transaction`:
+1. `executeInboundSchedule`: gọi `tx.inventory.upsert(...)` để cộng tồn kho, SAU ĐÓ mới `tx.transaction.create(...)`.
+   Cần đọc tồn kho hiện tại (`tx.inventory.findUnique`) TRƯỚC khi upsert để có giá trị "trước", rồi tính
+   "sau" = trước + schedule.quantity.
+2. `executeOutboundSchedule`: trong vòng lặp `for (const line of pickLines)`, đã có sẵn biến `inv` (đọc bằng
+   `tx.inventory.findUnique` TRƯỚC khi update/xoá) — đó chính là giá trị "trước". Giá trị "sau" =
+   `inv.quantity - line.quantity` (hoặc 0 nếu bị xoá hẳn).
+
+`TransactionsController` hiện chỉ có `GET /transactions` (danh sách), thiếu route chi tiết theo id.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Tạo file mới `apps/backend/src/common/utils/transaction-seq.util.ts`, export hàm:
+   ```ts
+   export async function getNextDailySeq(tx: Prisma.TransactionClient, at: Date = new Date()): Promise<number>
+   ```
+   Logic: đếm số `Transaction` có `createdAt` trong cùng ngày dương lịch với `at` (dùng setHours(0,0,0,0)
+   để lấy đầu ngày, +1 ngày để lấy cuối ngày), trả về `count + 1`.
+2. Trong `executeInboundSchedule`: thêm đoạn đọc `existingInv` TRƯỚC dòng `tx.inventory.upsert`, tính
+   `quantityBefore = existingInv?.quantity ?? 0`, `quantityAfter = quantityBefore + schedule.quantity`. Thêm
+   3 field `quantityBefore`, `quantityAfter`, `dailySeq: await getNextDailySeq(tx)` vào `data` của
+   `tx.transaction.create(...)` ở hàm này.
+3. Trong `executeOutboundSchedule`: trong vòng lặp, dùng biến `inv` đã có sẵn để tính
+   `quantityBefore = inv.quantity`, `quantityAfter = inv.quantity - line.quantity`. Thêm 3 field
+   `quantityBefore`, `quantityAfter`, `dailySeq: await getNextDailySeq(tx)` vào `data` của
+   `tx.transaction.create(...)` trong vòng lặp này.
+4. Trong `transactions.service.ts`:
+   - Thêm `quantityBefore: true, quantityAfter: true, dailySeq: true` vào object `select` trong `findAll()`.
+   - Cập nhật type tham số và phần return trong `toTransactionView` để có thêm 3 field này.
+   - Thêm hàm `async findOne(id: string)`: query `prisma.transaction.findUnique` với CÙNG `select` như
+     `findAll`, nếu không tìm thấy ném `NotFoundException('Transaction not found')` (import từ
+     `@nestjs/common`), nếu có thì `return toTransactionView(item)`.
+5. Trong `transactions.controller.ts`: thêm route `GET /transactions/:id` gọi `service.findOne(id)`, dùng
+   cùng decorator pattern (`@Roles(MANAGER_ROLE)`, `@ApiAuthReadErrors()`) như route `GET /transactions`
+   hiện có, import thêm `Param` từ `@nestjs/common`.
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi logic FEFO/slot-scoring/allocations trong schedules.service.ts — chỉ thêm code tính before/after
+  quanh đúng 2 chỗ `tx.transaction.create` đã nêu.
+- Với outbound, PHẢI tính before/after RIÊNG cho từng dòng trong vòng lặp, không dùng chung 1 giá trị.
+- `getNextDailySeq` PHẢI nhận `tx: Prisma.TransactionClient` (client trong transaction), KHÔNG dùng
+  `this.prisma` trực tiếp — để đảm bảo nhất quán khi nhiều dòng được tạo trong cùng 1 lần xuất.
+
+FILE ĐƯỢC PHÉP SỬA/TẠO:
+- Tạo mới: apps/backend/src/common/utils/transaction-seq.util.ts
+- Sửa: apps/backend/src/schedules/schedules.service.ts
+- Sửa: apps/backend/src/transactions/transactions.service.ts
+- Sửa: apps/backend/src/transactions/transactions.controller.ts
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/prisma/schema.prisma
+- apps/frontend/**
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung 4 file đã sửa/tạo (đầy đủ, không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung các file hiện tại:
+
+--- schedules.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SCHEDULES.SERVICE.TS Ở ĐÂY]
+
+--- transactions.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG TRANSACTIONS.SERVICE.TS Ở ĐÂY]
+
+--- transactions.controller.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG TRANSACTIONS.CONTROLLER.TS Ở ĐÂY]
