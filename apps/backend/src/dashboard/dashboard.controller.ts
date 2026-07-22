@@ -26,6 +26,13 @@ export class DashboardController {
     return this.service.getSummary();
   }
 
+  @Get('expiring-batches')
+  @Roles(MANAGER_ROLE)
+  @ApiAuthReadErrors()
+  expiringBatches() {
+    return this.service.getExpiringBatches();
+  }
+
   @Get('chart')
   @Roles(MANAGER_ROLE)
   @ApiQuery({

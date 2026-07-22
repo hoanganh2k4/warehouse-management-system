@@ -5,7 +5,15 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { paginate, skipTake } from '../common/utils/pagination.util';
+import { getExpiryStatus } from '../common/utils/expiry.util';
 import { BatchQueryDto, CreateBatchDto } from './dto/batch.dto';
+
+// Gắn thêm expiryStatus/daysUntilExpiry lên 1 batch, không đổi field nào khác
+// đã có sẵn (giữ nguyên toàn bộ shape gốc của Prisma trả về).
+function attachExpiryStatus<T extends { expiryDate: Date }>(batch: T) {
+  const { status, daysUntilExpiry } = getExpiryStatus(batch.expiryDate);
+  return { ...batch, expiryStatus: status, daysUntilExpiry };
+}
 
 @Injectable()
 export class BatchesService {
@@ -29,7 +37,7 @@ export class BatchesService {
       this.prisma.batch.count({ where }),
     ]);
 
-    return paginate(items, page, limit, total);
+    return paginate(items.map(attachExpiryStatus), page, limit, total);
   }
 
   async findOne(id: string) {
@@ -49,7 +57,7 @@ export class BatchesService {
       },
     });
     if (!batch) throw new NotFoundException('Batch not found');
-    return batch;
+    return attachExpiryStatus(batch);
   }
 
   async create(dto: CreateBatchDto) {
