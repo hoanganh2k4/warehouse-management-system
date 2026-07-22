@@ -55,15 +55,15 @@ model Category {
 }
 
 model Product {
-  id         String   @id @default(uuid())
-  skuCode    String   @unique
+  id         String    @id @default(uuid())
+  skuCode    String    @unique
   name       String
   categoryId String
-  category   Category @relation(fields: [categoryId], references: [id])
+  category   Category  @relation(fields: [categoryId], references: [id])
   unit       String
-  isHeavy    Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  isHeavy    Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
 
   batches   Batch[]
@@ -84,10 +84,11 @@ model Batch {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  inventories     Inventory[]
-  transactions    Transaction[]
-  schedulesSugg   Schedule[]    @relation("ScheduleSuggestedBatch")
-  schedulesActual Schedule[]    @relation("ScheduleActualBatch")
+  inventories         Inventory[]
+  transactions        Transaction[]
+  schedulesSugg       Schedule[]           @relation("ScheduleSuggestedBatch")
+  schedulesActual     Schedule[]           @relation("ScheduleActualBatch")
+  scheduleAllocations ScheduleAllocation[]
 
   @@index([productId])
   @@index([expiryDate])
@@ -196,11 +197,12 @@ model Slot {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
-  inventories     Inventory[]
-  transactionsIn  Transaction[] @relation("SlotTo")
-  transactionsOut Transaction[] @relation("SlotFrom")
-  schedulesSugg   Schedule[]    @relation("ScheduleSuggestedSlot")
-  schedulesActual Schedule[]    @relation("ScheduleActualSlot")
+  inventories         Inventory[]
+  transactionsIn      Transaction[]        @relation("SlotTo")
+  transactionsOut     Transaction[]        @relation("SlotFrom")
+  schedulesSugg       Schedule[]           @relation("ScheduleSuggestedSlot")
+  schedulesActual     Schedule[]           @relation("ScheduleActualSlot")
+  scheduleAllocations ScheduleAllocation[]
 
   @@unique([levelId, code])
   @@index([currentProductId])
@@ -241,15 +243,24 @@ model Transaction {
   slotToId   String?
   slotTo     Slot?           @relation("SlotTo", fields: [slotToId], references: [id])
   quantity   Int
-  userId     String
-  user       User            @relation(fields: [userId], references: [id])
-  note       String?
-  createdAt  DateTime        @default(now())
+
+  // Tồn kho tại slot liên quan TRƯỚC giao dịch (Task 91 sẽ điền)
+  quantityBefore Int?
+  // Tồn kho tại slot liên quan SAU giao dịch (Task 91 sẽ điền)
+  quantityAfter  Int?
+  // Thứ tự trong ngày, dùng để sort liên tiếp (Task 91/93)
+  dailySeq       Int?
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  note      String?
+  createdAt DateTime @default(now())
 
   schedule Schedule?
 
   @@index([batchId])
   @@index([type])
+  @@index([createdAt, dailySeq])
   @@map("transactions")
 }
 
@@ -287,6 +298,11 @@ enum ScheduleOverrideReason {
   OTHER // Khác (dùng kèm overrideReasonNote)
 }
 
+enum AllocationKind {
+  SUGGESTED
+  ACTUAL
+}
+
 model Schedule {
   id     String         @id @default(uuid())
   type   ScheduleType
@@ -302,6 +318,11 @@ model Schedule {
   // Mã lô hàng do người dùng nhập tay khi đặt lịch (không bắt buộc)
   batchCode String?
 
+  // Mã đơn riêng, tự sinh, dùng để tra cứu (Task 92)
+  orderCode  String?   @unique
+  // HSD lô hàng, thu ngay lúc đặt lịch (chỉ dùng khi type = INBOUND)
+  expiryDate DateTime?
+
   // Nhập kho -> supplier bắt buộc; Xuất kho -> customer bắt buộc (kiểm tra ở tầng service/DTO)
   supplierId String?
   supplier   Supplier? @relation(fields: [supplierId], references: [id])
@@ -312,22 +333,22 @@ model Schedule {
 
   // ---- Smart Suggestion (snapshot tại thời điểm đặt lịch, chỉ mang tính tham khảo) ----
   suggestedSlotId   String?
-  suggestedSlot     Slot?    @relation("ScheduleSuggestedSlot", fields: [suggestedSlotId], references: [id])
+  suggestedSlot     Slot?     @relation("ScheduleSuggestedSlot", fields: [suggestedSlotId], references: [id])
   suggestedBatchId  String? // Chỉ dùng cho Outbound: Batch được FEFO đề xuất
-  suggestedBatch    Batch?   @relation("ScheduleSuggestedBatch", fields: [suggestedBatchId], references: [id])
+  suggestedBatch    Batch?    @relation("ScheduleSuggestedBatch", fields: [suggestedBatchId], references: [id])
   suggestionScore   Float? // % độ phù hợp
   suggestionReasons String[] // Danh sách lý do đề xuất, hiển thị dạng "✓ ..."
   suggestedAt       DateTime?
 
   // ---- Kết quả thực tế khi người dùng nhấn "Thực hiện" và xác nhận ----
-  actualSlotId        String?
-  actualSlot          Slot?                   @relation("ScheduleActualSlot", fields: [actualSlotId], references: [id])
-  actualBatchId       String?
-  actualBatch         Batch?                  @relation("ScheduleActualBatch", fields: [actualBatchId], references: [id])
-  allocationMethod    AllocationMethod? // Nhập kho
-  selectionMethod     SelectionMethod? // Xuất kho
-  overrideReason      ScheduleOverrideReason?
-  overrideReasonNote  String? // Khi overrideReason = OTHER
+  actualSlotId       String?
+  actualSlot         Slot?                   @relation("ScheduleActualSlot", fields: [actualSlotId], references: [id])
+  actualBatchId      String?
+  actualBatch        Batch?                  @relation("ScheduleActualBatch", fields: [actualBatchId], references: [id])
+  allocationMethod   AllocationMethod? // Nhập kho
+  selectionMethod    SelectionMethod? // Xuất kho
+  overrideReason     ScheduleOverrideReason?
+  overrideReasonNote String? // Khi overrideReason = OTHER
 
   executedById String?
   executedBy   User?     @relation("ScheduleExecutedBy", fields: [executedById], references: [id])
@@ -336,6 +357,9 @@ model Schedule {
   // Transaction được sinh ra sau khi xác nhận thực hiện (1-1)
   transactionId String?      @unique
   transaction   Transaction? @relation(fields: [transactionId], references: [id])
+
+  // Danh sách đầy đủ vị trí/lô được gợi ý hoặc thực hiện (Task 98-99)
+  allocations ScheduleAllocation[]
 
   createdById String
   createdBy   User     @relation("ScheduleCreatedBy", fields: [createdById], references: [id])
@@ -350,4 +374,25 @@ model Schedule {
   @@index([scheduledAt])
   @@index([productId])
   @@map("schedules")
+}
+
+model ScheduleAllocation {
+  id         String         @id @default(uuid())
+  scheduleId String
+  schedule   Schedule       @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  kind       AllocationKind
+
+  slotId String
+  slot   Slot   @relation(fields: [slotId], references: [id])
+
+  batchId String?
+  batch   Batch?  @relation(fields: [batchId], references: [id])
+
+  quantity  Int
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([scheduleId, kind])
+  @@map("schedule_allocations")
 }
