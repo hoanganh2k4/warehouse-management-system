@@ -1,0 +1,73 @@
+Bạn là trợ lý lập trình frontend React/TypeScript. Tôi cần thêm ô tìm kiếm theo "mã đơn" (orderCode) trên
+trang Lịch sử giao dịch, áp dụng cho cả 2 tab (Lịch sử giao dịch + Lịch nhập/xuất).
+
+BỐI CẢNH:
+Backend đã hỗ trợ: `GET /transactions?orderCode=...` (lọc theo mã đơn) và `GET /schedules/by-code/:orderCode`
+(tra đúng 1 lịch theo mã đơn, 404 nếu không tìm thấy). `apps/frontend/src/pages/transactions/TransactionList.tsx`
+hiện có 2 tab: "history" (bảng Transaction, dùng hook `useTransactions`) và "schedule" (bảng Schedule, dùng
+hook `useSchedules`, có sẵn state `detailSchedule` để mở `ScheduleDetailModal`). Muốn thêm 1 ô input dùng
+chung cho cả 2 tab, có debounce, theo đúng pattern debounce đã dùng ở `InventoryList.tsx` (state `xxxInput`
++ state `xxx` cập nhật sau 400ms qua `setTimeout`/`clearTimeout` trong `useEffect`).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Trong `apps/frontend/src/types.ts`, thêm `orderCode?: string;` vào `GetTransactionsParams`.
+2. Trong `apps/frontend/src/services/schedule.service.ts`, thêm method:
+   ```ts
+   getByOrderCode(orderCode: string): Promise<Schedule> {
+     return apiClient.get(`/schedules/by-code/${orderCode}`);
+   },
+   ```
+3. Trong `TransactionList.tsx`:
+   - Thêm state `orderCodeInput` (string), debounce 400ms ra state `orderCode` (giống pattern
+     `skuInput`/`sku` trong InventoryList.tsx — dùng `useEffect` + `setTimeout`/`clearTimeout`).
+   - Thêm state `orderCodeSearchError: string | null`.
+   - Thêm 1 ô `<input>` "Tìm theo mã đơn (VD: SCH-20260722-0001)" trong khu vực `page-header-controls`, đặt
+     TRƯỚC `<nav className="tab-nav">` (áp dụng chung cho cả 2 tab, không lồng riêng trong 1 tab).
+   - Truyền `orderCode: orderCode || undefined` vào object params gọi `useTransactions(...)`.
+   - Thêm `useEffect` mới: khi `activeTab === 'schedule'` VÀ `orderCode` có giá trị, gọi
+     `scheduleService.getByOrderCode(orderCode)`; nếu thành công, `setDetailSchedule(result)` (mở modal có
+     sẵn); nếu lỗi, set `orderCodeSearchError` với thông báo rõ ràng, KHÔNG throw lỗi ra ngoài. Khi
+     `activeTab !== 'schedule'` hoặc `orderCode` rỗng, reset `orderCodeSearchError` về `null`. Effect này
+     phải có cờ `cancelled` để tránh race condition.
+   - Hiển thị `orderCodeSearchError` (nếu có) ngay dưới ô input, dùng class `form-error` có sẵn trong dự án.
+
+QUY TẮC BẮT BUỘC:
+- Debounce input 400ms, đúng pattern đã dùng trong InventoryList.tsx.
+- `useEffect` tra cứu theo mã đơn PHẢI có cờ `cancelled`.
+- KHÔNG coi lỗi 404 (không tìm thấy) là lỗi hệ thống nghiêm trọng — chỉ hiện thông báo nhẹ nhàng dưới ô
+  input, KHÔNG hiện toast lỗi to hay crash trang.
+- KHÔNG đổi `ScheduleDetailModal.tsx`.
+- Nếu hook `useTransactions` có danh sách tham số cố định (không tự động forward mọi field trong params) —
+  kiểm tra kỹ file `useTransactions.ts` (dán bên dưới), nếu cần thêm `orderCode` vào đó thì thêm, và ghi rõ
+  trong phần giải thích đầu ra là bạn đã phải sửa thêm file này và lý do.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/frontend/src/types.ts
+- apps/frontend/src/services/schedule.service.ts
+- apps/frontend/src/pages/transactions/TransactionList.tsx
+- apps/frontend/src/hooks/useTransactions.ts (CHỈ nếu thực sự cần thiết — xem quy tắc ở trên)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/frontend/src/components/ScheduleDetailModal.tsx
+- Bất kỳ file backend nào
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung tất cả file đã sửa (đầy đủ, không rút gọn bằng comment "giữ nguyên"), kèm 1 dòng ghi
+chú nếu có sửa `useTransactions.ts` và lý do.
+
+Đây là nội dung các file hiện tại:
+
+--- types.ts (phần liên quan GetTransactionsParams) ---
+[DÁN NỘI DUNG PHẦN GETTRANSACTIONSPARAMS TRONG TYPES.TS Ở ĐÂY]
+
+--- schedule.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SCHEDULE.SERVICE.TS Ở ĐÂY]
+
+--- TransactionList.tsx (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG TRANSACTIONLIST.TSX Ở ĐÂY]
+
+--- useTransactions.ts (hiện tại, đầy đủ, tham khảo) ---
+[DÁN TOÀN BỘ NỘI DUNG USETRANSACTIONS.TS Ở ĐÂY]
+
+--- InventoryList.tsx (tham khảo pattern debounce, không sửa) ---
+[DÁN TOÀN BỘ NỘI DUNG INVENTORYLIST.TSX Ở ĐÂY]

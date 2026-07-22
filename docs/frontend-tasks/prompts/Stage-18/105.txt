@@ -1,0 +1,80 @@
+Bạn là trợ lý lập trình frontend React/TypeScript. Tôi cần thêm hiển thị hạn sử dụng + badge màu cảnh báo
+(OK/WARNING/CRITICAL/EXPIRED) ở trang Tồn kho và popup chi tiết Slot trong Racking.
+
+BỐI CẢNH:
+- Backend `GET /inventory` giờ trả thêm field `expiryDate` (string ISO), `expiryStatus`
+  ('OK'|'WARNING'|'CRITICAL'|'EXPIRED'), `daysUntilExpiry` (number) cho mỗi item — nhưng type
+  `InventoryItem` (`apps/frontend/src/types.ts`) và component `InventoryTable.tsx` chưa dùng các field này.
+- `apps/frontend/src/pages/racking/components/SlotDetailDialog.tsx` hiện chỉ hiển thị sản phẩm đang ở slot
+  (`product`), không có thông tin lô hàng/hạn sử dụng. Muốn lấy dữ liệu này, gọi
+  `inventoryService.getInventory({ slotId: slot.id })` — API `GET /inventory` đã hỗ trợ filter theo
+  `slotId` (field này đã có sẵn trong `GetInventoryParams`), không cần API mới.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Trong `apps/frontend/src/types.ts`, thêm 3 field vào `InventoryItem`:
+   `expiryDate: string`, `expiryStatus: 'OK' | 'WARNING' | 'CRITICAL' | 'EXPIRED'`,
+   `daysUntilExpiry: number` (đặt trước `updatedAt`).
+2. Tạo file mới `apps/frontend/src/utils/expiry.utils.ts`, export:
+   - `type ExpiryStatus = 'OK' | 'WARNING' | 'CRITICAL' | 'EXPIRED'`
+   - `getExpiryBadgeClass(status: ExpiryStatus): string` — trả về `'expiry-badge is-ok'`,
+     `'expiry-badge is-warning'`, `'expiry-badge is-critical'`, `'expiry-badge is-expired'` tương ứng.
+   - `getExpiryLabel(status: ExpiryStatus, daysUntilExpiry: number): string` — EXPIRED trả
+     `Đã hết hạn {abs(daysUntilExpiry)} ngày`; CRITICAL/WARNING trả `Còn {daysUntilExpiry} ngày`; OK trả
+     `Còn hạn`.
+   - `formatDate(value: string): string` — format `dd/mm/yyyy`.
+3. Trong `apps/frontend/src/components/InventoryTable.tsx`: thêm cột `<th>Hạn sử dụng</th>` (sau cột "Số
+   lượng", trước "Cập nhật lúc") — thêm cả ở bảng skeleton loading (thêm `<td>` skeleton tương ứng) lẫn bảng
+   dữ liệu thật (thêm `<td>` hiển thị badge dùng `getExpiryBadgeClass`/`getExpiryLabel`/`formatDate` vừa
+   tạo). Import các hàm này từ `'../utils/expiry.utils'`.
+4. Trong `apps/frontend/src/pages/racking/components/SlotDetailDialog.tsx`:
+   - Thêm `useState`/`useEffect` (import từ 'react'): khi `slot.id` thay đổi, gọi
+     `inventoryService.getInventory({ slotId: slot.id, limit: 10 })` (import `inventoryService` từ
+     `'../../../services/inventory.service'`), lưu `result.items` vào state `slotBatches`
+     (`InventoryItem[]`), có state `slotBatchesLoading` (boolean).
+   - Thêm 1 mục mới trong `<dl className="warehouse-map-popup-list">`, đặt SAU mục "Hàng hoá", TRƯỚC
+     `</dl>`: hiển thị "Đang tải..." khi loading, "Không có lô hàng" khi rỗng, hoặc danh sách các batch với
+     badge màu (dùng `getExpiryBadgeClass`, `getExpiryLabel`, `formatDate`).
+5. Thêm CSS cho class `.expiry-badge` và 4 biến thể `.is-ok` (xanh lá), `.is-warning` (vàng), `.is-critical`
+   (cam), `.is-expired` (đỏ) vào file CSS chung của dự án (tìm đúng file đang định nghĩa
+   `.slot-status-badge` để thêm cạnh đó, giữ đúng convention màu/style hiện có của dự án — bạn xem file CSS
+   tôi dán bên dưới để chọn đúng vị trí thêm).
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi cách `RackingPage.tsx` gọi `<SlotDetailDialog />` — không cần thêm prop mới, component tự fetch
+  bên trong.
+- `useEffect` fetch dữ liệu trong `SlotDetailDialog` PHẢI có dependency array đúng (`[slot.id]`), tránh gọi
+  API lặp vô hạn.
+- Xử lý rõ ràng 3 trạng thái: đang tải, rỗng (không có lô), có dữ liệu.
+- KHÔNG đổi bất kỳ logic/field nào khác trong các file — chỉ thêm phần liên quan tới hạn sử dụng.
+
+FILE ĐƯỢC PHÉP SỬA/TẠO:
+- apps/frontend/src/types.ts
+- Tạo mới: apps/frontend/src/utils/expiry.utils.ts
+- apps/frontend/src/components/InventoryTable.tsx
+- apps/frontend/src/pages/racking/components/SlotDetailDialog.tsx
+- File CSS chung của dự án (thêm class `.expiry-badge` + biến thể)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/frontend/src/pages/inventory/InventoryList.tsx
+- apps/frontend/src/pages/racking/RackingPage.tsx
+- Bất kỳ file backend nào
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung tất cả file đã sửa/tạo (đầy đủ, không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung các file hiện tại:
+
+--- types.ts (chỉ phần liên quan InventoryItem và GetInventoryParams, đủ ngữ cảnh) ---
+[DÁN NỘI DUNG TYPES.TS Ở ĐÂY]
+
+--- InventoryTable.tsx (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG INVENTORYTABLE.TSX Ở ĐÂY]
+
+--- SlotDetailDialog.tsx (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SLOTDETAILDIALOG.TSX Ở ĐÂY]
+
+--- inventory.service.ts (frontend, tham khảo, không sửa) ---
+[DÁN TOÀN BỘ NỘI DUNG INVENTORY.SERVICE.TS (FRONTEND) Ở ĐÂY]
+
+--- File CSS chung của dự án (nơi định nghĩa .slot-status-badge) ---
+[DÁN NỘI DUNG FILE CSS LIÊN QUAN Ở ĐÂY]

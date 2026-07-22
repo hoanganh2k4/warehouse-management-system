@@ -1,0 +1,38 @@
+Bạn là trợ lý lập trình frontend React/TypeScript. Tôi cần sửa TEXT mô tả (hint) của 2 StatCard trên trang
+Dashboard cho khớp đúng ý nghĩa dữ liệu sau khi backend đã sửa công thức tính occupancyPercent.
+
+BỐI CẢNH:
+`apps/frontend/src/pages/dashboard/Dashboard.tsx` có 2 card liên quan tới slot:
+- Card "Slot trống": hiển thị `availableSlots / totalSlots` (đếm SỐ LƯỢNG slot), hint hiện tại
+  `"Trống / tổng số slot"`.
+- Card "Tỉ lệ lấp đầy": hiển thị `occupancyPercent%`, hint hiện tại SAI là `"Slot đang sử dụng"` — trong khi
+  backend đã sửa để giá trị này tính theo DUNG LƯỢNG (capacity), không phải đếm slot. Hint cũ gây hiểu nhầm
+  2 card đang lặp ý nghĩa.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Đổi `hint` của card "Tỉ lệ lấp đầy" từ `"Slot đang sử dụng"` thành `"Theo dung lượng đã dùng"`.
+2. Đổi `hint` của card "Slot trống" từ `"Trống / tổng số slot"` thành
+   `"Số lượng slot, không tính dung lượng"`.
+
+QUY TẮC BẮT BUỘC:
+- CHỈ đổi giá trị prop `hint` của 2 StatCard nêu trên.
+- KHÔNG đổi `label`, `value`, `icon` của bất kỳ card nào.
+- KHÔNG đổi bất kỳ logic/hook/API call nào trong file.
+- KHÔNG đụng tới `StatCard.tsx` hay bất kỳ file nào khác.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/frontend/src/pages/dashboard/Dashboard.tsx
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/frontend/src/components/StatCard.tsx
+- apps/frontend/src/hooks/useDashboard.ts
+- apps/frontend/src/services/dashboard.service.ts
+- apps/frontend/src/types.ts
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `Dashboard.tsx` sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung file hiện tại:
+
+--- Dashboard.tsx (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG DASHBOARD.TSX Ở ĐÂY]

@@ -1,0 +1,62 @@
+Bạn là trợ lý lập trình frontend React/TypeScript. Tôi cần thêm 1 field KHÔNG BẮT BUỘC "Hạn sử dụng dự
+kiến" vào form đặt lịch nhập.
+
+BỐI CẢNH:
+Backend `POST /schedules/inbound/preview` và `POST /schedules/inbound` giờ chấp nhận thêm field optional
+`expiryDate` (string, ISO date) — nếu có, dùng để tính gợi ý vị trí FEFO chính xác hơn; nếu không có, hệ
+thống tự dùng `scheduledDate` như trước (không đổi hành vi cũ). `InboundScheduleModal.tsx` hiện có các field
+`scheduledDate`, `scheduledTime`, `supplierId`, `productId`, `quantity`, `batchCode`, `note` — có 1
+`useEffect` tự động gọi API preview khi `productId`/`quantity`/`scheduledDate` đổi, và 1 `handleSubmit` gọi
+API tạo lịch thật.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Trong `apps/frontend/src/types.ts`, thêm `expiryDate?: string;` vào CẢ HAI type
+   `InboundSuggestionPreviewPayload` và `CreateInboundSchedulePayload`.
+2. Trong `InboundScheduleModal.tsx`:
+   - Thêm `expiryDate: string;` vào `type FormState`, thêm `expiryDate: ''` vào `INITIAL_FORM`.
+   - Thêm `form.expiryDate` vào dependency array của `useEffect` gọi API preview.
+   - Trong object gửi lên API preview, thêm `expiryDate: form.expiryDate || undefined`.
+   - Trong `payload` gửi lên API tạo lịch (`handleSubmit`), thêm `expiryDate: form.expiryDate || undefined`.
+   - Thêm field input date trong JSX, đặt NGAY SAU field `scheduledDate` hiện có, theo đúng cấu trúc
+     `form-field`/`form-label`/`form-input` các field khác đang dùng:
+     ```tsx
+     <div className="form-field">
+       <label className="form-label" htmlFor="in-expiryDate">
+         Hạn sử dụng dự kiến (nếu đã biết)
+       </label>
+       <input
+         id="in-expiryDate"
+         type="date"
+         className="form-input"
+         value={form.expiryDate}
+         onChange={(e) => updateField('expiryDate', e.target.value)}
+       />
+     </div>
+     ```
+
+QUY TẮC BẮT BUỘC:
+- Field `expiryDate` KHÔNG được validate bắt buộc — không thêm vào object `errors`/hàm validate, không gọi
+  `handleBlur` cho field này.
+- Khi field trống, PHẢI gửi `undefined` (dùng `form.expiryDate || undefined`), KHÔNG gửi chuỗi rỗng `''` lên
+  API (tránh lỗi validate `@IsDateString` ở backend).
+- KHÔNG đổi field/logic nào khác trong form (giữ nguyên toàn bộ validation, cấu trúc field hiện có).
+- KHÔNG đụng `OutboundScheduleModal.tsx`.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/frontend/src/types.ts
+- apps/frontend/src/components/InboundScheduleModal.tsx
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/frontend/src/components/OutboundScheduleModal.tsx
+- Bất kỳ file backend nào
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung 2 file đã sửa (đầy đủ, không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung 2 file hiện tại:
+
+--- types.ts (phần liên quan InboundSuggestionPreviewPayload, CreateInboundSchedulePayload) ---
+[DÁN NỘI DUNG PHẦN LIÊN QUAN TRONG TYPES.TS Ở ĐÂY]
+
+--- InboundScheduleModal.tsx (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG INBOUNDSCHEDULEMODAL.TSX Ở ĐÂY]

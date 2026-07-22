@@ -1,0 +1,77 @@
+Bạn là trợ lý lập trình frontend React/TypeScript. Tôi cần thêm nút "Chi tiết" cho mỗi dòng giao dịch, mở
+modal hiển thị tồn kho trước/sau giao dịch.
+
+BỐI CẢNH:
+Backend đã có `GET /transactions/:id` trả về Transaction đầy đủ, gồm `quantityBefore`, `quantityAfter`,
+`dailySeq`, và (qua relation Schedule) `orderCode`. `TransactionTable.tsx` hiện chưa có cột hành động nào,
+không có cách xem chi tiết 1 giao dịch. Đã có sẵn pattern tương tự cho Schedule:
+`ScheduleTable` có prop `onViewDetail`, `TransactionList.tsx` quản lý state `detailSchedule` và render
+`<ScheduleDetailModal />` — tôi muốn làm y hệt pattern này cho Transaction.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Trong `apps/frontend/src/types.ts`, sửa `type Transaction`, thêm 4 field (đặt trước `createdAt`):
+   `quantityBefore: number | null`, `quantityAfter: number | null`, `dailySeq: number | null`,
+   `orderCode: string | null`.
+2. Trong `apps/frontend/src/services/transaction.service.ts`, thêm method:
+   ```ts
+   getTransactionById(id: string): Promise<Transaction> {
+     return apiClient.get(`/transactions/${id}`);
+   },
+   ```
+3. Trong `apps/frontend/src/components/TransactionTable.tsx`:
+   - Thêm prop `onViewDetail: (transaction: Transaction) => void` vào `TransactionTableProps`.
+   - Thêm cột `<th>Hành động</th>` ở cuối (cả bảng skeleton loading và bảng dữ liệu thật, thêm `<td>` tương
+     ứng — skeleton dùng `<span className="skeleton" style={{ width: '60px' }} />`, dữ liệu thật dùng nút
+     `<button type="button" className="btn-link" onClick={() => onViewDetail(item)}>Chi tiết</button>`).
+4. Tạo file mới `apps/frontend/src/components/TransactionDetailModal.tsx` — component nhận prop
+   `transactionId: string` và `onClose: () => void`, tự fetch dữ liệu bằng
+   `transactionService.getTransactionById` trong `useEffect` (có xử lý `cancelled` flag để tránh race
+   condition), hiển thị loading/error/dữ liệu theo đúng cấu trúc `dialog-overlay`/`dialog-box
+   dialog-box-wide`/`schedule-detail-grid` đã dùng trong `ScheduleDetailModal.tsx` (dán bên dưới để bạn theo
+   đúng style). Hiển thị các dòng: Mã đơn, Sản phẩm, Số lượng thay đổi, Tồn kho trước, Tồn kho sau, Thứ tự
+   trong ngày — dùng `?? '—'` cho các field có thể null.
+5. Trong `apps/frontend/src/pages/transactions/TransactionList.tsx`:
+   - Thêm state `const [detailTransactionId, setDetailTransactionId] = useState<string | null>(null);`.
+   - Truyền `onViewDetail={(t) => setDetailTransactionId(t.id)}` vào `<TransactionTable />`.
+   - Render `{detailTransactionId && (<TransactionDetailModal transactionId={detailTransactionId} onClose={() => setDetailTransactionId(null)} />)}`
+     ở cuối JSX, đặt cạnh khối `{detailSchedule && ...}` đã có, và import `TransactionDetailModal` ở đầu
+     file.
+
+QUY TẮC BẮT BUỘC:
+- Theo đúng pattern UI đã có cho Schedule (class CSS, cấu trúc dialog) — không tự sáng tạo cấu trúc HTML/CSS
+  mới.
+- `useEffect` fetch dữ liệu PHẢI có cờ `cancelled` để tránh cập nhật state sau khi component unmount/đổi id.
+- KHÔNG đổi `ScheduleDetailModal.tsx`, `ScheduleTable.tsx`.
+- KHÔNG đổi cách gọi `getTransactions` (danh sách) hiện có.
+
+FILE ĐƯỢC PHÉP SỬA/TẠO:
+- apps/frontend/src/types.ts
+- apps/frontend/src/services/transaction.service.ts
+- apps/frontend/src/components/TransactionTable.tsx
+- Tạo mới: apps/frontend/src/components/TransactionDetailModal.tsx
+- apps/frontend/src/pages/transactions/TransactionList.tsx
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/frontend/src/components/ScheduleDetailModal.tsx
+- apps/frontend/src/components/ScheduleTable.tsx
+- Bất kỳ file backend nào
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung tất cả file đã sửa/tạo (đầy đủ, không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung các file hiện tại:
+
+--- types.ts (phần liên quan Transaction, đủ ngữ cảnh) ---
+[DÁN NỘI DUNG PHẦN TRANSACTION TRONG TYPES.TS Ở ĐÂY]
+
+--- transaction.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG TRANSACTION.SERVICE.TS Ở ĐÂY]
+
+--- TransactionTable.tsx (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG TRANSACTIONTABLE.TSX Ở ĐÂY]
+
+--- ScheduleDetailModal.tsx (tham khảo style, không sửa) ---
+[DÁN TOÀN BỘ NỘI DUNG SCHEDULEDETAILMODAL.TSX Ở ĐÂY]
+
+--- TransactionList.tsx (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG TRANSACTIONLIST.TSX Ở ĐÂY]

@@ -1,0 +1,62 @@
+Bạn là trợ lý lập trình frontend React/TypeScript. Tôi cần sửa `SmartLocationSuggestionCard` để hiển thị ĐẦY
+ĐỦ danh sách nhiều vị trí khi cần chia hàng, thay vì chỉ 1 dòng cảnh báo chung chung.
+
+BỐI CẢNH:
+Backend `POST /schedules/inbound/preview` giờ trả thêm field `alternativeSlots: { slotId, slotPath,
+allocateQty, score }[]` trong response (khi `splitRequired: true`, mảng này liệt kê đủ mọi vị trí cần dùng).
+`SmartLocationSuggestionCard.tsx` hiện chỉ hiện 1 đoạn text cảnh báo khi `suggestion.splitRequired === true`,
+không liệt kê chi tiết.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Trong `apps/frontend/src/types.ts`:
+   - Thêm type mới:
+     ```ts
+     export type AlternativeSlot = {
+       slotId: string;
+       slotPath: string;
+       allocateQty: number;
+       score: number;
+     };
+     ```
+   - Thêm field `alternativeSlots: AlternativeSlot[];` vào `InboundSuggestionResult` (giữ nguyên mọi field
+     khác).
+2. Trong `SmartLocationSuggestionCard.tsx`, thay khối hiển thị cảnh báo `splitRequired` hiện tại bằng logic
+   mới:
+   - Nếu `suggestion.splitRequired && suggestion.alternativeSlots.length > 1`: hiển thị tiêu đề cảnh báo
+     kèm số lượng vị trí, và danh sách `<ul>` liệt kê từng `alternativeSlots` (dùng `alt.slotId` làm key),
+     mỗi dòng hiện `slotPath`, `allocateQty`, và badge `score%`.
+   - Nếu `suggestion.splitRequired && suggestion.alternativeSlots.length <= 1` (trường hợp fallback, dữ
+     liệu thiếu): giữ nguyên đoạn cảnh báo text đơn giản như code cũ, không crash.
+   - Nếu `!suggestion.splitRequired`: không đổi gì so với hiện tại.
+3. Thêm CSS cho class `smart-card-alt-list` (danh sách các vị trí) vào file CSS chung của dự án, đồng bộ
+   style với `.smart-card-reasons ul` đã có (dán bên dưới để bạn theo đúng convention).
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi phần hiển thị khi `splitRequired === false` — giữ nguyên y hệt.
+- PHẢI có nhánh fallback khi `alternativeSlots` rỗng/chỉ có 1 phần tử dù `splitRequired: true`, không được
+  để component crash hoặc hiện danh sách trống khó hiểu.
+- Dùng `alt.slotId` làm `key` trong `.map`, không dùng index.
+- KHÔNG đổi cách `InboundScheduleModal.tsx` gọi/truyền prop cho component này.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/frontend/src/types.ts
+- apps/frontend/src/components/SmartLocationSuggestionCard.tsx
+- File CSS chung của dự án (chỉ thêm class mới liên quan `smart-card-alt-list`)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/frontend/src/components/InboundScheduleModal.tsx
+- Bất kỳ file backend nào
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung tất cả file đã sửa (đầy đủ, không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung các file hiện tại:
+
+--- types.ts (phần liên quan InboundSuggestionResult) ---
+[DÁN NỘI DUNG PHẦN LIÊN QUAN TRONG TYPES.TS Ở ĐÂY]
+
+--- SmartLocationSuggestionCard.tsx (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG SMARTLOCATIONSUGGESTIONCARD.TSX Ở ĐÂY]
+
+--- File CSS chung (nơi định nghĩa .smart-card-reasons, .smart-card-row...) ---
+[DÁN NỘI DUNG PHẦN CSS LIÊN QUAN Ở ĐÂY]

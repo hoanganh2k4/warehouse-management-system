@@ -1,0 +1,46 @@
+Bạn là trợ lý lập trình frontend React/TypeScript. Tôi cần bạn (1) kiểm tra 1 file component xem có logic
+tính toán trùng lặp không, và (2) sửa TEXT hint của 1 StatCard.
+
+BỐI CẢNH:
+Backend đã sửa lỗi đếm "_count.products" của Category (loại sản phẩm đã xoá mềm). File
+`apps/frontend/src/pages/categories/CategoryList.tsx`, dòng tính `totalProducts`:
+```tsx
+const totalProducts = items.reduce((sum, c) => sum + (c._count?.products ?? 0), 0);
+```
+chỉ cộng dồn dữ liệu có sẵn từ API — KHÔNG có bug ở đây, số sẽ tự động đúng sau khi backend đã sửa. KHÔNG
+cần và KHÔNG được sửa dòng này.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Đọc nội dung file `CategoryTable.tsx` (dán bên dưới) — kiểm tra xem cột hiển thị số sản phẩm của từng
+   category trong bảng có logic tính toán/filter riêng nào khác ngoài việc hiển thị trực tiếp
+   `category._count.products` hay không. Trả lời rõ: CÓ hay KHÔNG phát hiện logic tính trùng lặp, giải
+   thích ngắn gọn. TUYỆT ĐỐI KHÔNG tự ý sửa file này trừ khi phát hiện lỗi rõ ràng — nếu phát hiện, chỉ nêu
+   ra, không tự sửa.
+2. Trong `CategoryList.tsx`, đổi `hint` của StatCard "Sản phẩm đã gán" từ
+   `hint="Tổng số sản phẩm đã gán danh mục"` thành
+   `hint="Chỉ tính sản phẩm đang hoạt động (không tính sản phẩm đã xoá)"`.
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi dòng tính `totalProducts` (biến `reduce`).
+- KHÔNG sửa `CategoryTable.tsx` trừ khi bạn phát hiện lỗi rõ ràng — nếu có, chỉ liệt kê ra, chờ tôi xác
+  nhận.
+- CHỈ đổi đúng 1 dòng `hint` nêu trên trong `CategoryList.tsx`.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/frontend/src/pages/categories/CategoryList.tsx (chỉ dòng hint)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/frontend/src/components/CategoryTable.tsx (trừ khi có xác nhận lỗi thật, không tự sửa trong lần trả
+  lời này)
+
+YÊU CẦU ĐẦU RA:
+1. Kết luận kiểm tra `CategoryTable.tsx` (có/không có logic trùng lặp, giải thích ngắn).
+2. Nội dung đầy đủ file `CategoryList.tsx` sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung 2 file hiện tại:
+
+--- CategoryList.tsx (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG CATEGORYLIST.TSX Ở ĐÂY]
+
+--- CategoryTable.tsx (hiện tại, đầy đủ, chỉ để kiểm tra, không sửa nếu không có lỗi rõ ràng) ---
+[DÁN TOÀN BỘ NỘI DUNG CATEGORYTABLE.TSX Ở ĐÂY]
