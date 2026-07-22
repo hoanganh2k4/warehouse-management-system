@@ -1,0 +1,41 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần thêm `orderBy` cho hàm `findAll()` trong
+`InventoryService` — hiện hàm này HOÀN TOÀN KHÔNG có orderBy, gây ra thứ tự trả về không ổn định giữa các
+lần gọi API.
+
+BỐI CẢNH:
+`apps/backend/src/inventory/inventory.service.ts`, hàm `findAll()`, câu query:
+```ts
+this.prisma.inventory.findMany({
+  where,
+  ...skipTake(page, limit),
+  select: { ... },
+}),
+```
+không có `orderBy` — PostgreSQL không đảm bảo thứ tự trả về khi không có `ORDER BY` tường minh, gây ra hiện
+tượng thứ tự dữ liệu thay đổi giữa các lần gọi dù không có gì thay đổi ở giữa, đặc biệt nghiêm trọng khi kết
+hợp phân trang (`skip`/`take`).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+Thêm dòng `orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }],` vào đúng câu query `this.prisma.inventory.findMany`
+trong hàm `findAll()` (đặt giữa `...skipTake(page, limit)` và `select`).
+
+QUY TẮC BẮT BUỘC:
+- CHỈ thêm đúng 1 dòng `orderBy` nêu trên vào ĐÚNG hàm `findAll()`.
+- KHÔNG đổi `where`, `select`, hay bất kỳ phần nào khác trong `findAll()`.
+- KHÔNG đụng tới `findOne()`, `inbound()`, `outbound()`, hay bất kỳ method nào khác trong file (kể cả
+  `getLedger()` nếu đã có từ task trước).
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/inventory/inventory.service.ts (chỉ hàm findAll)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- Bất kỳ file nào khác trong dự án.
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `inventory.service.ts` sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ
+nguyên").
+
+Đây là nội dung file hiện tại (đã bao gồm thay đổi từ các task trước nếu có — Task 101, 102):
+
+--- inventory.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG INVENTORY.SERVICE.TS Ở ĐÂY]
