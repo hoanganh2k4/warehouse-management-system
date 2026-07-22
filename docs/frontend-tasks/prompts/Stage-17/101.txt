@@ -1,0 +1,54 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần ghi thêm `quantityBefore`/`quantityAfter`/`dailySeq`
+khi tạo Transaction trong luồng nhập/xuất TRỰC TIẾP qua Inventory API — luồng này độc lập với Schedule và
+trước đó chưa được vá.
+
+BỐI CẢNH:
+`apps/backend/src/inventory/inventory.service.ts` có 2 hàm `inbound()` và `outbound()` — đây là 2 API thật
+(`POST /inventory/inbound`, `POST /inventory/outbound`), nhập/xuất tức thời KHÔNG qua Schedule. Trước đó đã
+sửa `schedules.service.ts` để ghi `quantityBefore`/`quantityAfter`/`dailySeq` cho Transaction, nhưng file
+`inventory.service.ts` này CHƯA được sửa — vẫn còn thiếu 3 field đó khi tạo Transaction. Có sẵn helper
+`getNextDailySeq(tx, at?)` trong `common/utils/transaction-seq.util.ts`.
+
+Trong `inbound()`, vòng lặp `for (const { slot, allocateQty, score } of allocations)` gọi
+`tx.inventory.upsert(...)` rồi `tx.transaction.create(...)` — cần đọc tồn kho TRƯỚC khi upsert để có giá trị
+"trước".
+
+Trong `outbound()`, vòng lặp `for (const line of pickingList)` đã có sẵn biến `inv` (đọc TRƯỚC khi
+update/xoá) — dùng biến này để tính before/after.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Import `getNextDailySeq` từ `'../common/utils/transaction-seq.util'` ở đầu file.
+2. Trong `inbound()`: trong vòng lặp, TRƯỚC dòng `tx.inventory.upsert`, thêm đoạn đọc
+   `existingInv = await tx.inventory.findUnique(...)`, tính `quantityBefore = existingInv?.quantity ?? 0`,
+   `quantityAfter = quantityBefore + allocateQty`. Thêm 3 field `quantityBefore`, `quantityAfter`,
+   `dailySeq: await getNextDailySeq(tx)` vào `data` của `tx.transaction.create(...)` trong vòng lặp này.
+3. Trong `outbound()`: trong vòng lặp, dùng biến `inv` đã có sẵn để tính
+   `quantityBefore = inv.quantity`, `quantityAfter = inv.quantity - line.quantity`. Thêm 3 field
+   `quantityBefore`, `quantityAfter`, `dailySeq: await getNextDailySeq(tx)` vào `data` của
+   `tx.transaction.create(...)` trong vòng lặp này.
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG đổi logic phân bổ (allocations)/FEFO (pickingList) trong 2 hàm.
+- KHÔNG đổi response shape trả về của `inbound()`/`outbound()`.
+- KHÔNG đụng `findAll()`, `findOne()` trong cùng file.
+- KHÔNG đụng `schedules.service.ts` hay bất kỳ file nào khác.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/inventory/inventory.service.ts (chỉ hàm inbound() và outbound())
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/src/schedules/schedules.service.ts
+- apps/backend/src/inventory/inventory.controller.ts
+- apps/backend/src/common/utils/transaction-seq.util.ts
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `inventory.service.ts` sau khi sửa (đầy đủ, không rút gọn bằng comment "giữ
+nguyên").
+
+Đây là nội dung file hiện tại:
+
+--- inventory.service.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG INVENTORY.SERVICE.TS Ở ĐÂY]
+
+--- transaction-seq.util.ts (tham khảo, không sửa) ---
+[DÁN TOÀN BỘ NỘI DUNG TRANSACTION-SEQ.UTIL.TS Ở ĐÂY]

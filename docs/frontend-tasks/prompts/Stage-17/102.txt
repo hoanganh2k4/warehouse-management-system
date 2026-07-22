@@ -1,0 +1,130 @@
+Bạn là trợ lý lập trình backend NestJS/Prisma. Tôi cần thêm 1 API MỚI `GET /inventory/ledger` — trả về "sổ
+biến động kho" (thời điểm nào, kho tăng/giảm bao nhiêu, tồn trước/sau), đọc từ dữ liệu Transaction đã có
+sẵn, KHÔNG tạo bảng mới, KHÔNG sửa các API/method cũ.
+
+BỐI CẢNH:
+`apps/backend/src/inventory/inventory.service.ts` hiện có `findAll()` trả về TỒN KHO HIỆN TẠI theo từng cặp
+(batch, slot) — đây là ảnh chụp hiện tại, không phải nhật ký biến động theo thời gian. Model `Transaction`
+(sau các task trước) đã có đủ `quantityBefore`, `quantityAfter`, `dailySeq`, `createdAt`, `type` (IMPORT/
+EXPORT), quan hệ `batch` (có `product`), `slotFrom`, `slotTo`, và quan hệ ngược `schedule` (có `orderCode`,
+optional vì không phải Transaction nào cũng sinh từ Schedule). Đây chính là nguồn dữ liệu đúng để dựng "sổ
+biến động kho theo thời điểm".
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Trong `apps/backend/src/inventory/dto/inventory.dto.ts`, thêm class mới:
+   ```ts
+   export class InventoryLedgerQueryDto {
+     @ApiPropertyOptional() @IsOptional() @IsUUID() productId?: string;
+     @ApiPropertyOptional() @IsOptional() @IsUUID() slotId?: string;
+     @ApiPropertyOptional() @IsOptional() @IsDateString() from?: string;
+     @ApiPropertyOptional() @IsOptional() @IsDateString() to?: string;
+     @ApiPropertyOptional() @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
+     @ApiPropertyOptional() @IsOptional() @Type(() => Number) @IsInt() @Min(1) limit?: number;
+   }
+   ```
+   (dùng đúng import đã có sẵn trong file — ApiPropertyOptional, Type, IsOptional, IsDateString, IsInt,
+   IsUUID, Min đều đã import ở đầu file, tái sử dụng).
+2. Trong `inventory.service.ts`, thêm method mới `async getLedger(query: InventoryLedgerQueryDto)`:
+   - `page = query.page ?? 1`, `limit = query.limit ?? 20`.
+   - Build `andConditions: Prisma.TransactionWhereInput[]` (theo đúng pattern `andConditions` đã dùng trong
+     `findAll()` của cùng file — mảng các điều kiện AND độc lập):
+     - Nếu có `query.productId`: `{ batch: { productId: query.productId } }`
+     - Nếu có `query.slotId`: `{ OR: [{ slotToId: query.slotId }, { slotFromId: query.slotId }] }`
+     - Nếu có `query.from`: `{ createdAt: { gte: new Date(query.from) } }`
+     - Nếu có `query.to`: `{ createdAt: { lte: new Date(query.to) } }`
+   - `where = andConditions.length > 0 ? { AND: andConditions } : {}`
+   - Query song song bằng `Promise.all`:
+     ```ts
+     this.prisma.transaction.findMany({
+       where,
+       ...skipTake(page, limit),
+       orderBy: [{ createdAt: 'desc' }, { dailySeq: 'desc' }],
+       select: {
+         id: true,
+         type: true,
+         createdAt: true,
+         quantity: true,
+         quantityBefore: true,
+         quantityAfter: true,
+         dailySeq: true,
+         batch: { select: { product: { select: { skuCode: true, name: true } } } },
+         slotTo: {
+           select: {
+             code: true,
+             level: { select: { levelNumber: true, rack: { select: { code: true, zone: { select: { code: true } } } } } },
+           },
+         },
+         slotFrom: {
+           select: {
+             code: true,
+             level: { select: { levelNumber: true, rack: { select: { code: true, zone: { select: { code: true } } } } } },
+           },
+         },
+         schedule: { select: { orderCode: true } },
+       },
+     }),
+     this.prisma.transaction.count({ where }),
+     ```
+   - Map từng item thành:
+     ```ts
+     {
+       transactionId: item.id,
+       occurredAt: item.createdAt,
+       type: item.type,
+       productSkuCode: item.batch.product.skuCode,
+       productName: item.batch.product.name,
+       slotPath: formatSlotLocation({
+         zoneCode: (item.type === 'IMPORT' ? item.slotTo : item.slotFrom)!.level.rack.zone.code,
+         rackCode: (item.type === 'IMPORT' ? item.slotTo : item.slotFrom)!.level.rack.code,
+         levelNumber: (item.type === 'IMPORT' ? item.slotTo : item.slotFrom)!.level.levelNumber,
+         slotCode: (item.type === 'IMPORT' ? item.slotTo : item.slotFrom)!.code,
+       }),
+       changeQuantity: item.type === 'IMPORT' ? item.quantity : -item.quantity,
+       balanceBefore: item.quantityBefore,
+       balanceAfter: item.quantityAfter,
+       dailySeq: item.dailySeq,
+       orderCode: item.schedule?.orderCode ?? null,
+     }
+     ```
+   - Trả về `paginate(mappedItems, page, limit, total)` (dùng đúng hàm `paginate` đã import sẵn trong file).
+3. Trong `inventory.controller.ts`, thêm route:
+   ```ts
+   @Public()
+   @Get('ledger')
+   getLedger(@Query() query: InventoryLedgerQueryDto) {
+     return this.service.getLedger(query);
+   }
+   ```
+   ĐẶT ROUTE NÀY TRƯỚC route `@Get(':id')` hiện có trong file (nếu chưa đúng thứ tự, sắp xếp lại) — để
+   NestJS không hiểu nhầm "ledger" là 1 giá trị `:id`.
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG tạo bảng/model Prisma mới — chỉ đọc từ `Transaction` đã có.
+- KHÔNG sửa `findAll()`, `findOne()`, `inbound()`, `outbound()` trong `inventory.service.ts`.
+- Route `ledger` PHẢI đặt trước route `:id` trong controller.
+- `orderBy` PHẢI đúng `[{ createdAt: 'desc' }, { dailySeq: 'desc' }]`.
+- Import `formatSlotLocation` từ `'../common/utils/location.util'` nếu file chưa import (thực tế đã có sẵn
+  trong file, kiểm tra lại).
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/backend/src/inventory/dto/inventory.dto.ts (chỉ thêm class mới)
+- apps/backend/src/inventory/inventory.service.ts (chỉ thêm method mới)
+- apps/backend/src/inventory/inventory.controller.ts (chỉ thêm route mới)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/backend/src/transactions/**
+- apps/backend/prisma/schema.prisma
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung 3 file đã sửa (đầy đủ, không rút gọn bằng comment "giữ nguyên").
+
+Đây là nội dung 3 file hiện tại:
+
+--- inventory.dto.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG INVENTORY.DTO.TS Ở ĐÂY]
+
+--- inventory.service.ts (hiện tại, đầy đủ, đã bao gồm thay đổi Task 101) ---
+[DÁN TOÀN BỘ NỘI DUNG INVENTORY.SERVICE.TS Ở ĐÂY]
+
+--- inventory.controller.ts (hiện tại, đầy đủ) ---
+[DÁN TOÀN BỘ NỘI DUNG INVENTORY.CONTROLLER.TS Ở ĐÂY]
