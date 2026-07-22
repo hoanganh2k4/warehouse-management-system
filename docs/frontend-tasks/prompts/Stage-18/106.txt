@@ -1,0 +1,44 @@
+Bạn là trợ lý lập trình frontend React/TypeScript. Tôi cần thêm badge "⚠ Hàng nặng" vào popup chi tiết Slot
+khi sản phẩm đang ở slot đó có `isHeavy = true`.
+
+BỐI CẢNH:
+`apps/frontend/src/pages/racking/components/SlotDetailDialog.tsx` nhận prop `product: Product | null` (đã
+fetch sẵn từ component cha), hiển thị tên sản phẩm trong mục `<dt>Hàng hoá</dt>` nhưng chưa hiển thị field
+`product.isHeavy` (đã tồn tại sẵn trong type `Product`, không cần đổi type hay gọi thêm API).
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+Trong đoạn JSX hiển thị tên sản phẩm (nhánh `slot.currentProductId && !productLoading && product`), thêm
+badge có điều kiện ngay sau tên sản phẩm:
+```tsx
+{product.skuCode} — {product.name}
+{product.isHeavy && <span className="heavy-badge">⚠ Hàng nặng</span>}
+```
+Thêm CSS cho class `.heavy-badge` vào file CSS chung của dự án (nơi đang định nghĩa `.slot-status-badge`),
+dùng màu nền cam/vàng nhạt, chữ đậm, bo góc nhỏ — đồng bộ hình dáng với `.slot-status-badge.is-full-badge`
+đang có.
+
+QUY TẮC BẮT BUỘC:
+- Badge CHỈ hiện khi `product` tồn tại VÀ `product.isHeavy === true` — không hiện khi slot trống, đang tải,
+  hoặc không tải được thông tin sản phẩm.
+- KHÔNG đổi type `Product`, KHÔNG gọi thêm API nào.
+- KHÔNG đổi bất kỳ phần nào khác trong component.
+
+FILE ĐƯỢC PHÉP SỬA:
+- apps/frontend/src/pages/racking/components/SlotDetailDialog.tsx
+- File CSS chung của dự án (chỉ thêm class `.heavy-badge`, không đổi class khác)
+
+FILE KHÔNG ĐƯỢC ĐỘNG TỚI:
+- apps/frontend/src/types.ts
+- apps/frontend/src/pages/racking/RackingPage.tsx
+
+YÊU CẦU ĐẦU RA:
+Trả về đầy đủ nội dung file `SlotDetailDialog.tsx` sau khi sửa, và đoạn CSS cần thêm (ghi rõ thêm vào file
+nào, vị trí nào).
+
+Đây là nội dung file hiện tại:
+
+--- SlotDetailDialog.tsx (hiện tại, đầy đủ, có thể đã bao gồm thay đổi Task 105) ---
+[DÁN TOÀN BỘ NỘI DUNG SLOTDETAILDIALOG.TSX Ở ĐÂY]
+
+--- File CSS chung của dự án (nơi định nghĩa .slot-status-badge) ---
+[DÁN NỘI DUNG FILE CSS LIÊN QUAN Ở ĐÂY]
