@@ -17,6 +17,7 @@ export class DashboardService {
       batches,
       totalSlots,
       occupiedSlots,
+      slotCapacityAgg,
       inventoryAgg,
       expiringSoon,
       inboundToday,
@@ -26,6 +27,9 @@ export class DashboardService {
       this.prisma.batch.count(),
       this.prisma.slot.count(),
       this.prisma.slot.count({ where: { usedCapacity: { gt: 0 } } }),
+      this.prisma.slot.aggregate({
+        _sum: { usedCapacity: true, maxCapacity: true },
+      }),
       this.prisma.inventory.aggregate({ _sum: { quantity: true } }),
       this.prisma.batch.count({
         where: {
@@ -54,8 +58,13 @@ export class DashboardService {
 
     const totalInventory = inventoryAgg._sum.quantity ?? 0;
     const availableSlots = totalSlots - occupiedSlots;
+
+    const totalCapacity = slotCapacityAgg._sum.maxCapacity ?? 0;
+    const usedCapacityTotal = slotCapacityAgg._sum.usedCapacity ?? 0;
     const occupancyPercent =
-      totalSlots > 0 ? Math.round((occupiedSlots / totalSlots) * 100) : 0;
+      totalCapacity > 0
+        ? Math.round((usedCapacityTotal / totalCapacity) * 100)
+        : 0;
 
     return {
       products,
