@@ -13,14 +13,18 @@ export class CategoriesService {
   findAll() {
     return this.prisma.category.findMany({
       orderBy: { name: 'asc' },
-      include: { _count: { select: { products: true } } },
+      include: {
+        _count: { select: { products: { where: { deletedAt: null } } } },
+      },
     });
   }
 
   async findOne(id: string) {
     const category = await this.prisma.category.findUnique({
       where: { id },
-      include: { _count: { select: { products: true } } },
+      include: {
+        _count: { select: { products: { where: { deletedAt: null } } } },
+      },
     });
     if (!category) throw new NotFoundException('Category not found');
     return category;
