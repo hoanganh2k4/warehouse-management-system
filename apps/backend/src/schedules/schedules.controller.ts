@@ -145,6 +145,15 @@ export class SchedulesController {
     return this.service.findAll(query);
   }
 
+  // Đặt TRƯỚC route @Get(':id') — nếu để sau, NestJS sẽ hiểu "by-code" là
+  // giá trị của :id và route này sẽ không bao giờ được gọi tới.
+  @Get('by-code/:orderCode')
+  @ApiSuccessExample({}, '200 OK — Tra cứu lịch theo mã đơn (orderCode)')
+  @ApiAuthReadErrors()
+  findByOrderCode(@Param('orderCode') orderCode: string) {
+    return this.service.findByOrderCode(orderCode);
+  }
+
   @Get(':id')
   @ApiSuccessExample({}, '200 OK — Chi tiết lịch (dùng cho "Xem chi tiết")')
   @ApiAuthReadErrors()

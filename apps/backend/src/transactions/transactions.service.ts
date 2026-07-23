@@ -1,9 +1,73 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma.service';
 import { paginate, skipTake } from '../common/utils/pagination.util';
 import { formatSlotLocation } from '../common/utils/location.util';
 import { TransactionQueryDto } from './dto/transaction.dto';
+
+// Dùng chung cho findAll và findOne để 2 API luôn trả đúng cùng 1 shape,
+// tránh lệch field giữa danh sách và chi tiết (bài học từ Task 86/87).
+const transactionSelect = {
+  id: true,
+  type: true,
+  quantity: true,
+  quantityBefore: true,
+  quantityAfter: true,
+  dailySeq: true,
+  note: true,
+  createdAt: true,
+  batchId: true,
+  batch: {
+    select: {
+      batchCode: true,
+      product: { select: { skuCode: true, name: true } },
+    },
+  },
+  slotFromId: true,
+  slotFrom: {
+    select: {
+      code: true,
+      level: {
+        select: {
+          levelNumber: true,
+          rack: {
+            select: {
+              code: true,
+              zone: {
+                select: {
+                  code: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  slotToId: true,
+  slotTo: {
+    select: {
+      code: true,
+      level: {
+        select: {
+          levelNumber: true,
+          rack: {
+            select: {
+              code: true,
+              zone: {
+                select: {
+                  code: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  userId: true,
+  user: { select: { id: true, username: true, fullName: true } },
+} satisfies Prisma.TransactionSelect;
 
 @Injectable()
 export class TransactionsService {
@@ -35,75 +99,28 @@ export class TransactionsService {
       if (query.from) where.createdAt.gte = new Date(query.from);
       if (query.to) where.createdAt.lte = new Date(query.to);
     }
+    if (query.orderCode) where.schedule = { orderCode: query.orderCode };
 
     const [items, total] = await Promise.all([
       this.prisma.transaction.findMany({
         where,
         ...skipTake(page, limit),
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          type: true,
-          quantity: true,
-          note: true,
-          createdAt: true,
-          batchId: true,
-          batch: {
-            select: {
-              batchCode: true,
-              product: { select: { skuCode: true, name: true } },
-            },
-          },
-          slotFromId: true,
-          slotFrom: {
-            select: {
-              code: true,
-              level: {
-                select: {
-                  levelNumber: true,
-                  rack: {
-                    select: {
-                      code: true,
-                      zone: {
-                        select: {
-                          code: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          slotToId: true,
-          slotTo: {
-            select: {
-              code: true,
-              level: {
-                select: {
-                  levelNumber: true,
-                  rack: {
-                    select: {
-                      code: true,
-                      zone: {
-                        select: {
-                          code: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          userId: true,
-          user: { select: { id: true, username: true, fullName: true } },
-        },
+        orderBy: [{ createdAt: 'desc' }, { dailySeq: 'desc' }],
+        select: transactionSelect,
       }),
       this.prisma.transaction.count({ where }),
     ]);
 
     return paginate(items.map(toTransactionView), page, limit, total);
+  }
+
+  async findOne(id: string) {
+    const item = await this.prisma.transaction.findUnique({
+      where: { id },
+      select: transactionSelect,
+    });
+    if (!item) throw new NotFoundException('Transaction not found');
+    return toTransactionView(item);
   }
 }
 
@@ -113,6 +130,9 @@ function toTransactionView(item: {
   id: string;
   type: string;
   quantity: number;
+  quantityBefore: number | null;
+  quantityAfter: number | null;
+  dailySeq: number | null;
   note: string | null;
   createdAt: Date;
   batchId: string;
@@ -150,6 +170,9 @@ function toTransactionView(item: {
     id: item.id,
     type: item.type,
     quantity: item.quantity,
+    quantityBefore: item.quantityBefore,
+    quantityAfter: item.quantityAfter,
+    dailySeq: item.dailySeq,
     note: item.note,
     createdAt: item.createdAt,
     batchId: item.batchId,

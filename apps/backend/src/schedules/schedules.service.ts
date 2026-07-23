@@ -20,6 +20,8 @@ import { FefoService } from '../common/services/fefo.service';
 import type { PickLine } from '../common/services/fefo.service';
 import { paginate, skipTake } from '../common/utils/pagination.util';
 import { formatSlotLocation } from '../common/utils/location.util';
+import { getNextDailySeq } from '../common/utils/transaction-seq.util';
+import { createScheduleWithOrderCode } from '../common/utils/order-code.util';
 import { AuthUser } from '../common/decorators/current-user.decorator';
 import {
   CreateInboundScheduleDto,
@@ -208,24 +210,29 @@ export class SchedulesService {
       new Date(dto.scheduledDate),
     );
 
-    const schedule = await this.prisma.schedule.create({
-      data: {
-        type: ScheduleType.INBOUND,
-        status: ScheduleStatus.PENDING,
-        scheduledAt,
-        productId: dto.productId,
-        quantity: dto.quantity,
-        batchCode: dto.batchCode,
-        supplierId: dto.supplierId,
-        note: dto.note,
-        suggestedSlotId: suggestion.slotId,
-        suggestionScore: suggestion.score,
-        suggestionReasons: suggestion.reasons,
-        suggestedAt: new Date(),
-        createdById: user.id,
-      },
-      include: scheduleInclude,
-    });
+    const schedule = await createScheduleWithOrderCode(
+      this.prisma,
+      (tx, orderCode) =>
+        tx.schedule.create({
+          data: {
+            type: ScheduleType.INBOUND,
+            status: ScheduleStatus.PENDING,
+            scheduledAt,
+            productId: dto.productId,
+            quantity: dto.quantity,
+            batchCode: dto.batchCode,
+            supplierId: dto.supplierId,
+            note: dto.note,
+            suggestedSlotId: suggestion.slotId,
+            suggestionScore: suggestion.score,
+            suggestionReasons: suggestion.reasons,
+            suggestedAt: new Date(),
+            createdById: user.id,
+            orderCode,
+          },
+          include: scheduleInclude,
+        }),
+    );
 
     return { schedule: toScheduleView(schedule), suggestion };
   }
@@ -324,25 +331,30 @@ export class SchedulesService {
       dto.quantity,
     );
 
-    const schedule = await this.prisma.schedule.create({
-      data: {
-        type: ScheduleType.OUTBOUND,
-        status: ScheduleStatus.PENDING,
-        scheduledAt,
-        productId: dto.productId,
-        quantity: dto.quantity,
-        batchCode: dto.batchCode,
-        customerId: dto.customerId,
-        note: dto.note,
-        suggestedSlotId: suggestion.slotId,
-        suggestedBatchId: suggestion.batchId,
-        suggestionScore: PRIORITY_SCORE[suggestion.priority],
-        suggestionReasons: suggestion.reasons,
-        suggestedAt: new Date(),
-        createdById: user.id,
-      },
-      include: scheduleInclude,
-    });
+    const schedule = await createScheduleWithOrderCode(
+      this.prisma,
+      (tx, orderCode) =>
+        tx.schedule.create({
+          data: {
+            type: ScheduleType.OUTBOUND,
+            status: ScheduleStatus.PENDING,
+            scheduledAt,
+            productId: dto.productId,
+            quantity: dto.quantity,
+            batchCode: dto.batchCode,
+            customerId: dto.customerId,
+            note: dto.note,
+            suggestedSlotId: suggestion.slotId,
+            suggestedBatchId: suggestion.batchId,
+            suggestionScore: PRIORITY_SCORE[suggestion.priority],
+            suggestionReasons: suggestion.reasons,
+            suggestedAt: new Date(),
+            createdById: user.id,
+            orderCode,
+          },
+          include: scheduleInclude,
+        }),
+    );
 
     return { schedule: toScheduleView(schedule), suggestion };
   }
@@ -504,6 +516,14 @@ export class SchedulesService {
         });
       }
 
+      // Đọc tồn kho TRƯỚC khi cộng thêm, để ghi đúng quantityBefore — nếu đọc
+      // sau upsert thì số liệu đã bị cộng dồn mất, không còn ý nghĩa "trước".
+      const existingInv = await tx.inventory.findUnique({
+        where: { batchId_slotId: { batchId: batch.id, slotId } },
+      });
+      const quantityBefore = existingInv?.quantity ?? 0;
+      const quantityAfter = quantityBefore + schedule.quantity;
+
       await tx.inventory.upsert({
         where: { batchId_slotId: { batchId: batch.id, slotId } },
         create: { batchId: batch.id, slotId, quantity: schedule.quantity },
@@ -520,6 +540,9 @@ export class SchedulesService {
           quantity: schedule.quantity,
           userId: user.id,
           note: schedule.note ?? undefined,
+          quantityBefore,
+          quantityAfter,
+          dailySeq: await getNextDailySeq(tx),
         },
       });
 
@@ -633,6 +656,12 @@ export class SchedulesService {
         if (!inv || inv.quantity < line.quantity) {
           throw new BadRequestException('Stock changed during outbound');
         }
+
+        // Mỗi dòng pick là 1 slot/batch riêng biệt — phải tính before/after
+        // riêng cho từng dòng, không dùng chung 1 giá trị cho cả vòng lặp.
+        const quantityBefore = inv.quantity;
+        const quantityAfter = inv.quantity - line.quantity;
+
         if (inv.quantity === line.quantity) {
           await tx.inventory.delete({ where: { id: inv.id } });
         } else {
@@ -652,6 +681,9 @@ export class SchedulesService {
             quantity: line.quantity,
             userId: user.id,
             note: schedule.note ?? undefined,
+            quantityBefore,
+            quantityAfter,
+            dailySeq: await getNextDailySeq(tx),
           },
         });
         transactions.push(txn);
@@ -772,6 +804,17 @@ export class SchedulesService {
 
   // ===================== Danh sách / Chi tiết lịch =====================
 
+  async findByOrderCode(orderCode: string) {
+    const schedule = await this.prisma.schedule.findUnique({
+      where: { orderCode },
+      include: scheduleInclude,
+    });
+    if (!schedule) {
+      throw new NotFoundException('Schedule not found for this order code');
+    }
+    return toScheduleView(schedule);
+  }
+
   async findAll(query: ScheduleQueryDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
@@ -784,7 +827,7 @@ export class SchedulesService {
       this.prisma.schedule.findMany({
         where,
         ...skipTake(page, limit),
-        orderBy: { scheduledAt: 'asc' },
+        orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
         include: scheduleInclude,
       }),
       this.prisma.schedule.count({ where }),
@@ -865,6 +908,7 @@ function toScheduleView(item: ScheduleWithRelations) {
 
   return {
     id: item.id,
+    orderCode: item.orderCode,
     type: item.type,
     status: item.status,
     scheduledDate: item.scheduledAt.toISOString().slice(0, 10),

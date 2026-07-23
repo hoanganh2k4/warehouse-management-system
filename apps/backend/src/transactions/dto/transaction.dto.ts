@@ -1,6 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDateString, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { TransactionType } from '../../../generated/prisma/client';
 
 export class TransactionQueryDto {
@@ -28,6 +34,13 @@ export class TransactionQueryDto {
   @IsOptional()
   @IsUUID()
   warehouseId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Lọc giao dịch theo mã đơn (orderCode) của lịch sinh ra nó',
+  })
+  @IsOptional()
+  @IsString()
+  orderCode?: string;
 
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()
