@@ -6,6 +6,10 @@ import type {
   PaginationMeta,
 } from '../types';
 
+const POLL_INTERVAL_MS = 15_000;
+
+
+
 export function useInventoryLedger(params: GetInventoryLedgerParams) {
   const [items, setItems] = useState<InventoryLedgerItem[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
@@ -16,8 +20,8 @@ export function useInventoryLedger(params: GetInventoryLedgerParams) {
   useEffect(() => {
     let cancelled = false;
 
-    function fetchInventoryLedger() {
-      setLoading(true);
+    function fetchInventoryLedger(background = false) {
+      if (!background) setLoading(true);
 
       inventoryService
         .getLedger(params)
@@ -37,8 +41,10 @@ export function useInventoryLedger(params: GetInventoryLedgerParams) {
     }
 
     fetchInventoryLedger();
+    const intervalId = window.setInterval(() => fetchInventoryLedger(true), POLL_INTERVAL_MS);
 
     return () => {
+      window.clearInterval(intervalId);
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

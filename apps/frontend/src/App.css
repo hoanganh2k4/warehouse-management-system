@@ -2325,3 +2325,353 @@
     padding: 9px 7px;
   }
 }
+
+/* Compact, accessible action buttons */
+.table-icon-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow: visible;
+}
+
+.icon-action {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: transform .15s ease, filter .15s ease, border-color .15s ease;
+}
+.icon-action:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.12); }
+.icon-action:disabled { opacity: .5; cursor: not-allowed; }
+.icon-action-success { color: #45d49a; background: rgba(20, 184, 116, .14); border-color: rgba(69, 212, 154, .34); }
+.icon-action-info { color: #65a8ff; background: rgba(48, 128, 255, .14); border-color: rgba(101, 168, 255, .34); }
+.icon-action-danger { color: #ff6673; background: rgba(239, 68, 68, .14); border-color: rgba(255, 102, 115, .36); }
+.icon-action-neutral { color: #f4bb55; background: rgba(244, 187, 85, .12); border-color: rgba(244, 187, 85, .32); }
+.icon-action::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  z-index: 60;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(4px);
+  width: max-content;
+  max-width: 180px;
+  padding: 6px 9px;
+  border: 1px solid #33415a;
+  border-radius: 7px;
+  background: #080e19;
+  color: #f8fafc;
+  font-size: 12px;
+  line-height: 1.2;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: .15s ease;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+.icon-action:hover::after, .icon-action:focus-visible::after { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
+.transaction-detail-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 11px;
+  border: 1px solid rgba(244, 187, 85, .45);
+  border-radius: 8px;
+  color: #f6c15c;
+  background: rgba(244, 187, 85, .1);
+  font-weight: 700;
+  cursor: pointer;
+}
+.transaction-detail-button:hover { background: rgba(244, 187, 85, .2); border-color: #f6c15c; }
+
+.smart-card-allocation-title { margin: 0 0 8px; font-weight: 700; color: var(--text-primary); }
+.allocation-list { display: grid; gap: 7px; margin: 8px 0 0; padding-left: 22px; }
+.allocation-list li { display: grid; grid-template-columns: minmax(160px, 1fr) auto auto; align-items: center; gap: 12px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,.025); }
+@media (max-width: 720px) { .allocation-list li { grid-template-columns: 1fr; gap: 4px; } }
+
+
+/* Compact allocation disclosure: keep schedule modals inside the viewport. */
+.dialog-box-wide {
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.allocation-disclosure {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  overflow: hidden;
+}
+
+.allocation-disclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--text-primary, var(--text));
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.allocation-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.allocation-disclosure > summary::after {
+  content: '▾';
+  flex: 0 0 auto;
+  color: var(--text-muted, var(--text));
+  transition: transform 0.18s ease;
+}
+
+.allocation-disclosure[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+.allocation-disclosure > summary:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.allocation-summary-meta {
+  margin-left: auto;
+  color: var(--text-muted, var(--text));
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.allocation-list-scroll {
+  max-height: 190px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0 10px 10px;
+  list-style-position: inside;
+  scrollbar-width: thin;
+}
+
+.allocation-list-scroll li {
+  margin-top: 7px;
+}
+
+@media (max-width: 640px) {
+  .dialog-overlay {
+    align-items: flex-start;
+  }
+
+  .dialog-box-wide {
+    max-height: calc(100vh - 24px);
+    padding: 18px;
+  }
+
+  .allocation-disclosure > summary {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .allocation-summary-meta {
+    width: 100%;
+    margin-left: 0;
+    white-space: normal;
+  }
+}
+
+/* Allocation list opens as a floating dropdown so it does not resize the modal. */
+.allocation-disclosure {
+  position: relative;
+  overflow: visible;
+}
+
+.allocation-disclosure[open] {
+  z-index: 30;
+}
+
+.allocation-disclosure .allocation-list-scroll {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  max-height: 148px;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface, #121a2a);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
+  scrollbar-width: thin;
+}
+
+.allocation-disclosure .allocation-list-scroll li {
+  min-height: 0;
+  margin: 0 0 4px;
+  padding: 5px 8px;
+  gap: 8px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.allocation-disclosure .allocation-list-scroll li:last-child {
+  margin-bottom: 0;
+}
+
+.allocation-disclosure .allocation-list-scroll .smart-card-value {
+  overflow: hidden;
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.allocation-disclosure .allocation-list-scroll .badge {
+  padding: 2px 6px;
+  font-size: 0.68rem;
+}
+
+@media (max-width: 640px) {
+  .allocation-disclosure .allocation-list-scroll li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .allocation-disclosure .allocation-list-scroll li > :nth-child(3) {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+/* ---------- Create schedule: form trái, Smart Suggestion mở rộng sang phải ---------- */
+.dialog-box-schedule-create {
+  width: min(1080px, calc(100vw - 32px));
+  max-width: 1080px;
+  max-height: calc(100vh - 32px);
+  overflow: hidden;
+}
+
+.dialog-box-schedule-create > .dialog-title {
+  margin-bottom: 18px;
+}
+
+.schedule-create-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.9fr);
+  gap: 22px;
+  align-items: stretch;
+  min-height: 0;
+  max-height: calc(100vh - 105px);
+}
+
+.schedule-create-fields {
+  min-width: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.schedule-create-suggestion {
+  min-width: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--line, var(--border));
+  padding-left: 22px;
+}
+
+.schedule-create-suggestion:empty::before {
+  content: 'Smart Location Suggestion sẽ xuất hiện tại đây sau khi chọn sản phẩm, số lượng và ngày.';
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  padding: 24px;
+  border: 1px dashed var(--line, var(--border));
+  border-radius: var(--radius-md, var(--radius-sm));
+  color: var(--text-faint, var(--text-muted));
+  font-size: 0.84rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.schedule-create-suggestion .smart-card {
+  margin: 0;
+  padding: 2px 4px 2px 0;
+}
+
+.schedule-create-suggestion .smart-card-note {
+  margin-bottom: 0;
+}
+
+.schedule-create-actions {
+  position: sticky;
+  bottom: 0;
+  padding-top: 14px;
+  padding-bottom: 2px;
+  background: linear-gradient(to bottom, transparent, var(--surface) 24%);
+}
+
+@media (max-width: 900px) {
+  .dialog-box-schedule-create {
+    width: min(680px, calc(100vw - 24px));
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+  }
+
+  .schedule-create-layout {
+    display: flex;
+    flex-direction: column;
+    max-height: none;
+  }
+
+  .schedule-create-fields,
+  .schedule-create-suggestion {
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .schedule-create-suggestion {
+    border-left: 0;
+    border-top: 1px solid var(--line, var(--border));
+    padding-top: 18px;
+    padding-left: 0;
+  }
+
+  .schedule-create-suggestion:empty::before {
+    min-height: 110px;
+  }
+}
+
+/* Create schedule modal: remove internal vertical scrollbars. */
+.dialog-overlay:has(.dialog-box-schedule-create) {
+  align-items: flex-start;
+  overflow-y: auto;
+}
+
+.dialog-box-schedule-create {
+  max-height: none;
+  overflow: visible;
+  margin-block: 16px;
+}
+
+.schedule-create-layout {
+  max-height: none;
+  align-items: start;
+}
+
+.schedule-create-fields,
+.schedule-create-suggestion {
+  overflow-y: visible;
+  scrollbar-width: none;
+}
+
+.schedule-create-fields::-webkit-scrollbar,
+.schedule-create-suggestion::-webkit-scrollbar {
+  display: none;
+}

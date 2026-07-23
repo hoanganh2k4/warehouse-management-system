@@ -175,3 +175,19 @@ export function AlertIcon({ size = 18 }: IconProps) {
     </svg>
   );
 }
+
+export function CheckIcon({ size = 18 }: IconProps) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" {...base}><path d="m5 12 4 4L19 6" /></svg>;
+}
+
+export function PencilIcon({ size = 18 }: IconProps) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" {...base}><path d="M4 20h4l11-11-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></svg>;
+}
+
+export function CloseIcon({ size = 18 }: IconProps) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" {...base}><path d="M6 6l12 12M18 6 6 18" /></svg>;
+}
+
+export function EyeIcon({ size = 18 }: IconProps) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" {...base}><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" /><circle cx="12" cy="12" r="2.5" /></svg>;
+}

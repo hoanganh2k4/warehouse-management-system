@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { inventoryService } from '../services/inventory.service';
 import type { GetInventoryParams, InventoryItem, PaginationMeta } from '../types';
 
+const POLL_INTERVAL_MS = 15_000;
+
+
+
 export function useInventory(params: GetInventoryParams) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
@@ -12,8 +16,8 @@ export function useInventory(params: GetInventoryParams) {
   useEffect(() => {
     let cancelled = false;
 
-    function fetchInventory() {
-      setLoading(true);
+    function fetchInventory(background = false) {
+      if (!background) setLoading(true);
 
       inventoryService
         .getInventory(params)
@@ -33,8 +37,10 @@ export function useInventory(params: GetInventoryParams) {
     }
 
     fetchInventory();
+    const intervalId = window.setInterval(() => fetchInventory(true), POLL_INTERVAL_MS);
 
     return () => {
+      window.clearInterval(intervalId);
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

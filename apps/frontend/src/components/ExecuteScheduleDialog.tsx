@@ -116,6 +116,47 @@ export function ExecuteScheduleDialog({ schedule, onClose, onExecuted }: Execute
               </div>
             )}
 
+            {'alternativeSlots' in recommended && recommended.alternativeSlots.length > 0 && (
+              <details className="allocation-disclosure">
+                <summary>
+                  <span>Phân bổ nhập kho</span>
+                  <span className="allocation-summary-meta">
+                    {recommended.alternativeSlots.length} vị trí ·{' '}
+                    {recommended.alternativeSlots.reduce((sum, line) => sum + line.allocateQty, 0)} đơn vị
+                  </span>
+                </summary>
+                <ol className="allocation-list allocation-list-scroll">
+                  {recommended.alternativeSlots.map((line) => (
+                    <li key={line.slotId}>
+                      <span className="smart-card-value">{line.slotPath}</span>
+                      <span><strong>{line.allocateQty}</strong> đơn vị</span>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            )}
+
+            {outboundInfo?.pickingList && outboundInfo.pickingList.length > 0 && (
+              <details className="allocation-disclosure">
+                <summary>
+                  <span>Phân bổ xuất kho</span>
+                  <span className="allocation-summary-meta">
+                    {outboundInfo.pickingList.length} vị trí ·{' '}
+                    {outboundInfo.pickingList.reduce((sum, line) => sum + line.quantity, 0)} đơn vị
+                  </span>
+                </summary>
+                <ol className="allocation-list allocation-list-scroll">
+                  {outboundInfo.pickingList.map((line, index) => (
+                    <li key={`${line.batchId}-${line.slotId}-${index}`}>
+                      <span className="smart-card-value">{line.slotPath}</span>
+                      <span>Batch <strong>{line.batchCode}</strong></span>
+                      <span><strong>{line.quantity}</strong> đơn vị</span>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            )}
+
             {outboundInfo && (
               <>
                 <div className="smart-card-row">

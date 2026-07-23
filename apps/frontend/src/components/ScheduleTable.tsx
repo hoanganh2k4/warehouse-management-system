@@ -1,5 +1,5 @@
 import type { Schedule } from '../types';
-import { AlertIcon, CalendarPlusIcon } from './icons';
+import { AlertIcon, CalendarPlusIcon, CheckIcon, CloseIcon, EyeIcon, PencilIcon } from './icons';
 import {
   scheduleTypeLabel,
   scheduleTypeBadgeClass,
@@ -128,28 +128,15 @@ export function ScheduleTable({
                 </span>
               </td>
               <td>
-                <div className="table-actions">
-                  {item.status === 'PENDING' && (
+                <div className="table-actions table-icon-actions">
+                  {item.status === 'PENDING' ? (
                     <>
-                      <button className="btn-secondary btn-sm" onClick={() => onExecute(item)}>
-                        Thực hiện
-                      </button>
-                      <button className="btn-secondary btn-sm" onClick={() => onEdit(item)}>
-                        Sửa
-                      </button>
-                      <button
-                        className="btn-danger btn-sm"
-                        disabled={cancellingId === item.id}
-                        onClick={() => onCancel(item)}
-                      >
-                        {cancellingId === item.id ? 'Đang hủy...' : 'Hủy'}
-                      </button>
+                      <button type="button" className="icon-action icon-action-success" data-tooltip="Thực hiện" aria-label="Thực hiện" onClick={() => onExecute(item)}><CheckIcon size={17} /></button>
+                      <button type="button" className="icon-action icon-action-info" data-tooltip="Sửa lịch" aria-label="Sửa lịch" onClick={() => onEdit(item)}><PencilIcon size={16} /></button>
+                      <button type="button" className="icon-action icon-action-danger" data-tooltip={cancellingId === item.id ? 'Đang hủy...' : 'Hủy lịch'} aria-label="Hủy lịch" disabled={cancellingId === item.id} onClick={() => onCancel(item)}><CloseIcon size={17} /></button>
                     </>
-                  )}
-                  {item.status !== 'PENDING' && (
-                    <button className="btn-secondary btn-sm" onClick={() => onViewDetail(item)}>
-                      Xem chi tiết
-                    </button>
+                  ) : (
+                    <button type="button" className="icon-action icon-action-neutral" data-tooltip="Xem chi tiết" aria-label="Xem chi tiết" onClick={() => onViewDetail(item)}><EyeIcon size={17} /></button>
                   )}
                 </div>
               </td>

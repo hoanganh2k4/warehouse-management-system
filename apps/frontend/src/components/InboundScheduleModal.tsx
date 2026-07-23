@@ -177,10 +177,12 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
 
   return (
     <div className="dialog-overlay" onClick={onClose}>
-      <div className="dialog-box dialog-box-wide" onClick={(e) => e.stopPropagation()}>
+      <div className="dialog-box dialog-box-schedule-create" onClick={(e) => e.stopPropagation()}>
         <h3 className="dialog-title">Đặt lịch nhập kho</h3>
 
         <form className="product-form schedule-modal-form" onSubmit={handleSubmit}>
+          <div className="schedule-create-layout">
+            <div className="schedule-create-fields">
           <div className="form-row">
             <div className="form-group">
               <label className="form-label" htmlFor="in-scheduledDate">
@@ -316,21 +318,25 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
             />
           </div>
 
-          <SmartLocationSuggestionCard
-            loading={suggestionLoading}
-            error={suggestionError}
-            suggestion={suggestion}
-          />
+              {submitError && <p className="form-error">{submitError}</p>}
 
-          {submitError && <p className="form-error">{submitError}</p>}
-
-          <div className="dialog-actions">
+              <div className="dialog-actions schedule-create-actions">
             <button type="button" className="btn-secondary" onClick={onClose} disabled={submitting}>
               Hủy
             </button>
             <button type="submit" className="btn-primary" disabled={submitting}>
               {submitting ? 'Đang đặt lịch...' : 'Đặt lịch'}
             </button>
+              </div>
+            </div>
+
+            <aside className="schedule-create-suggestion" aria-live="polite">
+              <SmartLocationSuggestionCard
+                loading={suggestionLoading}
+                error={suggestionError}
+                suggestion={suggestion}
+              />
+            </aside>
           </div>
         </form>
       </div>

@@ -498,6 +498,7 @@ export type OutboundSuggestionResult = {
   selectionMethod: 'FEFO';
   reasons: string[];
   splitRequired: boolean;
+  pickingList: OutboundPickLine[];
 };
 
 export type OutboundSuggestionPreviewPayload = {

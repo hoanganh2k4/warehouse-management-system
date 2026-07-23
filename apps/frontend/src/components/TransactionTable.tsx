@@ -1,5 +1,5 @@
 import type { Transaction } from '../types';
-import { AlertIcon, SwapIcon } from './icons';
+import { AlertIcon, EyeIcon, SwapIcon } from './icons';
 
 type TransactionTableProps = {
   items: Transaction[];
@@ -153,8 +153,9 @@ export function TransactionTable({
               <td className="muted-cell">{item.note ?? '—'}</td>
               <td className="muted-cell">{formatDateTime(item.createdAt)}</td>
               <td>
-                <button type="button" className="btn-link" onClick={() => onViewDetail(item)}>
-                  Chi tiết
+                <button type="button" className="transaction-detail-button" onClick={() => onViewDetail(item)}>
+                  <EyeIcon size={15} />
+                  <span>Chi tiết</span>
                 </button>
               </td>
             </tr>
