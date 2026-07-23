@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { TransactionType } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma.service';
+import {
+  EXPIRY_WARNING_DAYS,
+  getExpiryStatus,
+} from '../common/utils/expiry.util';
+import { formatSlotLocation } from '../common/utils/location.util';
 
 @Injectable()
 export class DashboardService {
@@ -78,6 +83,75 @@ export class DashboardService {
       inboundToday: inboundToday._sum.quantity ?? 0,
       outboundToday: outboundToday._sum.quantity ?? 0,
     };
+  }
+
+  /**
+   * Danh sách chi tiết các lô hàng sắp/đã hết hạn (còn tồn kho > 0), kèm vị
+   * trí đang lưu và trạng thái hết hạn — dùng cho bảng cảnh báo trên Dashboard.
+   * Dùng chung ngưỡng EXPIRY_WARNING_DAYS với Task 89, không hardcode lại số 30.
+   */
+  async getExpiringBatches() {
+    const batches = await this.prisma.batch.findMany({
+      where: {
+        expiryDate: {
+          lte: new Date(
+            Date.now() + EXPIRY_WARNING_DAYS * 24 * 60 * 60 * 1000,
+          ),
+        },
+        inventories: { some: { quantity: { gt: 0 } } },
+      },
+      include: {
+        product: { select: { skuCode: true, name: true } },
+        inventories: {
+          where: { quantity: { gt: 0 } },
+          select: {
+            quantity: true,
+            slot: {
+              select: {
+                code: true,
+                level: {
+                  select: {
+                    levelNumber: true,
+                    rack: {
+                      select: { code: true, zone: { select: { code: true } } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { expiryDate: 'asc' },
+    });
+
+    return batches.map((batch) => {
+      const { status, daysUntilExpiry } = getExpiryStatus(batch.expiryDate);
+      const quantity = batch.inventories.reduce(
+        (sum, inv) => sum + inv.quantity,
+        0,
+      );
+      const locations = batch.inventories.map((inv) =>
+        formatSlotLocation({
+          zoneCode: inv.slot.level.rack.zone.code,
+          rackCode: inv.slot.level.rack.code,
+          levelNumber: inv.slot.level.levelNumber,
+          slotCode: inv.slot.code,
+        }),
+      );
+
+      return {
+        batchId: batch.id,
+        batchCode: batch.batchCode,
+        productSkuCode: batch.product.skuCode,
+        productName: batch.product.name,
+        expiryDate: batch.expiryDate,
+        expiryStatus: status,
+        daysUntilExpiry,
+        quantity,
+        locations,
+      };
+    });
   }
 
   /**

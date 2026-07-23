@@ -15,6 +15,7 @@ import {
   normalizeZoneCode,
 } from '../common/utils/location.util';
 import { AuthUser } from '../common/decorators/current-user.decorator';
+import { getExpiryStatus } from '../common/utils/expiry.util';
 import {
   InboundDto,
   InventoryQueryDto,
@@ -105,6 +106,7 @@ export class InventoryService {
           batch: {
             select: {
               batchCode: true,
+              expiryDate: true,
               product: { select: { skuCode: true, name: true } },
             },
           },
@@ -148,6 +150,7 @@ export class InventoryService {
         batch: {
           select: {
             batchCode: true,
+            expiryDate: true,
             product: { select: { skuCode: true, name: true } },
           },
         },
@@ -337,7 +340,11 @@ function toInventoryView(item: {
   slotId: string;
   quantity: number;
   updatedAt: Date;
-  batch: { batchCode: string; product: { skuCode: string; name: string } };
+  batch: {
+    batchCode: string;
+    expiryDate: Date;
+    product: { skuCode: string; name: string };
+  };
   slot: {
     code: string;
     level: {
@@ -351,6 +358,7 @@ function toInventoryView(item: {
     };
   };
 }) {
+  const { status, daysUntilExpiry } = getExpiryStatus(item.batch.expiryDate);
   return {
     id: item.id,
     batchId: item.batchId,
@@ -366,5 +374,8 @@ function toInventoryView(item: {
     productName: item.batch.product.name,
     quantity: item.quantity,
     updatedAt: item.updatedAt,
+    expiryDate: item.batch.expiryDate,
+    expiryStatus: status,
+    daysUntilExpiry,
   };
 }
