@@ -64,13 +64,25 @@ export class SlotScoringService {
     }));
 
     scored.sort((a, b) => {
-      const scoreDiff = b.score - a.score;
-      const sameLevel = a.level.levelNumber === b.level.levelNumber;
-
-      if (sameLevel && Math.abs(scoreDiff) < SCORE_TIE_EPSILON) {
-        return extractSlotNumber(a.code) - extractSlotNumber(b.code);
+      // Lấp đầy vị trí đang chứa cùng sản phẩm trước để tránh dàn hàng sang
+      // nhiều slot khi slot hiện tại vẫn còn dung lượng.
+      const aExistingProduct = a.currentProductId === product.id ? 0 : 1;
+      const bExistingProduct = b.currentProductId === product.id ? 0 : 1;
+      if (aExistingProduct !== bExistingProduct) {
+        return aExistingProduct - bExistingProduct;
       }
-      return scoreDiff;
+
+      // Quy tắc vận hành: dùng S01 của các level trước, rồi mới S02...
+      const slotNumberDiff =
+        extractSlotNumber(a.code) - extractSlotNumber(b.code);
+      if (slotNumberDiff !== 0) return slotNumberDiff;
+
+      // Với cùng số slot, ưu tiên level thấp rồi mới dùng điểm thông minh.
+      const levelDiff = a.level.levelNumber - b.level.levelNumber;
+      if (levelDiff !== 0) return levelDiff;
+
+      const scoreDiff = b.score - a.score;
+      return Math.abs(scoreDiff) < SCORE_TIE_EPSILON ? 0 : scoreDiff;
     });
 
     const allocations: { slot: Slot; allocateQty: number; score: number }[] =

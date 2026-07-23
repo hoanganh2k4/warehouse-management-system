@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import '../../App.css';
 import './Dashboard.css';
 import { StatCard } from '../../components/StatCard';
@@ -6,11 +6,31 @@ import { InboundOutboundChart } from '../../components/InboundOutboundChart';
 import { AlertIcon, BoxIcon, GridIcon, LayersIcon, ScaleIcon, WarehouseIcon } from '../../components/icons';
 import { useDashboard } from '../../hooks/useDashboard';
 import { useDashboardChart } from '../../hooks/useDashboardChart';
+import { dashboardService } from '../../services/dashboard.service';
+import type { DashboardExpiringBatch } from '../../types';
+import { formatDate, getExpiryBadgeClass, getExpiryLabel } from '../../utils/expiry.utils';
 
 export default function Dashboard() {
   const { summary, loading, error, refetch } = useDashboard();
   const [chartDays, setChartDays] = useState(14);
   const { data: chartData, loading: chartLoading } = useDashboardChart(chartDays);
+  const [expiringBatches, setExpiringBatches] = useState<DashboardExpiringBatch[]>([]);
+  const [expiringLoading, setExpiringLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    dashboardService
+      .getExpiringBatches()
+      .then((items) => {
+        if (!cancelled) setExpiringBatches(items);
+      })
+      .finally(() => {
+        if (!cancelled) setExpiringLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <main className="app-content dashboard-page">
@@ -69,6 +89,54 @@ export default function Dashboard() {
             hint="Lô hàng cần chú ý"
             icon={<AlertIcon />}
           />
+        </div>
+      )}
+
+
+      {!error && (
+        <div className="panel expiry-panel">
+          <div className="panel-header">
+            <div className="panel-header-title-group">
+              <h2>Lô sắp hết hạn / đã hết hạn</h2>
+              <span className="result-count">{expiringBatches.length} lô cần chú ý</span>
+            </div>
+          </div>
+          {expiringLoading ? (
+            <div className="state-panel"><p className="state-body">Đang tải dữ liệu hạn sử dụng...</p></div>
+          ) : expiringBatches.length === 0 ? (
+            <div className="state-panel"><p className="state-body">Không có lô hàng sắp hết hạn.</p></div>
+          ) : (
+            <div className="table-wrap">
+              <table className="product-table expiry-table">
+                <thead>
+                  <tr>
+                    <th>Lô hàng</th>
+                    <th>Sản phẩm</th>
+                    <th>Hạn sử dụng</th>
+                    <th>Trạng thái</th>
+                    <th>Số lượng</th>
+                    <th>Vị trí</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expiringBatches.map((batch) => (
+                    <tr key={batch.batchId}>
+                      <td><span className="sku-code">{batch.batchCode}</span></td>
+                      <td>{batch.productSkuCode} — {batch.productName}</td>
+                      <td>{formatDate(batch.expiryDate)}</td>
+                      <td>
+                        <span className={getExpiryBadgeClass(batch.expiryStatus)}>
+                          {getExpiryLabel(batch.expiryStatus, batch.daysUntilExpiry)}
+                        </span>
+                      </td>
+                      <td>{batch.quantity}</td>
+                      <td>{batch.locations.join(', ') || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

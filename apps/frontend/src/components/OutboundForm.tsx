@@ -78,7 +78,6 @@ export function OutboundForm({ onSubmit, submitting }: OutboundFormProps) {
     });
   }
 
-  const isFormInvalid = Object.keys(validate(form)).length > 0;
 
   return (
     <form className="product-form" onSubmit={handleSubmit}>
@@ -138,7 +137,7 @@ export function OutboundForm({ onSubmit, submitting }: OutboundFormProps) {
       </div>
 
       <div className="form-actions">
-        <button type="submit" className="btn-primary" disabled={submitting || isFormInvalid}>
+        <button type="submit" className="btn-primary" disabled={submitting}>
           {submitting ? 'Đang xuất kho...' : 'Xuất kho'}
         </button>
       </div>

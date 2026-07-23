@@ -112,6 +112,18 @@ export type DashboardChartPoint = {
   outbound: number;
 };
 
+export type DashboardExpiringBatch = {
+  batchId: string;
+  batchCode: string;
+  productSkuCode: string;
+  productName: string;
+  expiryDate: string;
+  expiryStatus: 'OK' | 'WARNING' | 'CRITICAL' | 'EXPIRED';
+  daysUntilExpiry: number;
+  quantity: number;
+  locations: string[];
+};
+
 export type InventoryItem = {
   id: string;
   batchId: string;
