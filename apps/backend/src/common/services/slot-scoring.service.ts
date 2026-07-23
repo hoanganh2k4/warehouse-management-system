@@ -2,9 +2,21 @@ import { Injectable } from '@nestjs/common';
 import { Product, Slot } from '../../../generated/prisma/client';
 import { PrismaService } from '../../prisma.service';
 
+// Ngưỡng dung sai khi so điểm 2 slot: chênh lệch nhỏ hơn mức này được coi là
+// "ngang điểm", chuyển sang so mã slot thay vì để sai số nhỏ tự quyết định.
+const SCORE_TIE_EPSILON = 0.02;
+
+// Mã slot dạng "S01", "S02"... — phải trích phần SỐ ra để so sánh, so chuỗi
+// trực tiếp sẽ sai (vd "S10" < "S2" theo thứ tự chuỗi, nhưng 10 > 2).
+function extractSlotNumber(code: string): number {
+  const digits = code.replace(/\D/g, '');
+  return digits ? parseInt(digits, 10) : 0;
+}
+
 export interface ScoredSlot extends Slot {
   score: number;
   availableCapacity: number;
+  level: { levelNumber: number };
 }
 
 @Injectable()
@@ -34,6 +46,10 @@ export class SlotScoringService {
       ...valid.map((s) => s.outboundFrequencyScore),
       1,
     );
+    const maxLevelNumber = Math.max(
+      ...valid.map((s) => s.level.levelNumber),
+      1,
+    );
 
     const scored: ScoredSlot[] = valid.map((slot) => ({
       ...slot,
@@ -43,10 +59,19 @@ export class SlotScoringService {
         incomingExpiry,
         maxDistance,
         maxFrequency,
+        maxLevelNumber,
       ),
     }));
 
-    scored.sort((a, b) => b.score - a.score);
+    scored.sort((a, b) => {
+      const scoreDiff = b.score - a.score;
+      const sameLevel = a.level.levelNumber === b.level.levelNumber;
+
+      if (sameLevel && Math.abs(scoreDiff) < SCORE_TIE_EPSILON) {
+        return extractSlotNumber(a.code) - extractSlotNumber(b.code);
+      }
+      return scoreDiff;
+    });
 
     const allocations: { slot: Slot; allocateQty: number; score: number }[] =
       [];
@@ -94,18 +119,35 @@ export class SlotScoringService {
     slot: Slot & {
       currentProduct: Product | null;
       inventories: { batch: { expiryDate: Date } }[];
+      level: { levelNumber: number };
     },
-    _product: Product,
+    product: Product,
     incomingExpiry: Date,
     maxDistance: number,
     maxFrequency: number,
+    maxLevelNumber: number,
   ): number {
     const D = 1 - slot.distanceToGate / maxDistance;
     const C = slot.availableCapacity / slot.maxCapacity;
     const O = slot.outboundFrequencyScore / maxFrequency;
     const F = this.computeFefoScore(slot, incomingExpiry);
+    const L = this.computeLevelScore(slot.level.levelNumber, maxLevelNumber);
 
+    if (product.isHeavy) {
+      return 0.5 * L + 0.2 * D + 0.2 * F + 0.1 * C;
+    }
     return 0.4 * D + 0.3 * F + 0.2 * C + 0.1 * O;
+  }
+
+  // Level càng thấp, điểm càng cao — chỉ có ý nghĩa với hàng nặng (isHeavy).
+  // Nếu chỉ có 1 level hợp lệ (maxLevelNumber <= 1) thì trả thẳng 1, tránh
+  // chia cho 0 làm NaN lan ra toàn bộ điểm số.
+  private computeLevelScore(
+    levelNumber: number,
+    maxLevelNumber: number,
+  ): number {
+    if (maxLevelNumber <= 1) return 1;
+    return 1 - (levelNumber - 1) / (maxLevelNumber - 1);
   }
 
   private computeFefoScore(
