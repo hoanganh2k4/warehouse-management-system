@@ -80,9 +80,6 @@ export function InboundForm({ onSubmit, submitting }: InboundFormProps) {
     return next;
   }
 
-  function handleBlurDates() {
-    setErrors((prev) => ({ ...prev, ...validate(form) }));
-  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -99,7 +96,6 @@ export function InboundForm({ onSubmit, submitting }: InboundFormProps) {
     });
   }
 
-  const isFormInvalid = Object.keys(validate(form)).length > 0;
 
   return (
     <form className="product-form" onSubmit={handleSubmit}>
@@ -155,7 +151,6 @@ export function InboundForm({ onSubmit, submitting }: InboundFormProps) {
           className="form-input"
           value={form.manufactureDate}
           onChange={(e) => updateField('manufactureDate', e.target.value)}
-          onBlur={handleBlurDates}
         />
         {errors.manufactureDate && <p className="form-error">{errors.manufactureDate}</p>}
       </div>
@@ -171,7 +166,6 @@ export function InboundForm({ onSubmit, submitting }: InboundFormProps) {
           className="form-input"
           value={form.expiryDate}
           onChange={(e) => updateField('expiryDate', e.target.value)}
-          onBlur={handleBlurDates}
         />
         {errors.expiryDate && <p className="form-error">{errors.expiryDate}</p>}
       </div>
@@ -191,7 +185,7 @@ export function InboundForm({ onSubmit, submitting }: InboundFormProps) {
       </div>
 
       <div className="form-actions">
-        <button type="submit" className="btn-primary" disabled={submitting || isFormInvalid}>
+        <button type="submit" className="btn-primary" disabled={submitting}>
           {submitting ? 'Đang nhập kho...' : 'Nhập kho'}
         </button>
       </div>

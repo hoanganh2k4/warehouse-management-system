@@ -67,6 +67,7 @@ const transactionSelect = {
   },
   userId: true,
   user: { select: { id: true, username: true, fullName: true } },
+  schedule: { select: { orderCode: true } },
 } satisfies Prisma.TransactionSelect;
 
 @Injectable()
@@ -165,6 +166,7 @@ function toTransactionView(item: {
   } | null;
   userId: string;
   user: { id: string; username: string; fullName: string | null };
+  schedule: { orderCode: string | null } | null;
 }) {
   return {
     id: item.id,
@@ -199,5 +201,6 @@ function toTransactionView(item: {
       : null,
     userId: item.userId,
     user: item.user,
+    orderCode: item.schedule?.orderCode ?? null,
   };
 }

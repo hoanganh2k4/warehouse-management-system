@@ -2245,3 +2245,83 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* UX fixes: readable notifications and tables without horizontal scrolling */
+.toast {
+  top: 84px;
+  right: 28px;
+  min-width: 320px;
+  max-width: min(480px, calc(100vw - 32px));
+  padding: 18px 20px;
+  background: #111827;
+  color: #f8fafc;
+  border-width: 1px;
+  border-left-width: 5px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.toast-error {
+  background: #2b1418;
+  color: #fecaca;
+  border-color: #ef4444;
+}
+
+.toast-success {
+  background: #10251d;
+  color: #bbf7d0;
+  border-color: #22c55e;
+}
+
+.toast-close {
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.product-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.product-table th,
+.product-table td {
+  padding-left: 12px;
+  padding-right: 12px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.table-actions {
+  flex-wrap: wrap;
+}
+
+.expiry-panel {
+  margin-top: 20px;
+}
+
+.expiry-table th:nth-child(1) { width: 12%; }
+.expiry-table th:nth-child(2) { width: 23%; }
+.expiry-table th:nth-child(3) { width: 13%; }
+.expiry-table th:nth-child(4) { width: 17%; }
+.expiry-table th:nth-child(5) { width: 10%; }
+.expiry-table th:nth-child(6) { width: 25%; }
+
+@media (max-width: 900px) {
+  .product-table {
+    font-size: 0.78rem;
+  }
+
+  .product-table th,
+  .product-table td {
+    padding: 9px 7px;
+  }
+}

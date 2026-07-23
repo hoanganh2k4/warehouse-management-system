@@ -42,7 +42,6 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
 
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -119,6 +118,12 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   }
 
   function validate(state: FormState): FormErrors {
@@ -136,27 +141,13 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
     return next;
   }
 
-  function handleBlur(field: keyof FormState) {
-    setTouched((prev) => ({ ...prev, [field]: true }));
-    setErrors(validate(form));
-  }
-
-  const validationErrors = validate(form);
-  const isFormInvalid = Object.keys(validationErrors).length > 0;
 
   function fieldError(field: keyof FormState) {
-    return touched[field] ? validationErrors[field] : errors[field];
+    return errors[field];
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setTouched({
-      scheduledDate: true,
-      scheduledTime: true,
-      supplierId: true,
-      productId: true,
-      quantity: true,
-    });
     const nextErrors = validate(form);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -201,7 +192,6 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
                 className="form-input"
                 value={form.scheduledDate}
                 onChange={(e) => updateField('scheduledDate', e.target.value)}
-                onBlur={() => handleBlur('scheduledDate')}
               />
               {fieldError('scheduledDate') && <p className="form-error">{fieldError('scheduledDate')}</p>}
             </div>
@@ -229,7 +219,6 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
                 className="form-input"
                 value={form.scheduledTime}
                 onChange={(e) => updateField('scheduledTime', e.target.value)}
-                onBlur={() => handleBlur('scheduledTime')}
               />
               {fieldError('scheduledTime') && <p className="form-error">{fieldError('scheduledTime')}</p>}
             </div>
@@ -245,7 +234,6 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
               value={form.supplierId}
               disabled={suppliersLoading}
               onChange={(e) => updateField('supplierId', e.target.value)}
-              onBlur={() => handleBlur('supplierId')}
             >
               <option value="">
                 {suppliersLoading ? 'Đang tải nhà cung cấp...' : '-- Chọn nhà cung cấp --'}
@@ -270,7 +258,6 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
               value={form.productId}
               disabled={productsLoading}
               onChange={(e) => updateField('productId', e.target.value)}
-              onBlur={() => handleBlur('productId')}
             >
               <option value="">
                 {productsLoading ? 'Đang tải sản phẩm...' : '-- Chọn sản phẩm --'}
@@ -297,7 +284,6 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
                 className="form-input"
                 value={form.quantity}
                 onChange={(e) => updateField('quantity', e.target.value)}
-                onBlur={() => handleBlur('quantity')}
               />
               {fieldError('quantity') && <p className="form-error">{fieldError('quantity')}</p>}
             </div>
@@ -342,7 +328,7 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
             <button type="button" className="btn-secondary" onClick={onClose} disabled={submitting}>
               Hủy
             </button>
-            <button type="submit" className="btn-primary" disabled={submitting || isFormInvalid}>
+            <button type="submit" className="btn-primary" disabled={submitting}>
               {submitting ? 'Đang đặt lịch...' : 'Đặt lịch'}
             </button>
           </div>

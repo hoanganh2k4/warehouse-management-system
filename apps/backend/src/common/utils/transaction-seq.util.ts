@@ -16,8 +16,11 @@ export async function getNextDailySeq(
   const end = new Date(start);
   end.setDate(end.getDate() + 1);
 
-  const count = await tx.transaction.count({
+  const latest = await tx.transaction.findFirst({
     where: { createdAt: { gte: start, lt: end } },
+    orderBy: [{ dailySeq: 'desc' }, { createdAt: 'desc' }],
+    select: { dailySeq: true },
   });
-  return count + 1;
+
+  return (latest?.dailySeq ?? 0) + 1;
 }
