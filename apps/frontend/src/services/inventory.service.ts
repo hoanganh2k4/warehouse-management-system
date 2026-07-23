@@ -1,9 +1,11 @@
 import { apiClient } from '../lib/api-client';
 import type {
+  GetInventoryLedgerParams,
   GetInventoryParams,
   InboundPayload,
   InboundResult,
   InventoryItem,
+  InventoryLedgerItem,
   OutboundPayload,
   OutboundResult,
   PaginatedResult,
@@ -12,6 +14,10 @@ import type {
 export const inventoryService = {
   getInventory(params: GetInventoryParams): Promise<PaginatedResult<InventoryItem>> {
     return apiClient.get('/inventory', { params });
+  },
+
+  getLedger(params: GetInventoryLedgerParams): Promise<PaginatedResult<InventoryLedgerItem>> {
+    return apiClient.get('/inventory/ledger', { params });
   },
 
   inbound(payload: InboundPayload): Promise<InboundResult> {

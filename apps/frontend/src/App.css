@@ -1284,6 +1284,16 @@
   color: var(--danger);
 }
 
+.ledger-change-positive {
+  color: var(--success, #16a34a);
+  font-weight: 600;
+}
+
+.ledger-change-negative {
+  color: var(--danger, #dc2626);
+  font-weight: 600;
+}
+
 .badge-warning {
   background: var(--warning-soft);
   color: var(--warning);

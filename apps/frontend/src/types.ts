@@ -315,6 +315,29 @@ export type GetTransactionsParams = {
   limit?: number;
 };
 
+export type InventoryLedgerItem = {
+  transactionId: string;
+  occurredAt: string;
+  type: TransactionType;
+  productSkuCode: string;
+  productName: string;
+  slotPath: string | null;
+  changeQuantity: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  dailySeq: number;
+  orderCode: string | null;
+};
+
+export type GetInventoryLedgerParams = {
+  productId?: string;
+  slotId?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  limit?: number;
+};
+
 // ---------- Đặt lịch nhập / xuất (Tab "Lịch nhập / xuất") ----------
 
 export type ScheduleType = 'INBOUND' | 'OUTBOUND';
