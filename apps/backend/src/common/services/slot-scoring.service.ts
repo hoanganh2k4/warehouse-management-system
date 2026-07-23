@@ -64,25 +64,27 @@ export class SlotScoringService {
     }));
 
     scored.sort((a, b) => {
-      // Lấp đầy vị trí đang chứa cùng sản phẩm trước để tránh dàn hàng sang
-      // nhiều slot khi slot hiện tại vẫn còn dung lượng.
-      const aExistingProduct = a.currentProductId === product.id ? 0 : 1;
-      const bExistingProduct = b.currentProductId === product.id ? 0 : 1;
-      if (aExistingProduct !== bExistingProduct) {
-        return aExistingProduct - bExistingProduct;
+      // Nếu slot đang chứa đúng sản phẩm cần nhập, ưu tiên lấp phần dung lượng
+      // còn lại trước để tránh dàn cùng SKU sang quá nhiều slot.
+      const aHasSameProduct = a.currentProductId === product.id;
+      const bHasSameProduct = b.currentProductId === product.id;
+
+      if (aHasSameProduct !== bHasSameProduct) {
+        return aHasSameProduct ? -1 : 1;
       }
 
-      // Quy tắc vận hành: dùng S01 của các level trước, rồi mới S02...
-      const slotNumberDiff =
-        extractSlotNumber(a.code) - extractSlotNumber(b.code);
-      if (slotNumberDiff !== 0) return slotNumberDiff;
-
-      // Với cùng số slot, ưu tiên level thấp rồi mới dùng điểm thông minh.
-      const levelDiff = a.level.levelNumber - b.level.levelNumber;
-      if (levelDiff !== 0) return levelDiff;
-
+      // Ngoài ưu tiên gom cùng SKU, vẫn giữ nguyên thuật toán chấm điểm:
+      // hàng tiêu chuẩn ưu tiên khoảng cách/FEFO/dung lượng/tần suất; hàng nặng
+      // ưu tiên level thấp. Mã S01 chỉ dùng để phân xử khi hai slot cùng level
+      // và điểm gần như ngang nhau, đúng yêu cầu Task 95.
       const scoreDiff = b.score - a.score;
-      return Math.abs(scoreDiff) < SCORE_TIE_EPSILON ? 0 : scoreDiff;
+      const sameLevel = a.level.levelNumber === b.level.levelNumber;
+
+      if (sameLevel && Math.abs(scoreDiff) < SCORE_TIE_EPSILON) {
+        return extractSlotNumber(a.code) - extractSlotNumber(b.code);
+      }
+
+      return scoreDiff;
     });
 
     const allocations: { slot: Slot; allocateQty: number; score: number }[] =
