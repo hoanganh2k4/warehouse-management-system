@@ -65,7 +65,26 @@ export function SmartLocationSuggestionCard({
             </div>
           )}
 
-          {suggestion.splitRequired && (
+          {suggestion.splitRequired && suggestion.alternativeSlots.length > 1 && (
+            <div className="smart-card-alt-list">
+              <p className="smart-card-warning">
+                ⚠ Số lượng vượt sức chứa 1 Slot — hệ thống sẽ chia vào{' '}
+                {suggestion.alternativeSlots.length} vị trí sau:
+              </p>
+              <ul>
+                {suggestion.alternativeSlots.map((alt) => (
+                  <li key={alt.slotId}>
+                    <span className="smart-card-value">{alt.slotPath}</span>
+                    {' — '}
+                    <strong>{alt.allocateQty}</strong> đơn vị{' '}
+                    <span className="badge badge-info">{alt.score}%</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {suggestion.splitRequired && suggestion.alternativeSlots.length <= 1 && (
             <p className="smart-card-warning">
               ⚠ Số lượng vượt sức chứa 1 Slot — hệ thống sẽ chia vào nhiều Slot khi thực hiện.
             </p>
