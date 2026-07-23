@@ -499,7 +499,7 @@ export class SchedulesService {
     dto: ExecuteScheduleDto,
     user: AuthUser,
   ) {
-    let slotId: string;
+    let multiSlots: { slotId: string; quantity: number }[];
     let allocationMethod: AllocationMethod;
     let overrideReason: ScheduleOverrideReason | null = null;
     let overrideReasonNote: string | null = null;
@@ -514,7 +514,7 @@ export class SchedulesService {
           'Slot được chọn không đủ sức chứa cho số lượng cần nhập',
         );
       }
-      slotId = slot.id;
+      multiSlots = [{ slotId: slot.id, quantity: schedule.quantity }];
       allocationMethod = AllocationMethod.MANUAL_OVERRIDE;
       overrideReason = dto.override.reason;
       overrideReasonNote = dto.override.reasonNote ?? null;
@@ -532,15 +532,26 @@ export class SchedulesService {
         schedule.quantity,
         expiryProxy,
       );
-      if (
-        allocations.length === 0 ||
-        allocations[0].allocateQty < schedule.quantity
-      ) {
+      const totalAllocatable = allocations.reduce(
+        (sum, a) => sum + a.allocateQty,
+        0,
+      );
+      if (allocations.length === 0 || totalAllocatable < schedule.quantity) {
         throw new BadRequestException(
-          'Không tìm được 1 Slot đủ sức chứa toàn bộ số lượng. Vui lòng dùng chức năng "Thay đổi vị trí" để chọn thủ công.',
+          'Không tìm được đủ vị trí trống cho toàn bộ số lượng. Vui lòng dùng chức năng "Thay đổi vị trí" để chọn thủ công.',
         );
       }
-      slotId = allocations[0].slot.id;
+      // Không còn chặn cứng 1-slot: chia số lượng qua nhiều slot theo đúng
+      // thứ tự allocations (đã ưu tiên/score cao nhất trước), phần tử cuối
+      // có thể lấy ít hơn allocateQty gốc nếu phần còn thiếu nhỏ hơn.
+      multiSlots = [];
+      let remaining = schedule.quantity;
+      for (const a of allocations) {
+        if (remaining <= 0) break;
+        const take = Math.min(a.allocateQty, remaining);
+        multiSlots.push({ slotId: a.slot.id, quantity: take });
+        remaining -= take;
+      }
       allocationMethod = AllocationMethod.SMART_ALLOCATION;
     }
 
@@ -580,51 +591,78 @@ export class SchedulesService {
 
       // Đọc tồn kho TRƯỚC khi cộng thêm, để ghi đúng quantityBefore — nếu đọc
       // sau upsert thì số liệu đã bị cộng dồn mất, không còn ý nghĩa "trước".
-      const existingInv = await tx.inventory.findUnique({
-        where: { batchId_slotId: { batchId: batch.id, slotId } },
-      });
-      const quantityBefore = existingInv?.quantity ?? 0;
-      const quantityAfter = quantityBefore + schedule.quantity;
+      // Xử lý tuần tự qua từng slot trong multiSlots (thường 1 phần tử khi
+      // override thủ công, có thể nhiều phần tử khi Smart Allocation phải
+      // chia hàng — Task 99), mỗi slot có quantityBefore/After/dailySeq riêng.
+      const transactions: Awaited<ReturnType<typeof tx.transaction.create>>[] =
+        [];
+      for (const { slotId: sId, quantity: qty } of multiSlots) {
+        const existingInv = await tx.inventory.findUnique({
+          where: { batchId_slotId: { batchId: batch.id, slotId: sId } },
+        });
+        const quantityBefore = existingInv?.quantity ?? 0;
+        const quantityAfter = quantityBefore + qty;
 
-      await tx.inventory.upsert({
-        where: { batchId_slotId: { batchId: batch.id, slotId } },
-        create: { batchId: batch.id, slotId, quantity: schedule.quantity },
-        update: { quantity: { increment: schedule.quantity } },
-      });
+        await tx.inventory.upsert({
+          where: { batchId_slotId: { batchId: batch.id, slotId: sId } },
+          create: { batchId: batch.id, slotId: sId, quantity: qty },
+          update: { quantity: { increment: qty } },
+        });
 
-      await this.slotCapacity.recalculate(slotId, tx);
+        await this.slotCapacity.recalculate(sId, tx);
 
-      const transaction = await tx.transaction.create({
-        data: {
-          type: TransactionType.IMPORT,
+        const txn = await tx.transaction.create({
+          data: {
+            type: TransactionType.IMPORT,
+            batchId: batch.id,
+            slotToId: sId,
+            quantity: qty,
+            userId: user.id,
+            note: schedule.note ?? undefined,
+            quantityBefore,
+            quantityAfter,
+            dailySeq: await getNextDailySeq(tx),
+          },
+        });
+        transactions.push(txn);
+      }
+
+      // Ghi lại TOÀN BỘ danh sách slot/số lượng thực tế đã dùng (kind =
+      // ACTUAL) — kể cả khi chỉ có 1 slot — để đồng bộ cách lưu trữ với
+      // alternativeSlots (kind = SUGGESTED) của Task 98. Insert bên trong
+      // cùng transaction để đảm bảo nhất quán nếu có lỗi rollback.
+      await tx.scheduleAllocation.createMany({
+        data: multiSlots.map((s, idx) => ({
+          scheduleId: schedule.id,
+          kind: 'ACTUAL' as const,
+          slotId: s.slotId,
           batchId: batch.id,
-          slotToId: slotId,
-          quantity: schedule.quantity,
-          userId: user.id,
-          note: schedule.note ?? undefined,
-          quantityBefore,
-          quantityAfter,
-          dailySeq: await getNextDailySeq(tx),
-        },
+          quantity: s.quantity,
+          sortOrder: idx,
+        })),
       });
 
+      // Schedule.actualSlotId/transactionId vẫn chỉ lưu vị trí/giao dịch
+      // "chính" (phần tử đầu tiên) để tương thích ngược với UI cũ chỉ đọc 1
+      // field này — danh sách đầy đủ nằm trong ScheduleAllocation (ACTUAL)
+      // và trong mảng `transactions` trả về.
       const updated = await tx.schedule.update({
         where: { id: schedule.id },
         data: {
           status: ScheduleStatus.COMPLETED,
-          actualSlotId: slotId,
+          actualSlotId: multiSlots[0].slotId,
           actualBatchId: batch.id,
           allocationMethod,
           overrideReason,
           overrideReasonNote,
           executedById: user.id,
           executedAt: new Date(),
-          transactionId: transaction.id,
+          transactionId: transactions[0].id,
         },
         include: scheduleInclude,
       });
 
-      return { schedule: toScheduleView(updated), transactions: [transaction] };
+      return { schedule: toScheduleView(updated), transactions };
     });
   }
 
