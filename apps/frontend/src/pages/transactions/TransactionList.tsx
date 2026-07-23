@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import '../../App.css';
 import { TransactionTable } from '../../components/TransactionTable';
+import { TransactionDetailModal } from '../../components/TransactionDetailModal';
 import { ScheduleTable } from '../../components/ScheduleTable';
 import { ScheduleDetailModal } from '../../components/ScheduleDetailModal';
 import { InboundScheduleModal } from '../../components/InboundScheduleModal';
@@ -10,14 +11,18 @@ import { Toast } from '../../components/Toast';
 import { CalendarPlusIcon } from '../../components/icons';
 import { useTransactions } from '../../hooks/useTransactions';
 import { useSchedules } from '../../hooks/useSchedules';
-import { scheduleService } from '../../services/schedule.service';
+
 import { productService } from '../../services/product.service';
 import type { Product, Schedule, TransactionType } from '../../types';
+import { scheduleService } from '../../services/schedule.service';
 
 type MainTab = 'history' | 'schedule';
 
 export default function TransactionList() {
   const [activeTab, setActiveTab] = useState<MainTab>('history');
+  const [orderCodeInput, setOrderCodeInput] = useState('');
+  const [orderCode, setOrderCode] = useState('');
+  const [orderCodeSearchError, setOrderCodeSearchError] = useState<string | null>(null);
 
   const [typeFilter, setTypeFilter] = useState<TransactionType | ''>('');
   const [fromFilter, setFromFilter] = useState('');
@@ -27,6 +32,7 @@ export default function TransactionList() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [detailTransactionId, setDetailTransactionId] = useState<string | null>(null);
 
   // ---- Tab "Lịch nhập / xuất" ----
   const [schedulePage, setSchedulePage] = useState(1);
@@ -105,6 +111,35 @@ export default function TransactionList() {
   }
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setOrderCode(orderCodeInput.trim());
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [orderCodeInput]);
+
+  useEffect(() => {
+    if (activeTab !== 'schedule' || !orderCode) return;
+
+    let cancelled = false;
+    scheduleService
+      .getByOrderCode(orderCode)
+      .then((result) => {
+        if (cancelled) return;
+        setDetailSchedule(result);
+        setOrderCodeSearchError(null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setOrderCodeSearchError(`Không tìm thấy lịch với mã đơn "${orderCode}".`);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, orderCode]);
+
+  useEffect(() => {
     let cancelled = false;
     productService
       .getProducts({ page: 1, limit: 100 })
@@ -126,6 +161,7 @@ export default function TransactionList() {
     from: fromFilter || undefined,
     to: toFilter || undefined,
     productId: productIdFilter || undefined,
+    orderCode: orderCode || undefined,
   });
 
   const totalCount = meta?.total ?? 0;
@@ -142,6 +178,29 @@ export default function TransactionList() {
         </div>
 
         <div className="page-header-controls">
+          <div className="filter-field">
+            <label className="filter-field-label" htmlFor="transaction-order-code">
+              Mã đơn
+            </label>
+            <input
+              id="transaction-order-code"
+              type="search"
+              className="filter-input"
+              placeholder="VD: SCH-20260722-0001"
+              value={orderCodeInput}
+              onChange={(event) => {
+                setOrderCodeInput(event.target.value);
+                setOrderCodeSearchError(null);
+                setPage(1);
+              }}
+            />
+            {orderCodeSearchError && (
+              <span className="form-error" role="alert">
+                {orderCodeSearchError}
+              </span>
+            )}
+          </div>
+
           <select
             className="sort-select"
             value={typeFilter}
@@ -231,14 +290,20 @@ export default function TransactionList() {
         <button
           type="button"
           className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
-          onClick={() => setActiveTab('history')}
+          onClick={() => {
+            setActiveTab('history');
+            setOrderCodeSearchError(null);
+          }}
         >
           Lịch sử giao dịch
         </button>
         <button
           type="button"
           className={`tab-button ${activeTab === 'schedule' ? 'active' : ''}`}
-          onClick={() => setActiveTab('schedule')}
+          onClick={() => {
+            setActiveTab('schedule');
+            setOrderCodeSearchError(null);
+          }}
         >
           Lịch nhập / xuất
         </button>
@@ -255,7 +320,13 @@ export default function TransactionList() {
             )}
           </div>
 
-          <TransactionTable items={items} totalCount={totalCount} loading={loading} error={error} />
+          <TransactionTable
+            items={items}
+            totalCount={totalCount}
+            loading={loading}
+            error={error}
+            onViewDetail={(transaction) => setDetailTransactionId(transaction.id)}
+          />
 
           <div className="pagination-controls">
             <button disabled={loading || page <= 1} onClick={() => setPage((p) => p - 1)}>
@@ -317,6 +388,13 @@ export default function TransactionList() {
             </button>
           </div>
         </section>
+      )}
+
+      {detailTransactionId && (
+        <TransactionDetailModal
+          transactionId={detailTransactionId}
+          onClose={() => setDetailTransactionId(null)}
+        />
       )}
 
       {detailSchedule && (

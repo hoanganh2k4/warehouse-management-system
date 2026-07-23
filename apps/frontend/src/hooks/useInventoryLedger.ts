@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
-import { transactionService } from '../services/transaction.service';
-import type { GetTransactionsParams, PaginationMeta, Transaction } from '../types';
+import { inventoryService } from '../services/inventory.service';
+import type {
+  GetInventoryLedgerParams,
+  InventoryLedgerItem,
+  PaginationMeta,
+} from '../types';
 
-export function useTransactions(params: GetTransactionsParams) {
-  const [items, setItems] = useState<Transaction[]>([]);
+export function useInventoryLedger(params: GetInventoryLedgerParams) {
+  const [items, setItems] = useState<InventoryLedgerItem[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -12,11 +16,11 @@ export function useTransactions(params: GetTransactionsParams) {
   useEffect(() => {
     let cancelled = false;
 
-    function fetchTransactions() {
+    function fetchInventoryLedger() {
       setLoading(true);
 
-      transactionService
-        .getTransactions(params)
+      inventoryService
+        .getLedger(params)
         .then((result) => {
           if (cancelled) return;
           setItems(result.items);
@@ -32,19 +36,17 @@ export function useTransactions(params: GetTransactionsParams) {
         });
     }
 
-    fetchTransactions();
+    fetchInventoryLedger();
 
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    params.productId,
+    params.slotId,
     params.from,
     params.to,
-    params.type,
-    params.productId,
-    params.warehouseId,
-    params.orderCode,
     params.page,
     params.limit,
     reloadToken,
@@ -52,7 +54,7 @@ export function useTransactions(params: GetTransactionsParams) {
 
   function refetch() {
     setLoading(true);
-    setReloadToken((t) => t + 1);
+    setReloadToken((token) => token + 1);
   }
 
   return { items, meta, loading, error, refetch };

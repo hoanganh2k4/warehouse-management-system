@@ -26,6 +26,10 @@ export const scheduleService = {
     return apiClient.get(`/schedules/${id}`);
   },
 
+  getByOrderCode(orderCode: string): Promise<Schedule> {
+    return apiClient.get(`/schedules/by-code/${encodeURIComponent(orderCode)}`);
+  },
+
   cancelSchedule(id: string, reason?: string): Promise<Schedule> {
     return apiClient.patch(`/schedules/${id}/cancel`, { reason });
   },

@@ -1,0 +1,105 @@
+Bạn là trợ lý lập trình frontend React/TypeScript. Tôi cần tạo tầng dữ liệu (types, service, hook) và
+component bảng cho tính năng mới "Sổ biến động kho" (Inventory Ledger) — CHƯA gắn vào trang/route nào cả.
+
+BỐI CẢNH:
+Backend đã có sẵn `GET /inventory/ledger?productId=&slotId=&from=&to=&page=&limit=` trả về:
+```json
+{
+  "items": [
+    {
+      "transactionId": "uuid",
+      "occurredAt": "2026-07-22T08:30:00.000Z",
+      "type": "IMPORT",
+      "productSkuCode": "SKU001",
+      "productName": "Sữa tươi 1L",
+      "slotPath": "A-01-02-05",
+      "changeQuantity": 50,
+      "balanceBefore": 100,
+      "balanceAfter": 150,
+      "dailySeq": 3,
+      "orderCode": "SCH-20260722-0004"
+    }
+  ],
+  "meta": { "page": 1, "limit": 20, "total": 42, "totalPages": 3 }
+}
+```
+Đã có sẵn pattern 3 lớp tương tự cho Transaction: `types.ts` (`Transaction`, `GetTransactionsParams`) →
+`services/transaction.service.ts` (`getTransactions`) → `hooks/useTransactions.ts` (fetch + loading/error/
+refetch) → `components/TransactionTable.tsx` (bảng, badge loại giao dịch, skeleton loading). Tôi muốn làm
+y hệt pattern này cho Inventory Ledger.
+
+MỤC TIÊU TASK (CHỈ LÀM ĐÚNG VIỆC NÀY):
+1. Trong `apps/frontend/src/types.ts`, thêm 2 type mới (đặt sau `GetTransactionsParams`):
+   ```ts
+   export type InventoryLedgerItem = {
+     transactionId: string;
+     occurredAt: string;
+     type: TransactionType;
+     productSkuCode: string;
+     productName: string;
+     slotPath: string | null;
+     changeQuantity: number;
+     balanceBefore: number;
+     balanceAfter: number;
+     dailySeq: number;
+     orderCode: string | null;
+   };
+
+   export type GetInventoryLedgerParams = {
+     productId?: string;
+     slotId?: string;
+     from?: string;
+     to?: string;
+     page?: number;
+     limit?: number;
+   };
+   ```
+2. Trong `apps/frontend/src/services/inventory.service.ts`, thêm method:
+   ```ts
+   getLedger(params: GetInventoryLedgerParams): Promise<PaginatedResult<InventoryLedgerItem>> {
+     return apiClient.get('/inventory/ledger', { params });
+   },
+   ```
+   (nhớ thêm `InventoryLedgerItem`, `GetInventoryLedgerParams` vào dòng import type ở đầu file.)
+3. Tạo file mới `apps/frontend/src/hooks/useInventoryLedger.ts` — copy nguyên cấu trúc
+   `apps/frontend/src/hooks/useTransactions.ts` (state `items`/`meta`/`loading`/`error`/`reloadToken`,
+   `useEffect` fetch có cờ `cancelled`, hàm `refetch`), chỉ đổi: gọi `inventoryService.getLedger(params)`
+   thay vì `transactionService.getTransactions(params)`; kiểu items là `InventoryLedgerItem[]`; params
+   nhận `GetInventoryLedgerParams`; dependency array của `useEffect` là `[params.productId, params.slotId,
+   params.from, params.to, params.page, params.limit, reloadToken]`.
+4. Tạo file mới `apps/frontend/src/components/InventoryLedgerTable.tsx` — copy cấu trúc
+   `apps/frontend/src/components/TransactionTable.tsx` (dán bên dưới để bạn theo đúng style: bảng
+   `product-table` bọc trong `table-wrap`, skeleton loading với `Array.from({ length: 6 })`, badge loại
+   giao dịch dùng lại 2 hàm `typeLabel`/`typeBadgeClass`, hàm `formatDateTime` — copy nguyên các hàm này
+   vào file mới, KHÔNG import chéo từ `TransactionTable.tsx`). Props:
+   `{ items: InventoryLedgerItem[]; totalCount: number; loading: boolean; error: string | null }`. Các cột
+   theo thứ tự: Thời gian (`formatDateTime(item.occurredAt)`), Loại (badge), Sản phẩm
+   (`{item.productSkuCode} — {item.productName}`), Vị trí (`item.slotPath ?? '—'`), Thay đổi
+   (`item.changeQuantity`, hiển thị có dấu `+` khi dương, class `ledger-change-positive` khi dương,
+   `ledger-change-negative` khi âm — số dương JS không tự có dấu `+`, phải tự nối chuỗi), Tồn trước
+   (`item.balanceBefore`), Tồn sau (`item.balanceAfter`), STT ngày (`item.dailySeq`), Mã đơn
+   (`item.orderCode ?? '—'`).
+5. Trong `apps/frontend/src/App.css`, kiểm tra xem đã có class màu xanh/đỏ dùng chung nào phù hợp chưa; nếu
+   chưa có, thêm cạnh các class `badge-*` hiện có:
+   ```css
+   .ledger-change-positive { color: #16a34a; font-weight: 600; }
+   .ledger-change-negative { color: #dc2626; font-weight: 600; }
+   ```
+
+QUY TẮC BẮT BUỘC:
+- KHÔNG gắn `InventoryLedgerTable`/`useInventoryLedger` vào bất kỳ trang, route, hay `Sidebar.tsx` nào ở
+  task này — chỉ tạo tầng dữ liệu + component độc lập. Việc gắn UI làm ở task khác.
+- KHÔNG sửa `TransactionTable.tsx`, `useTransactions.ts`, `InventoryList.tsx`, `App.tsx`.
+- `useEffect` trong hook PHẢI có cờ `cancelled` để tránh cập nhật state sau khi component unmount.
+- Sort dữ liệu do backend xử lý — hook và component KHÔNG tự sắp xếp lại `items`.
+
+FILE ĐƯỢC PHÉP SỬA/TẠO:
+- apps/frontend/src/types.ts
+- apps/frontend/src/services/inventory.service.ts
+- apps/frontend/src/hooks/useInventoryLedger.ts (tạo mới)
+- apps/frontend/src/components/InventoryLedgerTable.tsx (tạo mới)
+- apps/frontend/src/App.css
+
+Sau khi sửa xong, chạy `npm run lint --workspace=frontend` và `npm run build --workspace=frontend`, đảm bảo
+không có lỗi. Toàn bộ code mới có thể build thành công dù chưa được import/sử dụng ở đâu (chấp nhận cảnh báo
+"unused export" nếu có, không phải lỗi build).

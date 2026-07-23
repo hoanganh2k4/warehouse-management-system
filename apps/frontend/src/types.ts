@@ -297,6 +297,10 @@ export type Transaction = {
   userId: string;
   user: { id: string; username: string; fullName: string | null };
   note: string | null;
+  quantityBefore: number | null;
+  quantityAfter: number | null;
+  dailySeq: number | null;
+  orderCode: string | null;
   createdAt: string;
 };
 
@@ -306,6 +310,30 @@ export type GetTransactionsParams = {
   type?: TransactionType;
   productId?: string;
   warehouseId?: string;
+  orderCode?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type InventoryLedgerItem = {
+  transactionId: string;
+  occurredAt: string;
+  type: TransactionType;
+  productSkuCode: string;
+  productName: string;
+  slotPath: string | null;
+  changeQuantity: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  dailySeq: number;
+  orderCode: string | null;
+};
+
+export type GetInventoryLedgerParams = {
+  productId?: string;
+  slotId?: string;
+  from?: string;
+  to?: string;
   page?: number;
   limit?: number;
 };
@@ -393,6 +421,13 @@ export type Customer = {
 
 export type SchedulePriority = 'HIGH' | 'MEDIUM' | 'LOW';
 
+export type AlternativeSlot = {
+  slotId: string;
+  slotPath: string;
+  allocateQty: number;
+  score: number;
+};
+
 export type InboundSuggestionResult = {
   slotId: string;
   zoneCode: string;
@@ -407,17 +442,20 @@ export type InboundSuggestionResult = {
   priority: SchedulePriority;
   reasons: string[];
   splitRequired: boolean;
+  alternativeSlots: AlternativeSlot[];
 };
 
 export type InboundSuggestionPreviewPayload = {
   productId: string;
   quantity: number;
   scheduledDate: string;
+  expiryDate?: string;
 };
 
 export type CreateInboundSchedulePayload = {
   scheduledDate: string;
   scheduledTime: string;
+  expiryDate?: string;
   supplierId: string;
   productId: string;
   quantity: number;
