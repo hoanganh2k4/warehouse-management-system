@@ -310,6 +310,7 @@ export type GetTransactionsParams = {
   type?: TransactionType;
   productId?: string;
   warehouseId?: string;
+  orderCode?: string;
   page?: number;
   limit?: number;
 };

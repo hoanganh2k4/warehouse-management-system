@@ -44,6 +44,7 @@ export function useTransactions(params: GetTransactionsParams) {
     params.type,
     params.productId,
     params.warehouseId,
+    params.orderCode,
     params.page,
     params.limit,
     reloadToken,
