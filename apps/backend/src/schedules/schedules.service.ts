@@ -38,6 +38,13 @@ import { UpdateScheduleDto } from './dto/update-schedule.dto';
 
 // Kết quả Smart Location Suggestion dùng chung cho cả preview (chưa lưu) và
 // lúc tạo lịch (lưu snapshot vào Schedule).
+export interface AlternativeSlot {
+  slotId: string;
+  slotPath: string;
+  allocateQty: number;
+  score: number; // 0-100, cùng thang điểm với suggestion.score
+}
+
 export interface InboundSuggestionResult {
   slotId: string;
   zoneCode: string;
@@ -52,6 +59,7 @@ export interface InboundSuggestionResult {
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   reasons: string[];
   splitRequired: boolean; // true nếu 1 slot không đủ chứa hết số lượng
+  alternativeSlots: AlternativeSlot[]; // Toàn bộ vị trí cần dùng khi splitRequired, kể cả vị trí chính (top)
 }
 
 // Kết quả Smart Picking Suggestion (FEFO) dùng chung cho preview và lúc tạo
@@ -92,17 +100,19 @@ export class SchedulesService {
 
   // ===================== Smart Location Suggestion (Inbound) =====================
 
-  // Lưu ý: tại thời điểm Đặt lịch, hệ thống CHƯA biết hạn sử dụng (HSD) thực tế
-  // của lô hàng sắp nhập (form Đặt lịch nhập không thu thập HSD - theo đúng yêu
-  // cầu). SlotScoringService cần 1 mốc "incoming expiry" để tính điểm FEFO phụ
-  // (trọng số 0.3/1.0) khi so khớp với các lô cùng SKU đã có trong slot. Ta dùng
-  // tạm ngày nhập dự kiến (scheduledDate) làm mốc xấp xỉ; đây chỉ là ước lượng ở
-  // bước lập kế hoạch — khi "Thực hiện lịch" (Bước 6), hệ thống sẽ chạy lại toàn
-  // bộ thuật toán với dữ liệu batch/HSD thật để chốt vị trí chính thức.
+  // Lưu ý: form Đặt lịch nhập CÓ THỂ thu thập HSD (expiryDate) nếu nhân viên đã
+  // biết trước lúc đặt lịch (không bắt buộc — hàng chưa về thì có thể chưa biết
+  // chính xác). SlotScoringService cần 1 mốc "incoming expiry" để tính điểm FEFO
+  // phụ (trọng số 0.3/1.0) khi so khớp với các lô cùng SKU đã có trong slot. Nếu
+  // có `expiryDate` thật, dùng giá trị đó; nếu không, dùng tạm ngày nhập dự kiến
+  // (scheduledDate) làm mốc xấp xỉ — đây chỉ là ước lượng ở bước lập kế hoạch khi
+  // "Thực hiện lịch" (Bước 6), hệ thống sẽ chạy lại toàn bộ thuật toán với dữ
+  // liệu batch/HSD thật để chốt vị trí chính thức.
   private async computeInboundSuggestion(
     productId: string,
     quantity: number,
     scheduledDate: Date,
+    expiryDate?: Date,
   ): Promise<InboundSuggestionResult> {
     const product = await this.prisma.product.findFirst({
       where: { id: productId, deletedAt: null },
@@ -112,7 +122,7 @@ export class SchedulesService {
     const allocations = await this.slotScoring.findBestSlots(
       product,
       quantity,
-      scheduledDate,
+      expiryDate ?? scheduledDate,
     );
 
     if (allocations.length === 0) {
@@ -161,6 +171,28 @@ export class SchedulesService {
     const priority: InboundSuggestionResult['priority'] =
       score >= 75 ? 'HIGH' : score >= 50 ? 'MEDIUM' : 'LOW';
 
+    const slotIds = allocations.map((a) => a.slot.id);
+    const slotDetails = await this.prisma.slot.findMany({
+      where: { id: { in: slotIds } },
+      include: { level: { include: { rack: { include: { zone: true } } } } },
+    });
+    const slotDetailMap = new Map(slotDetails.map((s) => [s.id, s]));
+
+    const alternativeSlots: AlternativeSlot[] = allocations.map((a) => {
+      const detail = slotDetailMap.get(a.slot.id)!;
+      return {
+        slotId: a.slot.id,
+        slotPath: formatSlotLocation({
+          zoneCode: detail.level.rack.zone.code,
+          rackCode: detail.level.rack.code,
+          levelNumber: detail.level.levelNumber,
+          slotCode: detail.code,
+        }),
+        allocateQty: a.allocateQty,
+        score: Math.round(a.score * 100),
+      };
+    });
+
     return {
       slotId: slotDetail.id,
       zoneCode: slotDetail.level.rack.zone.code,
@@ -180,6 +212,7 @@ export class SchedulesService {
       priority,
       reasons,
       splitRequired,
+      alternativeSlots,
     };
   }
 
@@ -190,6 +223,7 @@ export class SchedulesService {
       dto.productId,
       dto.quantity,
       new Date(dto.scheduledDate),
+      dto.expiryDate ? new Date(dto.expiryDate) : undefined,
     );
   }
 
@@ -208,12 +242,13 @@ export class SchedulesService {
       dto.productId,
       dto.quantity,
       new Date(dto.scheduledDate),
+      dto.expiryDate ? new Date(dto.expiryDate) : undefined,
     );
 
     const schedule = await createScheduleWithOrderCode(
       this.prisma,
-      (tx, orderCode) =>
-        tx.schedule.create({
+      async (tx, orderCode) => {
+        const createdSchedule = await tx.schedule.create({
           data: {
             type: ScheduleType.INBOUND,
             status: ScheduleStatus.PENDING,
@@ -223,6 +258,7 @@ export class SchedulesService {
             batchCode: dto.batchCode,
             supplierId: dto.supplierId,
             note: dto.note,
+            expiryDate: dto.expiryDate ? new Date(dto.expiryDate) : undefined,
             suggestedSlotId: suggestion.slotId,
             suggestionScore: suggestion.score,
             suggestionReasons: suggestion.reasons,
@@ -231,7 +267,23 @@ export class SchedulesService {
             orderCode,
           },
           include: scheduleInclude,
-        }),
+        });
+
+        if (suggestion.alternativeSlots.length > 0) {
+          await tx.scheduleAllocation.createMany({
+            data: suggestion.alternativeSlots.map((s, idx) => ({
+              scheduleId: createdSchedule.id,
+              kind: 'SUGGESTED' as const,
+              slotId: s.slotId,
+              batchId: null,
+              quantity: s.allocateQty,
+              sortOrder: idx,
+            })),
+          });
+        }
+
+        return createdSchedule;
+      },
     );
 
     return { schedule: toScheduleView(schedule), suggestion };
@@ -333,8 +385,8 @@ export class SchedulesService {
 
     const schedule = await createScheduleWithOrderCode(
       this.prisma,
-      (tx, orderCode) =>
-        tx.schedule.create({
+      async (tx, orderCode) => {
+        const createdSchedule = await tx.schedule.create({
           data: {
             type: ScheduleType.OUTBOUND,
             status: ScheduleStatus.PENDING,
@@ -353,7 +405,23 @@ export class SchedulesService {
             orderCode,
           },
           include: scheduleInclude,
-        }),
+        });
+
+        if (suggestion.pickingList.length > 0) {
+          await tx.scheduleAllocation.createMany({
+            data: suggestion.pickingList.map((line, idx) => ({
+              scheduleId: createdSchedule.id,
+              kind: 'SUGGESTED' as const,
+              slotId: line.slotId,
+              batchId: line.batchId,
+              quantity: line.quantity,
+              sortOrder: idx,
+            })),
+          });
+        }
+
+        return createdSchedule;
+      },
     );
 
     return { schedule: toScheduleView(schedule), suggestion };
@@ -437,7 +505,7 @@ export class SchedulesService {
     dto: ExecuteScheduleDto,
     user: AuthUser,
   ) {
-    let slotId: string;
+    let multiSlots: { slotId: string; quantity: number }[];
     let allocationMethod: AllocationMethod;
     let overrideReason: ScheduleOverrideReason | null = null;
     let overrideReasonNote: string | null = null;
@@ -452,7 +520,7 @@ export class SchedulesService {
           'Slot được chọn không đủ sức chứa cho số lượng cần nhập',
         );
       }
-      slotId = slot.id;
+      multiSlots = [{ slotId: slot.id, quantity: schedule.quantity }];
       allocationMethod = AllocationMethod.MANUAL_OVERRIDE;
       overrideReason = dto.override.reason;
       overrideReasonNote = dto.override.reasonNote ?? null;
@@ -470,21 +538,33 @@ export class SchedulesService {
         schedule.quantity,
         expiryProxy,
       );
-      if (
-        allocations.length === 0 ||
-        allocations[0].allocateQty < schedule.quantity
-      ) {
+      const totalAllocatable = allocations.reduce(
+        (sum, a) => sum + a.allocateQty,
+        0,
+      );
+      if (allocations.length === 0 || totalAllocatable < schedule.quantity) {
         throw new BadRequestException(
-          'Không tìm được 1 Slot đủ sức chứa toàn bộ số lượng. Vui lòng dùng chức năng "Thay đổi vị trí" để chọn thủ công.',
+          'Không tìm được đủ vị trí trống cho toàn bộ số lượng. Vui lòng dùng chức năng "Thay đổi vị trí" để chọn thủ công.',
         );
       }
-      slotId = allocations[0].slot.id;
+      // Không còn chặn cứng 1-slot: chia số lượng qua nhiều slot theo đúng
+      // thứ tự allocations (đã ưu tiên/score cao nhất trước), phần tử cuối
+      // có thể lấy ít hơn allocateQty gốc nếu phần còn thiếu nhỏ hơn.
+      multiSlots = [];
+      let remaining = schedule.quantity;
+      for (const a of allocations) {
+        if (remaining <= 0) break;
+        const take = Math.min(a.allocateQty, remaining);
+        multiSlots.push({ slotId: a.slot.id, quantity: take });
+        remaining -= take;
+      }
       allocationMethod = AllocationMethod.SMART_ALLOCATION;
     }
 
-    // Batch chính thức chỉ được xác định ở bước Thực hiện (form Đặt lịch
-    // không thu thập NSX/HSD). Nếu nhân viên xác nhận đúng mã lô đã dự kiến
-    // và mã đó đã tồn tại, gộp thêm số lượng vào Batch đó; ngược lại tạo mới.
+    // Batch chính thức chỉ được xác định ở bước Thực hiện. Form Đặt lịch có
+    // thể thu thập HSD dự kiến để tính gợi ý, nhưng HSD thực tế vẫn được nhân
+    // viên xác nhận khi nhận hàng. Nếu mã lô đã tồn tại thì gộp thêm số lượng;
+    // ngược lại hệ thống tạo Batch mới.
     const batchCode =
       dto.actualBatchCode?.trim() || schedule.batchCode?.trim() || undefined;
     if (!dto.expiryDate) {
@@ -518,51 +598,78 @@ export class SchedulesService {
 
       // Đọc tồn kho TRƯỚC khi cộng thêm, để ghi đúng quantityBefore — nếu đọc
       // sau upsert thì số liệu đã bị cộng dồn mất, không còn ý nghĩa "trước".
-      const existingInv = await tx.inventory.findUnique({
-        where: { batchId_slotId: { batchId: batch.id, slotId } },
-      });
-      const quantityBefore = existingInv?.quantity ?? 0;
-      const quantityAfter = quantityBefore + schedule.quantity;
+      // Xử lý tuần tự qua từng slot trong multiSlots (thường 1 phần tử khi
+      // override thủ công, có thể nhiều phần tử khi Smart Allocation phải
+      // chia hàng — Task 99), mỗi slot có quantityBefore/After/dailySeq riêng.
+      const transactions: Awaited<ReturnType<typeof tx.transaction.create>>[] =
+        [];
+      for (const { slotId: sId, quantity: qty } of multiSlots) {
+        const existingInv = await tx.inventory.findUnique({
+          where: { batchId_slotId: { batchId: batch.id, slotId: sId } },
+        });
+        const quantityBefore = existingInv?.quantity ?? 0;
+        const quantityAfter = quantityBefore + qty;
 
-      await tx.inventory.upsert({
-        where: { batchId_slotId: { batchId: batch.id, slotId } },
-        create: { batchId: batch.id, slotId, quantity: schedule.quantity },
-        update: { quantity: { increment: schedule.quantity } },
-      });
+        await tx.inventory.upsert({
+          where: { batchId_slotId: { batchId: batch.id, slotId: sId } },
+          create: { batchId: batch.id, slotId: sId, quantity: qty },
+          update: { quantity: { increment: qty } },
+        });
 
-      await this.slotCapacity.recalculate(slotId, tx);
+        await this.slotCapacity.recalculate(sId, tx);
 
-      const transaction = await tx.transaction.create({
-        data: {
-          type: TransactionType.IMPORT,
+        const txn = await tx.transaction.create({
+          data: {
+            type: TransactionType.IMPORT,
+            batchId: batch.id,
+            slotToId: sId,
+            quantity: qty,
+            userId: user.id,
+            note: schedule.note ?? undefined,
+            quantityBefore,
+            quantityAfter,
+            dailySeq: await getNextDailySeq(tx),
+          },
+        });
+        transactions.push(txn);
+      }
+
+      // Ghi lại TOÀN BỘ danh sách slot/số lượng thực tế đã dùng (kind =
+      // ACTUAL) — kể cả khi chỉ có 1 slot — để đồng bộ cách lưu trữ với
+      // alternativeSlots (kind = SUGGESTED) của Task 98. Insert bên trong
+      // cùng transaction để đảm bảo nhất quán nếu có lỗi rollback.
+      await tx.scheduleAllocation.createMany({
+        data: multiSlots.map((s, idx) => ({
+          scheduleId: schedule.id,
+          kind: 'ACTUAL' as const,
+          slotId: s.slotId,
           batchId: batch.id,
-          slotToId: slotId,
-          quantity: schedule.quantity,
-          userId: user.id,
-          note: schedule.note ?? undefined,
-          quantityBefore,
-          quantityAfter,
-          dailySeq: await getNextDailySeq(tx),
-        },
+          quantity: s.quantity,
+          sortOrder: idx,
+        })),
       });
 
+      // Schedule.actualSlotId/transactionId vẫn chỉ lưu vị trí/giao dịch
+      // "chính" (phần tử đầu tiên) để tương thích ngược với UI cũ chỉ đọc 1
+      // field này — danh sách đầy đủ nằm trong ScheduleAllocation (ACTUAL)
+      // và trong mảng `transactions` trả về.
       const updated = await tx.schedule.update({
         where: { id: schedule.id },
         data: {
           status: ScheduleStatus.COMPLETED,
-          actualSlotId: slotId,
+          actualSlotId: multiSlots[0].slotId,
           actualBatchId: batch.id,
           allocationMethod,
           overrideReason,
           overrideReasonNote,
           executedById: user.id,
           executedAt: new Date(),
-          transactionId: transaction.id,
+          transactionId: transactions[0].id,
         },
         include: scheduleInclude,
       });
 
-      return { schedule: toScheduleView(updated), transactions: [transaction] };
+      return { schedule: toScheduleView(updated), transactions };
     });
   }
 
@@ -689,9 +796,23 @@ export class SchedulesService {
         transactions.push(txn);
       }
 
+      // Lưu đầy đủ các vị trí/batch đã xuất thực tế để API chi tiết lịch
+      // có thể hiển thị toàn bộ tuyến FEFO, thay vì chỉ vị trí đại diện.
+      await tx.scheduleAllocation.createMany({
+        data: pickLines.map((line, idx) => ({
+          scheduleId: schedule.id,
+          kind: 'ACTUAL' as const,
+          slotId: line.slotId,
+          batchId: line.batchId,
+          quantity: line.quantity,
+          sortOrder: idx,
+        })),
+      });
+
       // Schema chỉ lưu 1 vị trí/batch thực tế trên Schedule (1-1 với
       // Transaction chính) — dùng route đầu tiên (ưu tiên FEFO cao nhất) làm
-      // đại diện; toàn bộ các dòng xuất thực tế vẫn có trong `transactions`.
+      // đại diện; toàn bộ các dòng xuất thực tế vẫn có trong `transactions`
+      // và ScheduleAllocation (ACTUAL).
       const primary = pickLines[0];
       const updated = await tx.schedule.update({
         where: { id: schedule.id },
@@ -885,6 +1006,33 @@ export const scheduleInclude = {
   actualBatch: { select: { id: true, batchCode: true, expiryDate: true } },
   createdBy: { select: { id: true, username: true, fullName: true } },
   executedBy: { select: { id: true, username: true, fullName: true } },
+  allocations: {
+    select: {
+      kind: true,
+      slotId: true,
+      batchId: true,
+      quantity: true,
+      sortOrder: true,
+      slot: {
+        select: {
+          code: true,
+          level: {
+            select: {
+              levelNumber: true,
+              rack: {
+                select: {
+                  code: true,
+                  zone: { select: { code: true } },
+                },
+              },
+            },
+          },
+        },
+      },
+      batch: { select: { batchCode: true } },
+    },
+    orderBy: { sortOrder: 'asc' },
+  },
 } satisfies Prisma.ScheduleInclude;
 
 type ScheduleWithRelations = Prisma.ScheduleGetPayload<{
@@ -906,6 +1054,21 @@ function toScheduleView(item: ScheduleWithRelations) {
         })
       : null;
 
+  const mapAllocation = (
+    allocation: ScheduleWithRelations['allocations'][number],
+  ) => ({
+    slotId: allocation.slotId,
+    slotPath: formatSlotLocation({
+      zoneCode: allocation.slot.level.rack.zone.code,
+      rackCode: allocation.slot.level.rack.code,
+      levelNumber: allocation.slot.level.levelNumber,
+      slotCode: allocation.slot.code,
+    }),
+    batchId: allocation.batchId,
+    batchCode: allocation.batch?.batchCode ?? null,
+    quantity: allocation.quantity,
+  });
+
   return {
     id: item.id,
     orderCode: item.orderCode,
@@ -916,6 +1079,7 @@ function toScheduleView(item: ScheduleWithRelations) {
     product: item.product,
     quantity: item.quantity,
     batchCode: item.batchCode,
+    expiryDate: item.expiryDate,
     supplier: item.supplier,
     customer: item.customer,
     partnerName: item.supplier?.name ?? item.customer?.name ?? null,
@@ -939,6 +1103,12 @@ function toScheduleView(item: ScheduleWithRelations) {
           overrideReasonNote: item.overrideReasonNote,
         }
       : null,
+    suggestedAllocations: item.allocations
+      .filter((allocation) => allocation.kind === 'SUGGESTED')
+      .map(mapAllocation),
+    actualAllocations: item.allocations
+      .filter((allocation) => allocation.kind === 'ACTUAL')
+      .map(mapAllocation),
     executedBy: item.executedBy,
     executedAt: item.executedAt,
     transactionId: item.transactionId,

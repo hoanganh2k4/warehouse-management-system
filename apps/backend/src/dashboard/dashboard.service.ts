@@ -94,9 +94,7 @@ export class DashboardService {
     const batches = await this.prisma.batch.findMany({
       where: {
         expiryDate: {
-          lte: new Date(
-            Date.now() + EXPIRY_WARNING_DAYS * 24 * 60 * 60 * 1000,
-          ),
+          lte: new Date(Date.now() + EXPIRY_WARNING_DAYS * 24 * 60 * 60 * 1000),
         },
         inventories: { some: { quantity: { gt: 0 } } },
       },

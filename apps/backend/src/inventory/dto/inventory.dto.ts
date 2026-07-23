@@ -98,3 +98,39 @@ export class InventoryQueryDto {
   @Type(() => Number)
   limit?: number = 20;
 }
+
+export class InventoryLedgerQueryDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  productId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  slotId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  from?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  to?: string;
+
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
+
+  @ApiPropertyOptional({ default: 20 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit?: number;
+}

@@ -2007,6 +2007,75 @@
   color: var(--cap-red);
 }
 
+/* Cảnh báo sản phẩm nặng trong chi tiết slot */
+.heavy-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-left: 8px;
+  padding: 3px 8px;
+  border: 1px solid #f59e0b;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+
+
+/* Badge cảnh báo hạn sử dụng */
+.expiry-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.expiry-badge.is-ok {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.expiry-badge.is-warning {
+  background: #fef9c3;
+  border-color: #fde047;
+  color: #854d0e;
+}
+
+.expiry-badge.is-critical {
+  background: #ffedd5;
+  border-color: #fdba74;
+  color: #9a3412;
+}
+
+.expiry-badge.is-expired {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.slot-expiry-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.slot-expiry-error {
+  color: #991b1b;
+}
+
 /* Tooltip dùng chung — hiện khi rê chuột vào Progress Bar */
 .has-tooltip {
   position: relative;

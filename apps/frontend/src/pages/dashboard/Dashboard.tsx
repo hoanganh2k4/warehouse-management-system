@@ -54,13 +54,13 @@ export default function Dashboard() {
           <StatCard
             label="Slot trống"
             value={loading ? '—' : `${summary?.availableSlots ?? 0} / ${summary?.totalSlots ?? 0}`}
-            hint="Trống / tổng số slot"
+            hint="Số lượng slot, không tính dung lượng"
             icon={<GridIcon />}
           />
           <StatCard
             label="Tỉ lệ lấp đầy"
             value={loading ? '—' : `${summary?.occupancyPercent ?? 0}%`}
-            hint="Slot đang sử dụng"
+            hint="Theo dung lượng đã dùng"
             icon={<WarehouseIcon />}
           />
           <StatCard

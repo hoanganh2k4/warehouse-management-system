@@ -121,6 +121,9 @@ export type InventoryItem = {
   productSkuCode: string;
   productName: string;
   quantity: number;
+  expiryDate: string;
+  expiryStatus: 'OK' | 'WARNING' | 'CRITICAL' | 'EXPIRED';
+  daysUntilExpiry: number;
   updatedAt: string;
 };
 

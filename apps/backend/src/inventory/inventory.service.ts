@@ -16,8 +16,10 @@ import {
 } from '../common/utils/location.util';
 import { AuthUser } from '../common/decorators/current-user.decorator';
 import { getExpiryStatus } from '../common/utils/expiry.util';
+import { getNextDailySeq } from '../common/utils/transaction-seq.util';
 import {
   InboundDto,
+  InventoryLedgerQueryDto,
   InventoryQueryDto,
   OutboundDto,
 } from './dto/inventory.dto';
@@ -97,6 +99,7 @@ export class InventoryService {
       this.prisma.inventory.findMany({
         where,
         ...skipTake(page, limit),
+        orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }],
         select: {
           id: true,
           batchId: true,
@@ -136,6 +139,119 @@ export class InventoryService {
     ]);
 
     return paginate(items.map(toInventoryView), page, limit, total);
+  }
+
+  async getLedger(query: InventoryLedgerQueryDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const andConditions: Prisma.TransactionWhereInput[] = [];
+
+    if (query.productId) {
+      andConditions.push({ batch: { productId: query.productId } });
+    }
+    if (query.slotId) {
+      andConditions.push({
+        OR: [{ slotToId: query.slotId }, { slotFromId: query.slotId }],
+      });
+    }
+    if (query.from) {
+      andConditions.push({ createdAt: { gte: new Date(query.from) } });
+    }
+    if (query.to) {
+      andConditions.push({ createdAt: { lte: new Date(query.to) } });
+    }
+
+    const where: Prisma.TransactionWhereInput =
+      andConditions.length > 0 ? { AND: andConditions } : {};
+
+    const [items, total] = await Promise.all([
+      this.prisma.transaction.findMany({
+        where,
+        ...skipTake(page, limit),
+        orderBy: [{ createdAt: 'desc' }, { dailySeq: 'desc' }],
+        select: {
+          id: true,
+          type: true,
+          createdAt: true,
+          quantity: true,
+          quantityBefore: true,
+          quantityAfter: true,
+          dailySeq: true,
+          batch: {
+            select: {
+              product: { select: { skuCode: true, name: true } },
+            },
+          },
+          slotTo: {
+            select: {
+              code: true,
+              level: {
+                select: {
+                  levelNumber: true,
+                  rack: {
+                    select: {
+                      code: true,
+                      zone: { select: { code: true } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          slotFrom: {
+            select: {
+              code: true,
+              level: {
+                select: {
+                  levelNumber: true,
+                  rack: {
+                    select: {
+                      code: true,
+                      zone: { select: { code: true } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          schedule: { select: { orderCode: true } },
+        },
+      }),
+      this.prisma.transaction.count({ where }),
+    ]);
+
+    const ledgerItems = items.map((item) => {
+      const slot =
+        item.type === TransactionType.IMPORT ? item.slotTo : item.slotFrom;
+
+      if (!slot) {
+        throw new BadRequestException(
+          `Transaction ${item.id} does not have a valid movement slot`,
+        );
+      }
+
+      return {
+        transactionId: item.id,
+        occurredAt: item.createdAt,
+        type: item.type,
+        productSkuCode: item.batch.product.skuCode,
+        productName: item.batch.product.name,
+        slotPath: formatSlotLocation({
+          zoneCode: slot.level.rack.zone.code,
+          rackCode: slot.level.rack.code,
+          levelNumber: slot.level.levelNumber,
+          slotCode: slot.code,
+        }),
+        changeQuantity:
+          item.type === TransactionType.IMPORT ? item.quantity : -item.quantity,
+        balanceBefore: item.quantityBefore,
+        balanceAfter: item.quantityAfter,
+        dailySeq: item.dailySeq,
+        orderCode: item.schedule?.orderCode ?? null,
+      };
+    });
+
+    return paginate(ledgerItems, page, limit, total);
   }
 
   async findOne(id: string) {
@@ -225,6 +341,12 @@ export class InventoryService {
       }[] = [];
 
       for (const { slot, allocateQty, score } of allocations) {
+        const existingInv = await tx.inventory.findUnique({
+          where: { batchId_slotId: { batchId: batch.id, slotId: slot.id } },
+        });
+        const quantityBefore = existingInv?.quantity ?? 0;
+        const quantityAfter = quantityBefore + allocateQty;
+
         const inventory = await tx.inventory.upsert({
           where: { batchId_slotId: { batchId: batch.id, slotId: slot.id } },
           create: { batchId: batch.id, slotId: slot.id, quantity: allocateQty },
@@ -239,6 +361,9 @@ export class InventoryService {
             batchId: batch.id,
             slotToId: slot.id,
             quantity: allocateQty,
+            quantityBefore,
+            quantityAfter,
+            dailySeq: await getNextDailySeq(tx),
             userId: user.id,
             note: dto.note,
           },
@@ -293,6 +418,9 @@ export class InventoryService {
           throw new BadRequestException('Stock changed during outbound');
         }
 
+        const quantityBefore = inv.quantity;
+        const quantityAfter = inv.quantity - line.quantity;
+
         if (inv.quantity === line.quantity) {
           await tx.inventory.delete({ where: { id: inv.id } });
         } else {
@@ -310,6 +438,9 @@ export class InventoryService {
             batchId: line.batchId,
             slotFromId: line.slotId,
             quantity: line.quantity,
+            quantityBefore,
+            quantityAfter,
+            dailySeq: await getNextDailySeq(tx),
             userId: user.id,
             note: dto.note,
           },
