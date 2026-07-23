@@ -38,6 +38,13 @@ import { UpdateScheduleDto } from './dto/update-schedule.dto';
 
 // Kết quả Smart Location Suggestion dùng chung cho cả preview (chưa lưu) và
 // lúc tạo lịch (lưu snapshot vào Schedule).
+export interface AlternativeSlot {
+  slotId: string;
+  slotPath: string;
+  allocateQty: number;
+  score: number; // 0-100, cùng thang điểm với suggestion.score
+}
+
 export interface InboundSuggestionResult {
   slotId: string;
   zoneCode: string;
@@ -52,6 +59,7 @@ export interface InboundSuggestionResult {
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   reasons: string[];
   splitRequired: boolean; // true nếu 1 slot không đủ chứa hết số lượng
+  alternativeSlots: AlternativeSlot[]; // Toàn bộ vị trí cần dùng khi splitRequired, kể cả vị trí chính (top)
 }
 
 // Kết quả Smart Picking Suggestion (FEFO) dùng chung cho preview và lúc tạo
@@ -163,6 +171,28 @@ export class SchedulesService {
     const priority: InboundSuggestionResult['priority'] =
       score >= 75 ? 'HIGH' : score >= 50 ? 'MEDIUM' : 'LOW';
 
+    const slotIds = allocations.map((a) => a.slot.id);
+    const slotDetails = await this.prisma.slot.findMany({
+      where: { id: { in: slotIds } },
+      include: { level: { include: { rack: { include: { zone: true } } } } },
+    });
+    const slotDetailMap = new Map(slotDetails.map((s) => [s.id, s]));
+
+    const alternativeSlots: AlternativeSlot[] = allocations.map((a) => {
+      const detail = slotDetailMap.get(a.slot.id)!;
+      return {
+        slotId: a.slot.id,
+        slotPath: formatSlotLocation({
+          zoneCode: detail.level.rack.zone.code,
+          rackCode: detail.level.rack.code,
+          levelNumber: detail.level.levelNumber,
+          slotCode: detail.code,
+        }),
+        allocateQty: a.allocateQty,
+        score: Math.round(a.score * 100),
+      };
+    });
+
     return {
       slotId: slotDetail.id,
       zoneCode: slotDetail.level.rack.zone.code,
@@ -182,6 +212,7 @@ export class SchedulesService {
       priority,
       reasons,
       splitRequired,
+      alternativeSlots,
     };
   }
 
@@ -238,6 +269,19 @@ export class SchedulesService {
           include: scheduleInclude,
         }),
     );
+
+    if (suggestion.alternativeSlots.length > 0) {
+      await this.prisma.scheduleAllocation.createMany({
+        data: suggestion.alternativeSlots.map((s, idx) => ({
+          scheduleId: schedule.id,
+          kind: 'SUGGESTED' as const,
+          slotId: s.slotId,
+          batchId: null,
+          quantity: s.allocateQty,
+          sortOrder: idx,
+        })),
+      });
+    }
 
     return { schedule: toScheduleView(schedule), suggestion };
   }
@@ -360,6 +404,19 @@ export class SchedulesService {
           include: scheduleInclude,
         }),
     );
+
+    if (suggestion.pickingList.length > 0) {
+      await this.prisma.scheduleAllocation.createMany({
+        data: suggestion.pickingList.map((line, idx) => ({
+          scheduleId: schedule.id,
+          kind: 'SUGGESTED' as const,
+          slotId: line.slotId,
+          batchId: line.batchId,
+          quantity: line.quantity,
+          sortOrder: idx,
+        })),
+      });
+    }
 
     return { schedule: toScheduleView(schedule), suggestion };
   }
