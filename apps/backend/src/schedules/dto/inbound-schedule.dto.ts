@@ -23,6 +23,14 @@ export class InboundSuggestionPreviewDto {
   @ApiProperty({ description: 'Ngày nhập dự kiến (yyyy-mm-dd)' })
   @IsDateString()
   scheduledDate: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Hạn sử dụng (HSD) dự kiến của lô hàng, nếu đã biết trước khi hàng về',
+  })
+  @IsOptional()
+  @IsDateString()
+  expiryDate?: string;
 }
 
 export class CreateInboundScheduleDto {
@@ -58,4 +66,12 @@ export class CreateInboundScheduleDto {
   @IsOptional()
   @IsString()
   note?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Hạn sử dụng (HSD) dự kiến của lô hàng, nếu đã biết trước khi hàng về',
+  })
+  @IsOptional()
+  @IsDateString()
+  expiryDate?: string;
 }

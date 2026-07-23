@@ -92,17 +92,19 @@ export class SchedulesService {
 
   // ===================== Smart Location Suggestion (Inbound) =====================
 
-  // Lưu ý: tại thời điểm Đặt lịch, hệ thống CHƯA biết hạn sử dụng (HSD) thực tế
-  // của lô hàng sắp nhập (form Đặt lịch nhập không thu thập HSD - theo đúng yêu
-  // cầu). SlotScoringService cần 1 mốc "incoming expiry" để tính điểm FEFO phụ
-  // (trọng số 0.3/1.0) khi so khớp với các lô cùng SKU đã có trong slot. Ta dùng
-  // tạm ngày nhập dự kiến (scheduledDate) làm mốc xấp xỉ; đây chỉ là ước lượng ở
-  // bước lập kế hoạch — khi "Thực hiện lịch" (Bước 6), hệ thống sẽ chạy lại toàn
-  // bộ thuật toán với dữ liệu batch/HSD thật để chốt vị trí chính thức.
+  // Lưu ý: form Đặt lịch nhập CÓ THỂ thu thập HSD (expiryDate) nếu nhân viên đã
+  // biết trước lúc đặt lịch (không bắt buộc — hàng chưa về thì có thể chưa biết
+  // chính xác). SlotScoringService cần 1 mốc "incoming expiry" để tính điểm FEFO
+  // phụ (trọng số 0.3/1.0) khi so khớp với các lô cùng SKU đã có trong slot. Nếu
+  // có `expiryDate` thật, dùng giá trị đó; nếu không, dùng tạm ngày nhập dự kiến
+  // (scheduledDate) làm mốc xấp xỉ — đây chỉ là ước lượng ở bước lập kế hoạch khi
+  // "Thực hiện lịch" (Bước 6), hệ thống sẽ chạy lại toàn bộ thuật toán với dữ
+  // liệu batch/HSD thật để chốt vị trí chính thức.
   private async computeInboundSuggestion(
     productId: string,
     quantity: number,
     scheduledDate: Date,
+    expiryDate?: Date,
   ): Promise<InboundSuggestionResult> {
     const product = await this.prisma.product.findFirst({
       where: { id: productId, deletedAt: null },
@@ -112,7 +114,7 @@ export class SchedulesService {
     const allocations = await this.slotScoring.findBestSlots(
       product,
       quantity,
-      scheduledDate,
+      expiryDate ?? scheduledDate,
     );
 
     if (allocations.length === 0) {
@@ -190,6 +192,7 @@ export class SchedulesService {
       dto.productId,
       dto.quantity,
       new Date(dto.scheduledDate),
+      dto.expiryDate ? new Date(dto.expiryDate) : undefined,
     );
   }
 
@@ -208,6 +211,7 @@ export class SchedulesService {
       dto.productId,
       dto.quantity,
       new Date(dto.scheduledDate),
+      dto.expiryDate ? new Date(dto.expiryDate) : undefined,
     );
 
     const schedule = await createScheduleWithOrderCode(
@@ -223,6 +227,7 @@ export class SchedulesService {
             batchCode: dto.batchCode,
             supplierId: dto.supplierId,
             note: dto.note,
+            expiryDate: dto.expiryDate ? new Date(dto.expiryDate) : undefined,
             suggestedSlotId: suggestion.slotId,
             suggestionScore: suggestion.score,
             suggestionReasons: suggestion.reasons,
@@ -916,6 +921,7 @@ function toScheduleView(item: ScheduleWithRelations) {
     product: item.product,
     quantity: item.quantity,
     batchCode: item.batchCode,
+    expiryDate: item.expiryDate,
     supplier: item.supplier,
     customer: item.customer,
     partnerName: item.supplier?.name ?? item.customer?.name ?? null,
