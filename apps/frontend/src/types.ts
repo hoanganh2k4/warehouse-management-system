@@ -398,6 +398,13 @@ export type Customer = {
 
 export type SchedulePriority = 'HIGH' | 'MEDIUM' | 'LOW';
 
+export type AlternativeSlot = {
+  slotId: string;
+  slotPath: string;
+  allocateQty: number;
+  score: number;
+};
+
 export type InboundSuggestionResult = {
   slotId: string;
   zoneCode: string;
@@ -412,6 +419,7 @@ export type InboundSuggestionResult = {
   priority: SchedulePriority;
   reasons: string[];
   splitRequired: boolean;
+  alternativeSlots: AlternativeSlot[];
 };
 
 export type InboundSuggestionPreviewPayload = {

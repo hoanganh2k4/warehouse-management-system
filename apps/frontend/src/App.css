@@ -2112,6 +2112,25 @@
   gap: 2px;
 }
 
+.smart-card-alt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.smart-card-alt-list ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.smart-card-alt-list li {
+  line-height: 1.5;
+}
+
 .smart-card-note {
   margin: 4px 0 0;
   font-size: 0.78rem;
