@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { dashboardService } from '../services/dashboard.service';
 import type { DashboardSummary } from '../types';
 
+const POLL_INTERVAL_MS = 15_000;
+
+
+
 export function useDashboard() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -11,8 +15,8 @@ export function useDashboard() {
   useEffect(() => {
     let cancelled = false;
 
-    function fetchSummary() {
-      setLoading(true);
+    function fetchSummary(background = false) {
+      if (!background) setLoading(true);
 
       dashboardService
         .getSummary()
@@ -31,8 +35,10 @@ export function useDashboard() {
     }
 
     fetchSummary();
+    const intervalId = window.setInterval(() => fetchSummary(true), POLL_INTERVAL_MS);
 
     return () => {
+      window.clearInterval(intervalId);
       cancelled = true;
     };
   }, [reloadToken]);

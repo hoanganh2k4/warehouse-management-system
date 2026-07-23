@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { scheduleService } from '../services/schedule.service';
 import type { GetSchedulesParams, PaginationMeta, Schedule } from '../types';
 
+const POLL_INTERVAL_MS = 15_000;
+
+
+
 export function useSchedules(params: GetSchedulesParams, enabled: boolean) {
   const [items, setItems] = useState<Schedule[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
@@ -13,8 +17,8 @@ export function useSchedules(params: GetSchedulesParams, enabled: boolean) {
     if (!enabled) return;
     let cancelled = false;
 
-    function fetchSchedules() {
-      setLoading(true);
+    function fetchSchedules(background = false) {
+      if (!background) setLoading(true);
 
       scheduleService
         .getSchedules(params)
@@ -34,8 +38,10 @@ export function useSchedules(params: GetSchedulesParams, enabled: boolean) {
     }
 
     fetchSchedules();
+    const intervalId = window.setInterval(() => fetchSchedules(true), POLL_INTERVAL_MS);
 
     return () => {
+      window.clearInterval(intervalId);
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

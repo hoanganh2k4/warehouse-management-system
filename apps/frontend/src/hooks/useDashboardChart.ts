@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { dashboardService } from '../services/dashboard.service';
 import type { DashboardChartPoint } from '../types';
 
+const POLL_INTERVAL_MS = 15_000;
+
 export function useDashboardChart(days = 14) {
   const [data, setData] = useState<DashboardChartPoint[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -16,22 +18,28 @@ export function useDashboardChart(days = 14) {
   useEffect(() => {
     let cancelled = false;
 
-    dashboardService
-      .getChart(days)
-      .then((result) => {
-        if (cancelled) return;
-        setData(result);
-        setError(null);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
-      })
-      .finally(() => {
-        if (!cancelled) setResolvedKey(requestKey);
-      });
+    function fetchChart(background = false) {
+      dashboardService
+        .getChart(days)
+        .then((result) => {
+          if (cancelled) return;
+          setData(result);
+          setError(null);
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
+        })
+        .finally(() => {
+          if (!cancelled && !background) setResolvedKey(requestKey);
+        });
+    }
+
+    fetchChart();
+    const intervalId = window.setInterval(() => fetchChart(true), POLL_INTERVAL_MS);
 
     return () => {
+      window.clearInterval(intervalId);
       cancelled = true;
     };
   }, [days, reloadToken, requestKey]);

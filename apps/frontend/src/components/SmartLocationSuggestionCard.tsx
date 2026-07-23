@@ -65,29 +65,25 @@ export function SmartLocationSuggestionCard({
             </div>
           )}
 
-          {suggestion.splitRequired && suggestion.alternativeSlots.length > 1 && (
-            <div className="smart-card-alt-list">
-              <p className="smart-card-warning">
-                ⚠ Số lượng vượt sức chứa 1 Slot — hệ thống sẽ chia vào{' '}
-                {suggestion.alternativeSlots.length} vị trí sau:
-              </p>
-              <ul>
+          {suggestion.alternativeSlots.length > 0 && (
+            <details className="allocation-disclosure">
+              <summary>
+                <span>{suggestion.splitRequired ? '⚠ Phân bổ nhiều vị trí' : 'Vị trí sẽ sử dụng'}</span>
+                <span className="allocation-summary-meta">
+                  {suggestion.alternativeSlots.length} vị trí ·{' '}
+                  {suggestion.alternativeSlots.reduce((sum, alt) => sum + alt.allocateQty, 0)} đơn vị
+                </span>
+              </summary>
+              <ol className="allocation-list allocation-list-scroll">
                 {suggestion.alternativeSlots.map((alt) => (
                   <li key={alt.slotId}>
                     <span className="smart-card-value">{alt.slotPath}</span>
-                    {' — '}
-                    <strong>{alt.allocateQty}</strong> đơn vị{' '}
+                    <span><strong>{alt.allocateQty}</strong> đơn vị</span>
                     <span className="badge badge-info">{alt.score}%</span>
                   </li>
                 ))}
-              </ul>
-            </div>
-          )}
-
-          {suggestion.splitRequired && suggestion.alternativeSlots.length <= 1 && (
-            <p className="smart-card-warning">
-              ⚠ Số lượng vượt sức chứa 1 Slot — hệ thống sẽ chia vào nhiều Slot khi thực hiện.
-            </p>
+              </ol>
+            </details>
           )}
 
           <p className="smart-card-note">

@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { transactionService } from '../services/transaction.service';
 import type { GetTransactionsParams, PaginationMeta, Transaction } from '../types';
 
+const POLL_INTERVAL_MS = 15_000;
+
+
+
 export function useTransactions(params: GetTransactionsParams) {
   const [items, setItems] = useState<Transaction[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
@@ -12,8 +16,8 @@ export function useTransactions(params: GetTransactionsParams) {
   useEffect(() => {
     let cancelled = false;
 
-    function fetchTransactions() {
-      setLoading(true);
+    function fetchTransactions(background = false) {
+      if (!background) setLoading(true);
 
       transactionService
         .getTransactions(params)
@@ -33,8 +37,10 @@ export function useTransactions(params: GetTransactionsParams) {
     }
 
     fetchTransactions();
+    const intervalId = window.setInterval(() => fetchTransactions(true), POLL_INTERVAL_MS);
 
     return () => {
+      window.clearInterval(intervalId);
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
