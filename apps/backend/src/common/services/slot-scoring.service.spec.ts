@@ -182,10 +182,7 @@ describe('SlotScoringService', () => {
       maxCapacity: 100,
       distanceToGate: 10.05,
     });
-    prismaMock.slot.findMany.mockResolvedValue([
-      level2CodeS01,
-      level1CodeS02,
-    ]);
+    prismaMock.slot.findMany.mockResolvedValue([level2CodeS01, level1CodeS02]);
 
     const result = await service.findBestSlots(
       { id: 'p1', isHeavy: false } as any,

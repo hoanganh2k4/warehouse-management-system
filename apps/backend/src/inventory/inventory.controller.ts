@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
 import {
   InboundDto,
+  InventoryLedgerQueryDto,
   InventoryQueryDto,
   OutboundDto,
 } from './dto/inventory.dto';
@@ -43,6 +44,13 @@ export class InventoryController {
   @ApiValidationError()
   findAll(@Query() query: InventoryQueryDto) {
     return this.service.findAll(query);
+  }
+
+  @Public()
+  @Get('ledger')
+  @ApiValidationError()
+  getLedger(@Query() query: InventoryLedgerQueryDto) {
+    return this.service.getLedger(query);
   }
 
   @Public()

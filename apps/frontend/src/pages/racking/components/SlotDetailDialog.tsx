@@ -1,6 +1,9 @@
-import type { Product, Rack, Slot, Zone } from '../../../types';
-import { CapacityBar, } from '../../../components/CapacityBar';
+import { useEffect, useState } from 'react';
+import { CapacityBar } from '../../../components/CapacityBar';
+import { inventoryService } from '../../../services/inventory.service';
+import type { InventoryItem, Product, Rack, Slot, Zone } from '../../../types';
 import { formatNumber, getCapacityTier } from '../../../utils/Capacity.utils';
+import { formatDate, getExpiryBadgeClass, getExpiryLabel } from '../../../utils/expiry.utils';
 
 type SlotDetailDialogProps = {
   slot: Slot;
@@ -13,6 +16,12 @@ type SlotDetailDialogProps = {
   onDelete: () => void;
 };
 
+type SlotBatchState = {
+  slotId: string | null;
+  items: InventoryItem[];
+  error: string | null;
+};
+
 export function SlotDetailDialog({
   slot,
   zone,
@@ -23,9 +32,47 @@ export function SlotDetailDialog({
   onEdit,
   onDelete,
 }: SlotDetailDialogProps) {
+  const [slotBatchState, setSlotBatchState] = useState<SlotBatchState>({
+    slotId: null,
+    items: [],
+    error: null,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    inventoryService
+      .getInventory({ slotId: slot.id, page: 1, limit: 10 })
+      .then((result) => {
+        if (cancelled) return;
+
+        setSlotBatchState({
+          slotId: slot.id,
+          items: result.items,
+          error: null,
+        });
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+
+        setSlotBatchState({
+          slotId: slot.id,
+          items: [],
+          error: error instanceof Error ? error.message : 'Không tải được hạn sử dụng',
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slot.id]);
+
   const isEmpty = slot.usedCapacity <= 0;
   const isFull = slot.usedCapacity >= slot.maxCapacity && slot.maxCapacity > 0;
   const tier = getCapacityTier(slot.occupancyRate, slot.usedCapacity);
+  const slotBatchesLoading = slotBatchState.slotId !== slot.id;
+  const slotBatches = slotBatchesLoading ? [] : slotBatchState.items;
+  const slotBatchesError = slotBatchesLoading ? null : slotBatchState.error;
   const slotTooltip = [
     `Đang lưu: ${formatNumber(slot.usedCapacity)} đơn vị`,
     `Sức chứa: ${formatNumber(slot.maxCapacity)} đơn vị`,
@@ -66,11 +113,35 @@ export function SlotDetailDialog({
             <dd>
               {!slot.currentProductId && 'Trống'}
               {slot.currentProductId && productLoading && 'Đang tải...'}
-              {slot.currentProductId && !productLoading && product && `${product.skuCode} — ${product.name}`}
+              {slot.currentProductId && !productLoading && product && (
+                <>
+                  {product.skuCode} — {product.name}
+                  {product.isHeavy && <span className="heavy-badge">⚠ Hàng nặng</span>}
+                </>
+              )}
               {slot.currentProductId &&
                 !productLoading &&
                 !product &&
                 'Không tải được thông tin sản phẩm'}
+            </dd>
+          </div>
+          <div>
+            <dt>Hạn sử dụng lô hàng</dt>
+            <dd className="slot-expiry-list">
+              {slotBatchesLoading && 'Đang tải...'}
+              {!slotBatchesLoading && slotBatchesError && (
+                <span className="slot-expiry-error">{slotBatchesError}</span>
+              )}
+              {!slotBatchesLoading && !slotBatchesError && slotBatches.length === 0 &&
+                'Không có lô hàng'}
+              {!slotBatchesLoading &&
+                !slotBatchesError &&
+                slotBatches.map((batch) => (
+                  <div key={batch.id} className={getExpiryBadgeClass(batch.expiryStatus)}>
+                    {batch.batchCode}: {formatDate(batch.expiryDate)} ·{' '}
+                    {getExpiryLabel(batch.expiryStatus, batch.daysUntilExpiry)}
+                  </div>
+                ))}
             </dd>
           </div>
         </dl>

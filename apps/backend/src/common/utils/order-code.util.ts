@@ -39,7 +39,11 @@ const MAX_RETRY = 3;
  * do 2 request tạo lịch cùng lúc trong cùng ngày (race condition hiếm gặp).
  */
 export async function createScheduleWithOrderCode<T>(
-  prisma: { $transaction: <R>(fn: (tx: Prisma.TransactionClient) => Promise<R>) => Promise<R> },
+  prisma: {
+    $transaction: <R>(
+      fn: (tx: Prisma.TransactionClient) => Promise<R>,
+    ) => Promise<R>;
+  },
   createFn: (tx: Prisma.TransactionClient, orderCode: string) => Promise<T>,
 ): Promise<T> {
   let lastError: unknown;

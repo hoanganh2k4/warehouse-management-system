@@ -71,7 +71,7 @@ export default function CategoryList() {
         <StatCard
           label="Sản phẩm đã gán"
           value={loading ? '—' : String(totalProducts)}
-          hint="Tổng số sản phẩm đã gán danh mục"
+          hint="Chỉ tính sản phẩm đang hoạt động (không tính sản phẩm đã xoá)"
           icon={<BoxIcon />}
         />
       </div>

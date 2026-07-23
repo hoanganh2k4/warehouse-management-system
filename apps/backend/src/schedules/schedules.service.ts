@@ -247,8 +247,8 @@ export class SchedulesService {
 
     const schedule = await createScheduleWithOrderCode(
       this.prisma,
-      (tx, orderCode) =>
-        tx.schedule.create({
+      async (tx, orderCode) => {
+        const createdSchedule = await tx.schedule.create({
           data: {
             type: ScheduleType.INBOUND,
             status: ScheduleStatus.PENDING,
@@ -267,21 +267,24 @@ export class SchedulesService {
             orderCode,
           },
           include: scheduleInclude,
-        }),
-    );
+        });
 
-    if (suggestion.alternativeSlots.length > 0) {
-      await this.prisma.scheduleAllocation.createMany({
-        data: suggestion.alternativeSlots.map((s, idx) => ({
-          scheduleId: schedule.id,
-          kind: 'SUGGESTED' as const,
-          slotId: s.slotId,
-          batchId: null,
-          quantity: s.allocateQty,
-          sortOrder: idx,
-        })),
-      });
-    }
+        if (suggestion.alternativeSlots.length > 0) {
+          await tx.scheduleAllocation.createMany({
+            data: suggestion.alternativeSlots.map((s, idx) => ({
+              scheduleId: createdSchedule.id,
+              kind: 'SUGGESTED' as const,
+              slotId: s.slotId,
+              batchId: null,
+              quantity: s.allocateQty,
+              sortOrder: idx,
+            })),
+          });
+        }
+
+        return createdSchedule;
+      },
+    );
 
     return { schedule: toScheduleView(schedule), suggestion };
   }
@@ -382,8 +385,8 @@ export class SchedulesService {
 
     const schedule = await createScheduleWithOrderCode(
       this.prisma,
-      (tx, orderCode) =>
-        tx.schedule.create({
+      async (tx, orderCode) => {
+        const createdSchedule = await tx.schedule.create({
           data: {
             type: ScheduleType.OUTBOUND,
             status: ScheduleStatus.PENDING,
@@ -402,21 +405,24 @@ export class SchedulesService {
             orderCode,
           },
           include: scheduleInclude,
-        }),
-    );
+        });
 
-    if (suggestion.pickingList.length > 0) {
-      await this.prisma.scheduleAllocation.createMany({
-        data: suggestion.pickingList.map((line, idx) => ({
-          scheduleId: schedule.id,
-          kind: 'SUGGESTED' as const,
-          slotId: line.slotId,
-          batchId: line.batchId,
-          quantity: line.quantity,
-          sortOrder: idx,
-        })),
-      });
-    }
+        if (suggestion.pickingList.length > 0) {
+          await tx.scheduleAllocation.createMany({
+            data: suggestion.pickingList.map((line, idx) => ({
+              scheduleId: createdSchedule.id,
+              kind: 'SUGGESTED' as const,
+              slotId: line.slotId,
+              batchId: line.batchId,
+              quantity: line.quantity,
+              sortOrder: idx,
+            })),
+          });
+        }
+
+        return createdSchedule;
+      },
+    );
 
     return { schedule: toScheduleView(schedule), suggestion };
   }
@@ -555,9 +561,10 @@ export class SchedulesService {
       allocationMethod = AllocationMethod.SMART_ALLOCATION;
     }
 
-    // Batch chính thức chỉ được xác định ở bước Thực hiện (form Đặt lịch
-    // không thu thập NSX/HSD). Nếu nhân viên xác nhận đúng mã lô đã dự kiến
-    // và mã đó đã tồn tại, gộp thêm số lượng vào Batch đó; ngược lại tạo mới.
+    // Batch chính thức chỉ được xác định ở bước Thực hiện. Form Đặt lịch có
+    // thể thu thập HSD dự kiến để tính gợi ý, nhưng HSD thực tế vẫn được nhân
+    // viên xác nhận khi nhận hàng. Nếu mã lô đã tồn tại thì gộp thêm số lượng;
+    // ngược lại hệ thống tạo Batch mới.
     const batchCode =
       dto.actualBatchCode?.trim() || schedule.batchCode?.trim() || undefined;
     if (!dto.expiryDate) {
@@ -789,9 +796,23 @@ export class SchedulesService {
         transactions.push(txn);
       }
 
+      // Lưu đầy đủ các vị trí/batch đã xuất thực tế để API chi tiết lịch
+      // có thể hiển thị toàn bộ tuyến FEFO, thay vì chỉ vị trí đại diện.
+      await tx.scheduleAllocation.createMany({
+        data: pickLines.map((line, idx) => ({
+          scheduleId: schedule.id,
+          kind: 'ACTUAL' as const,
+          slotId: line.slotId,
+          batchId: line.batchId,
+          quantity: line.quantity,
+          sortOrder: idx,
+        })),
+      });
+
       // Schema chỉ lưu 1 vị trí/batch thực tế trên Schedule (1-1 với
       // Transaction chính) — dùng route đầu tiên (ưu tiên FEFO cao nhất) làm
-      // đại diện; toàn bộ các dòng xuất thực tế vẫn có trong `transactions`.
+      // đại diện; toàn bộ các dòng xuất thực tế vẫn có trong `transactions`
+      // và ScheduleAllocation (ACTUAL).
       const primary = pickLines[0];
       const updated = await tx.schedule.update({
         where: { id: schedule.id },
@@ -985,6 +1006,33 @@ export const scheduleInclude = {
   actualBatch: { select: { id: true, batchCode: true, expiryDate: true } },
   createdBy: { select: { id: true, username: true, fullName: true } },
   executedBy: { select: { id: true, username: true, fullName: true } },
+  allocations: {
+    select: {
+      kind: true,
+      slotId: true,
+      batchId: true,
+      quantity: true,
+      sortOrder: true,
+      slot: {
+        select: {
+          code: true,
+          level: {
+            select: {
+              levelNumber: true,
+              rack: {
+                select: {
+                  code: true,
+                  zone: { select: { code: true } },
+                },
+              },
+            },
+          },
+        },
+      },
+      batch: { select: { batchCode: true } },
+    },
+    orderBy: { sortOrder: 'asc' },
+  },
 } satisfies Prisma.ScheduleInclude;
 
 type ScheduleWithRelations = Prisma.ScheduleGetPayload<{
@@ -1005,6 +1053,21 @@ function toScheduleView(item: ScheduleWithRelations) {
           slotCode: slot.code,
         })
       : null;
+
+  const mapAllocation = (
+    allocation: ScheduleWithRelations['allocations'][number],
+  ) => ({
+    slotId: allocation.slotId,
+    slotPath: formatSlotLocation({
+      zoneCode: allocation.slot.level.rack.zone.code,
+      rackCode: allocation.slot.level.rack.code,
+      levelNumber: allocation.slot.level.levelNumber,
+      slotCode: allocation.slot.code,
+    }),
+    batchId: allocation.batchId,
+    batchCode: allocation.batch?.batchCode ?? null,
+    quantity: allocation.quantity,
+  });
 
   return {
     id: item.id,
@@ -1040,6 +1103,12 @@ function toScheduleView(item: ScheduleWithRelations) {
           overrideReasonNote: item.overrideReasonNote,
         }
       : null,
+    suggestedAllocations: item.allocations
+      .filter((allocation) => allocation.kind === 'SUGGESTED')
+      .map(mapAllocation),
+    actualAllocations: item.allocations
+      .filter((allocation) => allocation.kind === 'ACTUAL')
+      .map(mapAllocation),
     executedBy: item.executedBy,
     executedAt: item.executedAt,
     transactionId: item.transactionId,

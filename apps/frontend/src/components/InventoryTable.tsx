@@ -1,4 +1,6 @@
 import type { InventoryItem } from '../types';
+import { formatDate, getExpiryBadgeClass, getExpiryLabel } from '../utils/expiry.utils';
+
 import { AlertIcon, LayersIcon } from './icons';
 
 type InventoryTableProps = {
@@ -31,6 +33,7 @@ export function InventoryTable({ items, totalCount, loading, error }: InventoryT
               <th>Mã lô hàng</th>
               <th>Vị trí</th>
               <th>Số lượng</th>
+              <th>Hạn sử dụng</th>
               <th>Cập nhật lúc</th>
             </tr>
           </thead>
@@ -41,6 +44,7 @@ export function InventoryTable({ items, totalCount, loading, error }: InventoryT
                 <td><span className="skeleton" style={{ width: '80px' }} /></td>
                 <td><span className="skeleton" style={{ width: '60px' }} /></td>
                 <td><span className="skeleton" style={{ width: '50px' }} /></td>
+                <td><span className="skeleton" style={{ width: '180px' }} /></td>
                 <td><span className="skeleton" style={{ width: '120px' }} /></td>
               </tr>
             ))}
@@ -89,6 +93,7 @@ export function InventoryTable({ items, totalCount, loading, error }: InventoryT
             <th>Mã lô hàng</th>
             <th>Vị trí</th>
             <th>Số lượng</th>
+            <th>Hạn sử dụng</th>
             <th>Cập nhật lúc</th>
           </tr>
         </thead>
@@ -105,6 +110,12 @@ export function InventoryTable({ items, totalCount, loading, error }: InventoryT
                 <span className="sku-code">{item.slotCode}</span>
               </td>
               <td>{item.quantity}</td>
+              <td>
+                <span className={getExpiryBadgeClass(item.expiryStatus)}>
+                  {formatDate(item.expiryDate)} ·{' '}
+                  {getExpiryLabel(item.expiryStatus, item.daysUntilExpiry)}
+                </span>
+              </td>
               <td className="muted-cell">{formatDateTime(item.updatedAt)}</td>
             </tr>
           ))}
