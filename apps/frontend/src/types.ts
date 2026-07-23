@@ -418,11 +418,13 @@ export type InboundSuggestionPreviewPayload = {
   productId: string;
   quantity: number;
   scheduledDate: string;
+  expiryDate?: string;
 };
 
 export type CreateInboundSchedulePayload = {
   scheduledDate: string;
   scheduledTime: string;
+  expiryDate?: string;
   supplierId: string;
   productId: string;
   quantity: number;

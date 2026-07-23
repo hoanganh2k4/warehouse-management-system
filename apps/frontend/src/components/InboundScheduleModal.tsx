@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { productService } from '../services/product.service';
-import { scheduleService } from '../services/schedule.service';
+
 import { useSuppliers } from '../hooks/useSuppliers';
 import type { CreateInboundSchedulePayload, InboundSuggestionResult, Product } from '../types';
 import { SmartLocationSuggestionCard } from './SmartLocationSuggestionCard';
+import { scheduleService } from '../services/schedule.service';
 
 type InboundScheduleModalProps = {
   onClose: () => void;
@@ -12,6 +13,7 @@ type InboundScheduleModalProps = {
 
 type FormState = {
   scheduledDate: string;
+  expiryDate: string;
   scheduledTime: string;
   supplierId: string;
   productId: string;
@@ -24,6 +26,7 @@ type FormErrors = Partial<Record<keyof FormState, string>>;
 
 const INITIAL_FORM: FormState = {
   scheduledDate: '',
+  expiryDate: '',
   scheduledTime: '',
   supplierId: '',
   productId: '',
@@ -90,6 +93,7 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
           productId: form.productId,
           quantity: quantityNum,
           scheduledDate: form.scheduledDate,
+          expiryDate: form.expiryDate || undefined,
         })
         .then((result) => {
           if (!cancelled) setSuggestion(result);
@@ -111,7 +115,7 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [form.productId, form.quantity, form.scheduledDate]);
+  }, [form.productId, form.quantity, form.scheduledDate, form.expiryDate]);
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -160,6 +164,7 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
     const payload: CreateInboundSchedulePayload = {
       scheduledDate: form.scheduledDate,
       scheduledTime: form.scheduledTime,
+      expiryDate: form.expiryDate || undefined,
       supplierId: form.supplierId,
       productId: form.productId,
       quantity: Number(form.quantity),
@@ -199,6 +204,19 @@ export function InboundScheduleModal({ onClose, onCreated }: InboundScheduleModa
                 onBlur={() => handleBlur('scheduledDate')}
               />
               {fieldError('scheduledDate') && <p className="form-error">{fieldError('scheduledDate')}</p>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="in-expiryDate">
+                Hạn sử dụng dự kiến (nếu đã biết)
+              </label>
+              <input
+                id="in-expiryDate"
+                type="date"
+                className="form-input"
+                value={form.expiryDate}
+                onChange={(e) => updateField('expiryDate', e.target.value)}
+              />
             </div>
 
             <div className="form-group">
