@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TransactionsService } from './transactions.service';
 import { TransactionQueryDto } from './dto/transaction.dto';
@@ -27,5 +27,12 @@ export class TransactionsController {
   @ApiAuthReadErrors()
   findAll(@Query() query: TransactionQueryDto) {
     return this.service.findAll(query);
+  }
+
+  @Get(':id')
+  @Roles(MANAGER_ROLE)
+  @ApiAuthReadErrors()
+  findOne(@Param('id') id: string) {
+    return this.service.findOne(id);
   }
 }
