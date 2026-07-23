@@ -6,6 +6,7 @@ type TransactionTableProps = {
   totalCount: number;
   loading: boolean;
   error: string | null;
+  onViewDetail: (transaction: Transaction) => void;
 };
 
 function formatDateTime(value: string) {
@@ -32,7 +33,13 @@ function typeBadgeClass(type: Transaction['type']) {
   return 'badge badge-standard';
 }
 
-export function TransactionTable({ items, totalCount, loading, error }: TransactionTableProps) {
+export function TransactionTable({
+  items,
+  totalCount,
+  loading,
+  error,
+  onViewDetail,
+}: TransactionTableProps) {
   if (loading) {
     return (
       <div className="table-wrap">
@@ -47,6 +54,7 @@ export function TransactionTable({ items, totalCount, loading, error }: Transact
               <th>Đến vị trí</th>
               <th>Ghi chú</th>
               <th>Thời gian</th>
+              <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -60,6 +68,7 @@ export function TransactionTable({ items, totalCount, loading, error }: Transact
                 <td><span className="skeleton" style={{ width: '60px' }} /></td>
                 <td><span className="skeleton" style={{ width: '100px' }} /></td>
                 <td><span className="skeleton" style={{ width: '120px' }} /></td>
+                <td><span className="skeleton" style={{ width: '60px' }} /></td>
               </tr>
             ))}
           </tbody>
@@ -111,6 +120,7 @@ export function TransactionTable({ items, totalCount, loading, error }: Transact
             <th>Đến vị trí</th>
             <th>Ghi chú</th>
             <th>Thời gian</th>
+            <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
@@ -142,6 +152,11 @@ export function TransactionTable({ items, totalCount, loading, error }: Transact
               </td>
               <td className="muted-cell">{item.note ?? '—'}</td>
               <td className="muted-cell">{formatDateTime(item.createdAt)}</td>
+              <td>
+                <button type="button" className="btn-link" onClick={() => onViewDetail(item)}>
+                  Chi tiết
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

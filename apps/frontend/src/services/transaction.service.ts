@@ -5,4 +5,7 @@ export const transactionService = {
   getTransactions(params: GetTransactionsParams): Promise<PaginatedResult<Transaction>> {
     return apiClient.get('/transactions', { params });
   },
+  getTransactionById(id: string): Promise<Transaction> {
+    return apiClient.get(`/transactions/${id}`);
+  },
 };

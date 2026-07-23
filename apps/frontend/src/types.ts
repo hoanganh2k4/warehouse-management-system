@@ -297,6 +297,10 @@ export type Transaction = {
   userId: string;
   user: { id: string; username: string; fullName: string | null };
   note: string | null;
+  quantityBefore: number | null;
+  quantityAfter: number | null;
+  dailySeq: number | null;
+  orderCode: string | null;
   createdAt: string;
 };
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import '../../App.css';
 import { TransactionTable } from '../../components/TransactionTable';
+import { TransactionDetailModal } from '../../components/TransactionDetailModal';
 import { ScheduleTable } from '../../components/ScheduleTable';
 import { ScheduleDetailModal } from '../../components/ScheduleDetailModal';
 import { InboundScheduleModal } from '../../components/InboundScheduleModal';
@@ -27,6 +28,7 @@ export default function TransactionList() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [detailTransactionId, setDetailTransactionId] = useState<string | null>(null);
 
   // ---- Tab "Lịch nhập / xuất" ----
   const [schedulePage, setSchedulePage] = useState(1);
@@ -255,7 +257,13 @@ export default function TransactionList() {
             )}
           </div>
 
-          <TransactionTable items={items} totalCount={totalCount} loading={loading} error={error} />
+          <TransactionTable
+            items={items}
+            totalCount={totalCount}
+            loading={loading}
+            error={error}
+            onViewDetail={(transaction) => setDetailTransactionId(transaction.id)}
+          />
 
           <div className="pagination-controls">
             <button disabled={loading || page <= 1} onClick={() => setPage((p) => p - 1)}>
@@ -317,6 +325,13 @@ export default function TransactionList() {
             </button>
           </div>
         </section>
+      )}
+
+      {detailTransactionId && (
+        <TransactionDetailModal
+          transactionId={detailTransactionId}
+          onClose={() => setDetailTransactionId(null)}
+        />
       )}
 
       {detailSchedule && (
