@@ -64,12 +64,15 @@ export default function Login() {
                 onClick={() => selectDemoAccount(account)}
               >
                 <span className="demo-account__role">{account.label}</span>
-                <span>
-                  <b>Tài khoản:</b> {account.username}
+                <span className="demo-account__credentials">
+                  <span>
+                    <b>Tài khoản:</b> {account.username}
+                  </span>
+                  <span>
+                    <b>Mật khẩu:</b> {account.password}
+                  </span>
                 </span>
-                <span>
-                  <b>Mật khẩu:</b> {account.password}
-                </span>
+                <span className="demo-account__action">Điền</span>
               </button>
             ))}
           </div>
