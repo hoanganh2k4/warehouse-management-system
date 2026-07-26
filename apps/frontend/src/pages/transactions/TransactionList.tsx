@@ -87,6 +87,18 @@ export default function TransactionList() {
     });
   }
 
+  async function handleViewScheduleDetail(schedule: Schedule) {
+    setDetailSchedule(schedule);
+    try {
+      const latestSchedule = await scheduleService.getScheduleById(schedule.id);
+      setDetailSchedule((current) =>
+        current?.id === latestSchedule.id ? latestSchedule : current,
+      );
+    } catch {
+      // Giữ dữ liệu từ bảng nếu API chi tiết tạm thời không phản hồi.
+    }
+  }
+
   async function handleCancelSchedule(schedule: Schedule) {
     const confirmed = window.confirm(
       `Hủy lịch ${schedule.type === 'INBOUND' ? 'nhập' : 'xuất'} kho cho sản phẩm "${
@@ -365,7 +377,7 @@ export default function TransactionList() {
             onExecute={handleExecuteSchedule}
             onEdit={handleEditSchedule}
             onCancel={handleCancelSchedule}
-            onViewDetail={(schedule) => setDetailSchedule(schedule)}
+            onViewDetail={handleViewScheduleDetail}
           />
 
           <div className="pagination-controls">

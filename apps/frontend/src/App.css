@@ -2675,3 +2675,213 @@
 .schedule-create-suggestion::-webkit-scrollbar {
   display: none;
 }
+
+/* ---------- Slot inventory + compact location detail ---------- */
+.dialog-overlay-raised {
+  z-index: 1200;
+}
+
+.slot-inventory-trigger,
+.location-summary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--canvas);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.slot-inventory-trigger:hover,
+.location-summary-button:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.slot-inventory-modal {
+  max-width: 860px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.slot-inventory-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.slot-inventory-summary,
+.dashboard-location-summary {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.slot-inventory-state {
+  padding: 36px 16px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.slot-inventory-table-wrap {
+  max-height: min(430px, 58vh);
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  scrollbar-width: thin;
+}
+
+.slot-inventory-table {
+  table-layout: fixed;
+}
+
+.slot-inventory-table th:nth-child(1) { width: 30%; }
+.slot-inventory-table th:nth-child(2) { width: 18%; }
+.slot-inventory-table th:nth-child(3) { width: 12%; }
+.slot-inventory-table th:nth-child(4) { width: 17%; }
+.slot-inventory-table th:nth-child(5) { width: 23%; }
+
+.slot-inventory-table th,
+.slot-inventory-table td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+.slot-inventory-product-name {
+  color: var(--text);
+}
+
+.schedule-batch-code-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.schedule-batch-code {
+  display: inline-flex;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--canvas);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.location-summary-button {
+  white-space: nowrap;
+}
+
+.dashboard-location-modal {
+  max-width: 620px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dashboard-location-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-height: min(430px, 58vh);
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+.dashboard-location-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--canvas);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-location-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-family: var(--sans);
+  font-weight: 700;
+}
+
+@media (max-width: 680px) {
+  .slot-inventory-modal,
+  .dashboard-location-modal {
+    max-height: calc(100vh - 24px);
+    padding: 18px;
+  }
+
+  .slot-inventory-table-wrap {
+    overflow-x: hidden;
+  }
+
+  .slot-inventory-table thead {
+    display: none;
+  }
+
+  .slot-inventory-table,
+  .slot-inventory-table tbody,
+  .slot-inventory-table tr,
+  .slot-inventory-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .slot-inventory-table tr {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .slot-inventory-table tr:last-child {
+    border-bottom: none;
+  }
+
+  .slot-inventory-table td {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 10px;
+    padding: 7px 0;
+    border: 0;
+    text-align: left;
+  }
+
+  .slot-inventory-table td::before {
+    content: attr(data-label);
+    color: var(--text-faint);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .dashboard-location-list {
+    grid-template-columns: 1fr;
+  }
+}
