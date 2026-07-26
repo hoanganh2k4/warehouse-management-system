@@ -376,6 +376,14 @@ export type ScheduleActual = {
   overrideReasonNote: string | null;
 } | null;
 
+export type ScheduleAllocation = {
+  slotId: string;
+  slotPath: string;
+  batchId: string | null;
+  batchCode: string | null;
+  quantity: number;
+};
+
 export type Schedule = {
   id: string;
   type: ScheduleType;
@@ -391,6 +399,8 @@ export type Schedule = {
   note: string | null;
   suggestion: ScheduleSuggestion;
   actual: ScheduleActual;
+  suggestedAllocations?: ScheduleAllocation[];
+  actualAllocations?: ScheduleAllocation[];
   executedBy: string | null;
   executedAt: string | null;
   transactionId: string | null;

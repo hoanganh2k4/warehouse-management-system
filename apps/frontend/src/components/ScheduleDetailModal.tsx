@@ -8,6 +8,17 @@ type ScheduleDetailModalProps = {
 
 export function ScheduleDetailModal({ schedule, onClose }: ScheduleDetailModalProps) {
   const partnerLabel = schedule.type === 'INBOUND' ? 'Nhà cung cấp' : 'Khách hàng';
+  const batchCodes = Array.from(
+    new Set(
+      [
+        schedule.batchCode,
+        schedule.actual?.batchCode,
+        schedule.suggestion?.batchCode,
+        ...(schedule.actualAllocations ?? []).map((item) => item.batchCode),
+        ...(schedule.suggestedAllocations ?? []).map((item) => item.batchCode),
+      ].filter((value): value is string => Boolean(value)),
+    ),
+  );
 
   return (
     <div className="dialog-overlay" onClick={onClose}>
@@ -41,7 +52,13 @@ export function ScheduleDetailModal({ schedule, onClose }: ScheduleDetailModalPr
           <span>{schedule.partnerName ?? '—'}</span>
 
           <span className="schedule-detail-label">Mã lô hàng</span>
-          <span>{schedule.batchCode ?? '—'}</span>
+          <span className="schedule-batch-code-list">
+            {batchCodes.length > 0
+              ? batchCodes.map((batchCode) => (
+                  <span key={batchCode} className="schedule-batch-code">{batchCode}</span>
+                ))
+              : '—'}
+          </span>
 
           <span className="schedule-detail-label">Ghi chú</span>
           <span>{schedule.note ?? '—'}</span>

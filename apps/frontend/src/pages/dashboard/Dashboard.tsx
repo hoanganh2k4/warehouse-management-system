@@ -3,7 +3,7 @@ import '../../App.css';
 import './Dashboard.css';
 import { StatCard } from '../../components/StatCard';
 import { InboundOutboundChart } from '../../components/InboundOutboundChart';
-import { AlertIcon, BoxIcon, GridIcon, LayersIcon, ScaleIcon, WarehouseIcon } from '../../components/icons';
+import { AlertIcon, BoxIcon, EyeIcon, GridIcon, LayersIcon, ScaleIcon, WarehouseIcon } from '../../components/icons';
 import { useDashboard } from '../../hooks/useDashboard';
 import { useDashboardChart } from '../../hooks/useDashboardChart';
 import { dashboardService } from '../../services/dashboard.service';
@@ -16,6 +16,7 @@ export default function Dashboard() {
   const { data: chartData, loading: chartLoading } = useDashboardChart(chartDays);
   const [expiringBatches, setExpiringBatches] = useState<DashboardExpiringBatch[]>([]);
   const [expiringLoading, setExpiringLoading] = useState(true);
+  const [locationDetailBatch, setLocationDetailBatch] = useState<DashboardExpiringBatch | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -130,13 +131,58 @@ export default function Dashboard() {
                         </span>
                       </td>
                       <td>{batch.quantity}</td>
-                      <td>{batch.locations.join(', ') || '—'}</td>
+                      <td>
+                        {batch.locations.length > 0 ? (
+                          <button
+                            type="button"
+                            className="location-summary-button"
+                            onClick={() => setLocationDetailBatch(batch)}
+                            aria-label={`Xem ${batch.locations.length} vị trí của lô ${batch.batchCode}`}
+                          >
+                            <EyeIcon size={15} />
+                            Xem {batch.locations.length} vị trí
+                          </button>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
+        </div>
+      )}
+
+
+      {locationDetailBatch && (
+        <div className="dialog-overlay dialog-overlay-raised" onClick={() => setLocationDetailBatch(null)}>
+          <div
+            className="dialog-box dashboard-location-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 className="dialog-title">Vị trí của lô {locationDetailBatch.batchCode}</h3>
+            <p className="dashboard-location-summary">
+              {locationDetailBatch.productSkuCode} — {locationDetailBatch.productName} ·{' '}
+              {locationDetailBatch.locations.length} vị trí
+            </p>
+
+            <div className="dashboard-location-list">
+              {locationDetailBatch.locations.map((location, index) => (
+                <div key={`${location}-${index}`} className="dashboard-location-item">
+                  <span className="dashboard-location-index">{index + 1}</span>
+                  <span>{location}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="dialog-actions">
+              <button type="button" className="btn-secondary" onClick={() => setLocationDetailBatch(null)}>
+                Đóng
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

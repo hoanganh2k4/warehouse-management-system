@@ -449,16 +449,20 @@ export default function RackingPage() {
           product={selectedSlotProduct}
           productLoading={selectedSlotProductLoading}
           onClose={() => setSelectedSlot(null)}
-          onEdit={() =>
-            setSlotModal({ mode: 'edit', slot: selectedSlot, levelId: selectedSlot.levelId })
-          }
-          onDelete={() =>
+          onEdit={() => {
+            const slotToEdit = selectedSlot;
+            setSelectedSlot(null);
+            setSlotModal({ mode: 'edit', slot: slotToEdit, levelId: slotToEdit.levelId });
+          }}
+          onDelete={() => {
+            const slotToDelete = selectedSlot;
+            setSelectedSlot(null);
             setDeleteTarget({
               type: 'slot',
-              id: selectedSlot.id,
-              label: `Slot ${selectedSlot.code}`,
-            })
-          }
+              id: slotToDelete.id,
+              label: `Slot ${slotToDelete.code}`,
+            });
+          }}
         />
       )}
 
